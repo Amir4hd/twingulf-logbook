@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    // The admin list is managed only in the Firebase console.
+    match /admins/{id} { allow read: if signedIn(); allow write: if false; }
+
+    // Setup, maintenance tasks and history: everyone signed in can read, only admins can change.
+    match /config/{id}        { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /maint_tasks/{id}   { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /maint_history/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+
+    // Readings and problem reports: tablet accounts can read and write.
+    match /logs/{id}   { allow read, write: if signedIn(); allow delete: if isAdmin(); }
+    match /issues/{id} { allow read, write: if signedIn(); allow delete: if isAdmin(); }
+  }
+}

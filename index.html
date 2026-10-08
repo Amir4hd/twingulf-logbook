@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f5a3a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Twin Gulf Plant Logbook</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky control bar; big-touch hourly entry screens for tablets; tabbed control room with hour-by-hour grid per area. */
+:root{
+  --bg:#e9ece7; --panel:#fbfcfa; --panel2:#f0f3ee; --ink:#17211c; --mut:#56645b; --line:#cdd5ca;
+  --accent:#0b6b63; --accentbg:#d6ebe7; --onaccent:#ffffff;
+  --ok:#2a7d4f; --okbg:#d9eddf; --warn:#9a5f08; --warnbg:#fbe8c4; --bad:#b3342a; --badbg:#f7d9d5; --stop:#7b867f; --stopbg:#e0e5df;
+  --f-d:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --f-b:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-m:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101513; --panel:#171e1b; --panel2:#1e2723; --ink:#e4ebe6; --mut:#9aa89f; --line:#2c3833;
+  --accent:#4fc2b6; --accentbg:#16403c; --onaccent:#05211e;
+  --ok:#58c184; --okbg:#173a27; --warn:#e8a93d; --warnbg:#443112; --bad:#f0705f; --badbg:#46201b; --stop:#7d8981; --stopbg:#27302b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101513; --panel:#171e1b; --panel2:#1e2723; --ink:#e4ebe6; --mut:#9aa89f; --line:#2c3833;
+  --accent:#4fc2b6; --accentbg:#16403c; --onaccent:#05211e;
+  --ok:#58c184; --okbg:#173a27; --warn:#e8a93d; --warnbg:#443112; --bad:#f0705f; --badbg:#46201b; --stop:#7d8981; --stopbg:#27302b; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-b);padding-inline:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{margin:0;font-family:var(--f-d);font-weight:600;letter-spacing:.02em;text-wrap:balance}
+h2{font-size:22px;text-transform:uppercase}
+h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
+.mono{font-family:var(--f-m);font-variant-numeric:tabular-nums}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ink);color:var(--bg);display:flex;align-items:center;gap:14px;padding:10px 16px;min-height:56px}
+.brand{font:700 22px/1 var(--f-d);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.bar .where{font:600 20px/1 var(--f-d);letter-spacing:.04em;text-transform:uppercase;opacity:.85;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .sp{flex:1}
+.clock{font:500 16px var(--f-m);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:#58c184}
+.dot.off{background:#f0705f}
+.bbtn{background:transparent;border:1px solid color-mix(in srgb,var(--bg) 45%,transparent);color:var(--bg);padding:8px 12px;border-radius:6px;min-height:40px}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.card>h2,.card>h3{margin-bottom:10px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.muted{color:var(--mut)}
+.small{font-size:13px}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 16px;min-height:44px;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--onaccent);font-weight:600}
+.btn.big{min-height:60px;font:600 22px var(--f-d);letter-spacing:.06em;text-transform:uppercase;padding-inline:28px}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn.sm{min-height:34px;padding:5px 10px;font-size:13px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--stopbg);color:var(--mut);white-space:nowrap}
+.chip.ok{background:var(--okbg);color:var(--ok)} .chip.warn{background:var(--warnbg);color:var(--warn)} .chip.bad{background:var(--badbg);color:var(--bad)} .chip.acc{background:var(--accentbg);color:var(--accent)}
+input[type=text],input[type=number],input[type=date],select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 11px;min-height:44px;width:100%}
+textarea{min-height:80px;resize:vertical}
+label.l{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mut);font-weight:500;min-width:0}
+
+.areas{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.acard{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;min-height:120px}
+.acard:hover{border-color:var(--accent)}
+.acard b{font:700 30px/1 var(--f-d);text-transform:uppercase;letter-spacing:.03em}
+.acard.ctl{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px}
+.hb{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:54px;border:2px solid var(--line);background:var(--panel2);border-radius:6px;font:500 16px var(--f-m);gap:2px;padding:2px}
+.hb small{font:500 10px var(--f-b);text-transform:uppercase;letter-spacing:.04em}
+.hb.done{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.hb.alarm{background:var(--warnbg);border-color:var(--warn);color:var(--warn)}
+.hb.stop{background:var(--stopbg);border-color:var(--stop);color:var(--mut)}
+.hb.part{background:var(--panel2);border:2px dashed var(--ok);color:var(--ok)}
+.hb.miss{border-color:var(--bad);color:var(--bad);background:var(--badbg)}
+.hb.future{opacity:.4;cursor:not-allowed}
+.hb.now{box-shadow:0 0 0 3px var(--accentbg)}
+.hb.sel{outline:3px solid var(--accent);outline-offset:1px}
+
+.grp{border:1px solid var(--line);border-radius:8px;padding:12px 14px 14px;margin:0;min-width:0}
+.grp legend{font:600 17px var(--f-d);text-transform:uppercase;letter-spacing:.05em;color:var(--accent);padding:0 6px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fld .fl{font-weight:500}
+.fld .ir{display:flex;align-items:center;border:2px solid var(--line);border-radius:6px;background:var(--panel);min-height:54px}
+.fld .ir input{border:0;background:transparent;min-height:50px;font:500 24px var(--f-m);padding:4px 10px;flex:1;min-width:0}
+.fld .ir input:focus-visible{outline:none}
+.fld .ir:focus-within{border-color:var(--accent)}
+.fld .ir i{font-style:normal;color:var(--mut);padding-right:12px;font-size:14px;white-space:nowrap}
+.fld .hint{font-size:12px;color:var(--mut)}
+.fld.high .ir,.fld.low .ir{border-color:var(--warn);background:var(--warnbg)}
+.fld.high .hint,.fld.low .hint{color:var(--warn);font-weight:600}
+.fld.need .ir{border-color:var(--bad);background:var(--badbg)}
+.fld.need .hint{color:var(--bad);font-weight:600}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg label{flex:1;min-width:140px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:flex;align-items:center;justify-content:center;min-height:56px;border:2px solid var(--line);border-radius:6px;font:600 20px var(--f-d);letter-spacing:.06em;text-transform:uppercase;background:var(--panel2);cursor:pointer}
+.seg input:checked+span.go{background:var(--ok);border-color:var(--ok);color:#fff}
+.seg input:checked+span.no{background:var(--stop);border-color:var(--stop);color:#fff}
+.seg input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.status{padding:8px 12px;border-radius:6px;background:var(--panel2);font-size:13px}
+
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);font-weight:600}
+td.n,th.n{text-align:right}
+tr.clk{cursor:pointer} tr.clk:hover{background:var(--panel2)}
+.hscroll,.tscroll{overflow-x:auto}
+
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--line)}
+.tab{background:transparent;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;padding:10px 16px;font:600 18px var(--f-d);letter-spacing:.06em;text-transform:uppercase;color:var(--mut);min-height:44px}
+.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.kpis{display:flex;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.kpi{flex:1 1 150px;padding:12px 16px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.kpi:first-child{border-left:0}
+.kpi b{font:600 34px/1 var(--f-d);font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.kpi.warn b{color:var(--warn)} .kpi.bad b{color:var(--bad)}
+.hg{min-width:700px;display:flex;flex-direction:column;gap:6px}
+.hrow{display:grid;grid-template-columns:140px 1fr 210px;gap:10px;align-items:center}
+.hname{font:600 18px var(--f-d);text-transform:uppercase;letter-spacing:.04em}
+.hcells{display:grid;grid-template-columns:repeat(24,1fr);gap:3px}
+.cell{height:30px;border:2px solid var(--line);border-radius:3px;background:var(--panel2);padding:0}
+.cell.done{background:var(--ok);border-color:var(--ok)}
+.cell.alarm{background:var(--warn);border-color:var(--warn)}
+.cell.stop{background:repeating-linear-gradient(45deg,var(--stop) 0 4px,var(--stopbg) 4px 8px);border-color:var(--stop)}
+.cell.part{background:var(--okbg);border:2px dashed var(--ok)}
+.cell.miss{background:var(--badbg);border-color:var(--bad)}
+.cell.future{opacity:.35;cursor:default}
+.cell.sel{outline:3px solid var(--ink);outline-offset:1px}
+.hlab{font:500 10px var(--f-m);color:var(--mut);text-align:center}
+.hsum{font-size:12px;color:var(--mut);line-height:1.3}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:10px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-3px;margin-right:5px;border:2px solid var(--line)}
+.bartrack{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden;border:1px solid var(--line);min-width:90px}
+.bartrack>div{height:100%;background:var(--ok)} .bartrack.warn>div{background:var(--warn)} .bartrack.bad>div{background:var(--bad)}
+.ctlrow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.ctlrow>*{min-width:150px;flex:0 1 200px}
+.ctlrow .btn{flex:0 0 auto;min-width:0}
+svg.ch text{fill:var(--mut);font:11px var(--f-m)}
+svg.ch .grid{stroke:var(--line);stroke-width:1}
+svg.ch .band{fill:var(--okbg);opacity:.7}
+svg.ch .ln{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
+svg.ch .pt{fill:var(--accent)} svg.ch .pt.x{fill:var(--bad)}
+svg.ch .lim{stroke:var(--warn);stroke-width:1.2;stroke-dasharray:5 4}
+.empty{padding:22px;border:2px dashed var(--line);border-radius:8px;color:var(--mut);text-align:center}
+.ovl{position:fixed;inset:0;background:rgba(10,16,13,.6);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+.dlg{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:12px}
+.dlg h2{font-size:28px}.dlg p{margin:0}
+.who{min-height:28px;font:600 20px var(--f-d);letter-spacing:.04em;text-transform:uppercase}
+.who.ok{color:var(--ok)}.who.bad{color:var(--bad)}
+.status.ok{background:var(--okbg);color:var(--ok)}.status.warn{background:var(--warnbg);color:var(--warn)}.status.bad{background:var(--badbg);color:var(--bad);font-weight:600}
+fieldset.plain{border:0;padding:0;margin:0;min-width:0;display:flex;flex-direction:column;gap:16px}
+.orow{display:grid;grid-template-columns:minmax(140px,2fr) minmax(140px,2fr) 70px 40px;gap:8px;align-items:center;margin-bottom:6px}
+.orow input[type=text],.orow input[type=password]{min-height:38px;padding:5px 8px}
+.vals{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 14px;margin-top:6px}
+.vals>div{display:flex;flex-direction:column;border-left:3px solid var(--line);padding-left:8px;min-width:0}
+.vals>div.hi{border-left-color:var(--warn)}.vals>div.empty0{opacity:.55}
+.vals small{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;overflow-wrap:anywhere}
+.vals b{font:500 16px var(--f-m);font-variant-numeric:tabular-nums}
+.ent{padding:10px 0;border-top:1px solid var(--line)}.ent:first-of-type{border-top:0}
+.fld.locked{opacity:.5}.fld.lead .ir{border-style:dashed}
+.orow{grid-template-columns:minmax(140px,2fr) minmax(140px,2fr) 80px 70px 40px !important}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:8px;z-index:50;max-width:92vw;font-weight:500}
+.toast.bad{background:var(--bad);color:#fff}
+.prow{display:grid;grid-template-columns:minmax(140px,2fr) 1fr 70px 70px 70px 40px;gap:8px;align-items:center;margin-bottom:6px}
+.prow input{min-height:38px;padding:5px 8px}
+.prow.h{font-size:11px;text-transform:uppercase;color:var(--mut);letter-spacing:.05em;font-weight:600}
+details.d{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--panel)}
+details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:uppercase;letter-spacing:.04em}
+@media (max-width:760px){
+  .bar{gap:8px;padding:8px 12px}.brand{font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis}.clock,.sync .txt{display:none}.bar .where{font-size:17px}
+  .hrow{grid-template-columns:1fr}.hsum{order:3}
+  .prow{grid-template-columns:1fr 1fr 1fr;} .prow.h{display:none}
+}
+@media (prefers-reduced-motion:no-preference){.hb,.btn{transition:border-color .12s,background .12s}}
+</style>
+
+<div id="top"></div>
+<main class="wrap" id="main"><div class="empty">Loading logbook…</div></main>
+<div id="toast" hidden></div>
+
+</head><body>
+<script src="vendor/firebase-app-compat.js"></script>
+<script src="vendor/firebase-auth-compat.js"></script>
+<script src="vendor/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="platform.js"></script>
+<script>
+(function(){
+'use strict';
+/* ---------- helpers ---------- */
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parseYmd=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);};
+const addDays=(s,n)=>{const d=parseYmd(s);d.setDate(d.getDate()+n);return ymd(d);};
+const daysBetween=(a,b)=>Math.round((parseYmd(b)-parseYmd(a))/864e5);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>(v===null||v===undefined||v===''||isNaN(Number(v)))?null:Number(v);
+const fmtN=v=>v==null?'–':Number(v).toFixed(2).replace(/\.?0+$/,'');
+const hh=h=>pad(h)+':00';
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const REASONS=['Planned stop','Breakdown','Cleaning / changeover','Material shortage','Power cut','Quality hold','Other'];
+
+/* ---------- standard setup (used until the admin saves their own in Setup) ---------- */
+const PACK_WIN=[[30,90],[870,930],[1350,1410]];
+const WIN_IDS=['film_waste','scotch','dmg_carton','flour','semolina','regr_used','regr_prod'];
+function N(id,label,unit,group,o){o=o||{};const p={id:id,label:label,unit:unit||'',min:null,max:null,group:group||'',total:!!o.total,kind:o.kind||'num',calc:o.calc||'',options:o.options||[]};if(WIN_IDS.indexOf(id)>=0&&o.pack)p.win=PACK_WIN;return p;}
+function migrateCfg(c){(c.areas||[]).forEach(a=>{if(String(a.id).indexOf('pack_')===0){a.params=a.params.filter(p=>p.id!=='pallet_times');a.params.forEach(p=>{if(WIN_IDS.indexOf(p.id)>=0&&!p.win)p.win=PACK_WIN;});}});return c;}
+const C_='°C',H_='%RH';
+function sensors(list){return list.map(c=>{const t=c.slice(-1);if(t==='T'||t==='H')return N('s'+c.toLowerCase(),c+(t==='T'?' temp':' humidity'),t==='T'?C_:H_,'Dryer temperature & humidity');return N('s'+c,'Motor '+c+' speed','Hz','Dryer motor speeds');});}
+function pack(id,name){return {id:id,name:name,every:'any',timed:true,equipment:['Packing machine','Carton sealer','Pallet wrapper','Conveyor'],params:[
+  N('pallets','Pallets completed','pcs','Production',{total:true}),N('ptype','Production type (e.g. AL-TAJ)','','Production',{kind:'text'}),
+  N('film_waste','Film wastage','kg','Film and carton wastage',{total:true,pack:true}),N('scotch','Scotch used in carton','cartons','Film and carton wastage',{total:true,pack:true}),N('dmg_carton','Damaged carton','pcs','Film and carton wastage',{total:true,pack:true}),
+  N('flour','Flour used','cartons','Raw material',{total:true,pack:true}),N('semolina','Semolina used','cartons','Raw material',{total:true,pack:true}),N('regr_used','Regrinding used','cartons','Raw material',{total:true,pack:true}),N('regr_prod','Regrinding produced','cartons','Raw material',{total:true,pack:true})]};}
+function lab(id,name,zones){return {id:id,name:name,every:'any',timed:true,noStatus:true,equipment:['Moisture analyzer','Drying oven','Balance'],params:[N('zone','Zone','','Sample',{kind:'select',options:zones}),N('result','Moisture result','%','Sample')]};}
+const DEFAULT_CFG={
+  plantName:'Twin Gulf Industries',
+  shifts:[{name:'Day',start:7},{name:'Night',start:19}],
+  crews:['A-B','B-C'],
+  operators:[],
+  areas:[
+    {id:'macaroni',name:'Macaroni Line',every:'hour',equipment:['Press','Screw','Vacuum pump','Dryer','Cutter','Cooler'],params:[
+      N('pp','Press pressure (P.P)','bar','Press'),N('ht','Head temp (H.T)',C_,'Press'),N('vac','Vacuum (VAC)','','Press'),N('wt','Water temp (W.T)',C_,'Press'),N('wp','Water pressure (W.P)','bar','Press'),N('scs','Screw speed (SC.S)','','Press'),N('cus','Cutter speed (CU.S)','Hz','Press'),N('dl','Dough level (D.L)','','Press'),N('cyt','Cylinder temp (CY.T)',C_,'Press')]
+      .concat(sensors(['201','275','291','292','293','294','295','401','309','328T','328H','329T','358T','358H','368T','368H'])) },
+    {id:'spaghetti',name:'Spaghetti Line',every:'hour',equipment:['Press','Screw','Vacuum pump','Dryer','Cooler','Stick ventilation'],params:[
+      N('sno','Stick number (S.No)','','Press',{kind:'text'}),N('pp','Press pressure (P.P)','bar','Press'),N('ht','Head temp (H.T)',C_,'Press'),N('v','Vacuum (V)','','Press'),N('wt','Water temp (W.T)',C_,'Press'),N('wp','Water pressure (W.P)','bar','Press'),N('scs','Screw speed (SC.S)','','Press'),N('dl','Dough level (D.L)','','Press'),N('cyt','Cylinder temp (CY.T)',C_,'Press'),
+      N('ct','Cooler temp (C.T)',C_,'Line'),N('ls','Line speed (L.S)','','Line'),N('hv','Head ventilation temp (H.V)',C_,'Line'),N('stv','Stick ventilation temp (ST.V)',C_,'Stick ventilation'),N('stvs','Stick ventilation speed (ST.V.S)','','Stick ventilation')]
+      .concat(sensors(['211','212H','212T','213H','213T','214T','322T','324T','324H','326T','326H'])) },
+    {id:'boiler',name:'Boiler & Chiller',every:'hour',equipment:['Boiler','Expansion tank','Long cut circulation pump','Short cut circulation pump','Heat exchanger tank','Chiller'],params:[
+      N('b_temp','Boiler temperature (main)',C_,'Boiler'),N('b_press','Boiler pressure (main)','bar','Boiler'),
+      N('exp_temp','Expansion tank temperature',C_,'Expansion tank'),N('exp_press','Expansion tank pressure','bar','Expansion tank'),
+      N('lc_temp','Long cut circulation pump temp',C_,'Circulation pumps'),N('lc_press','Long cut circulation pump pressure','bar','Circulation pumps'),N('sc_temp','Short cut circulation pump temp',C_,'Circulation pumps'),N('sc_press','Short cut circulation pump pressure','bar','Circulation pumps'),
+      N('hx_temp','Heat exchanger tank temp',C_,'Heat exchanger'),N('hx_press','Heat exchanger tank pressure','bar','Heat exchanger'),
+      N('ch_in','Chiller inlet temp',C_,'Chiller'),N('ch_out','Chiller outlet temp',C_,'Chiller')]},
+    pack('pack_mac','Packaging · Macaroni'),pack('pack_spa','Packaging · Spaghetti'),
+    lab('lab_mac','Lab · Macaroni',['A1','Shaker','A2','S','Final']),
+    lab('lab_spa','Lab · Spaghetti',['Dryer','Pre-dryer','Final']),
+    {id:'ro',name:'Reverse Osmosis',every:'shift',timed:true,equipment:['Multimedia filters','RO modules','High pressure pump','Dosing pumps','Submersible pump','Generator'],params:[
+      N('op_hours','Operation hours','h','General'),
+      N('mm_in','Multimedia inlet pressure','bar','Pressures'),N('mm_out','Multimedia outlet pressure','bar','Pressures'),N('mm_drop','Pressure drop across MM filters (in − out)','bar','Pressures',{calc:'mm_in-mm_out'}),
+      N('feed_p','Feed pressure','bar','Pressures'),N('pre_mod','System pressure pre-module','bar','Pressures'),N('post_mod','System pressure post-module','bar','Pressures'),N('mod_drop','Pressure drop across modules (pre − post)','bar','Pressures',{calc:'pre_mod-post_mod'}),
+      N('f_prod','Product flow rate','L/min','Flow'),N('f_rej','Reject flow rate','L/min','Flow'),N('f_feed','Feed flow rate (product + reject)','L/min','Flow',{calc:'f_prod+f_rej'}),N('recovery','System recovery','%','Flow',{calc:'f_prod/(f_prod+f_rej)*100'}),
+      N('feed_t','Feed water temperature',C_,'Water quality'),N('tds','Product TDS','ppm','Water quality'),N('ph','Product water pH','pH','Water quality'),
+      N('antiscal','Anti-scalant dosing tank level','','Tanks'),N('postph','Post-pH correction chemical tank level','','Tanks'),N('raw_tank','Raw water tank level','%','Tanks'),N('prod_tank','Product water tank level','%','Tanks'),
+      N('backwash','Daily backwash time (hh:mm)','','Other',{kind:'time'}),N('pump_a','Submersible pump current','A','Other'),N('gen_v','Generator battery level','V','Other')]}
+  ]};
+
+/* ---------- state ---------- */
+const S={db:null,user:null,isAdmin:false,canWrite:true,cfg:DEFAULT_CFG,cfgJ:JSON.stringify(DEFAULT_CFG),
+  view:'home',areaId:null,tab:'overview',today:ymd(new Date()),date:ymd(new Date()),hour:new Date().getHours(),
+  day:null,dirty:false,logs:{},mlogs:{},tasks:[],hist:[],issues:[],ovDate:ymd(new Date()),sel:null,
+  trend:{area:'press',param:'',days:3},subs:{},ops:[],asOp:false,unlock:null,lastHour:new Date().getHours(),online:navigator.onLine,setupEditing:false,pmSig:'',mTrunc:false,editTask:null};
+const nowH=()=>new Date().getHours();
+const area=id=>S.cfg.areas.find(a=>a.id===id)||null;
+const shiftOf=h=>{const sh=S.cfg.shifts.slice().sort((a,b)=>a.start-b.start);let r=sh[sh.length-1];sh.forEach(s=>{if(s.start<=h)r=s;});return r?r.name:'';};
+function pState(p,v){v=num(v);if(v==null)return 'empty';if(p.min!=null&&v<p.min)return 'low';if(p.max!=null&&v>p.max)return 'high';return 'ok';}
+function limitText(p){if(p.min!=null&&p.max!=null)return p.min+' – '+p.max+' '+p.unit;if(p.max!=null)return 'max '+p.max+' '+p.unit;if(p.min!=null)return 'min '+p.min+' '+p.unit;return 'no limits set';}
+function resub(key,fn){if(S.subs[key]){try{S.subs[key]()}catch(e){}}S.subs[key]=fn();}
+function unsub(key){if(S.subs[key]){try{S.subs[key]()}catch(e){}delete S.subs[key];}}
+let toastT;
+function toast(msg,bad){const t=$('#toast');t.className='toast'+(bad?' bad':'');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true},bad?6000:2800);}
+const dbErr=e=>(e&&e.message)?e.message:'Could not save. Check the connection and try again.';
+
+/* hour cell state for a day doc */
+function entries(doc){const out=[];if(!doc||!doc.hours)return out;Object.keys(doc.hours).forEach(k=>{const e=doc.hours[k];if(!e)return;const c0=k.charAt(0),min=c0==='s'?Math.floor(Number(k.slice(1))/60):c0==='t'?Number(k.slice(1)):Number(k)*60;out.push({k:k,min:min,h:Math.floor(min/60),e:e});});return out.sort((a,b)=>a.min-b.min);}
+const hm=min=>pad(Math.floor(min/60))+':'+pad(min%60);
+const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes();};
+function entTime(date,min){const q=parseYmd(date);return new Date(q.getFullYear(),q.getMonth(),q.getDate(),Math.floor(min/60),min%60).getTime();}
+function worst(es){const rank={done:0,part:1,alarm:2,stop:3};let r='done';es.forEach(x=>{const e=x.e,t=e.run===false?'stop':(e.alarms||0)>0?'alarm':(e.empty||0)>0?'part':'done';if(rank[t]>rank[r])r=t;});return r;}
+function shiftWindows(date){
+  const sh=S.cfg.shifts.slice().sort((a,b)=>a.start-b.start),out=[];
+  sh.forEach((s,i)=>{const next=sh[(i+1)%sh.length].start,segs=[];
+    if(next>s.start)segs.push([s.start*60,next*60]);else{segs.push([s.start*60,1440]);segs.push([0,next*60]);}
+    let ended;if(date<S.today)ended=true;else if(date>S.today)ended=false;else ended=next>s.start&&nowMin()>=next*60;
+    out.push({name:s.name,segs:segs,ended:ended});});
+  return out;
+}
+function isReq(a,h){return !(a&&a.timed);}
+function cellState(doc,date,h,a){
+  const es=entries(doc).filter(x=>x.h===h);
+  const isToday=date===S.today,future=date>S.today||(isToday&&h>nowH());
+  if(es.length)return worst(es);
+  if(future)return 'future';
+  if(a&&a.timed)return 'na';
+  if(isToday&&h===nowH())return 'now';
+  return 'miss';
+}
+/* ---------- top bar ---------- */
+function renderTop(){
+  const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':'');
+  const t=new Date();
+  $('#top').innerHTML='<header class="bar"><span class="brand">'+esc(S.cfg.plantName||'Plant Logbook')+'</span>'+(where?'<span class="where">'+esc(where)+'</span>':'')+'<span class="sp"></span>'+
+   '<span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'No database')+'</span></span>'+
+   '<span class="clock" id="clock">'+ymd(t)+' '+pad(t.getHours())+':'+pad(t.getMinutes())+'</span>'+
+   (S.isAdmin&&S.view==='area'?'<button class="bbtn" id="asOp" aria-pressed="'+S.asOp+'">'+(S.asOp?'Operator view: on':'Operator view')+'</button>':'')+(S.view!=='home'?'<button class="bbtn" id="goHome">'+(S.isAdmin?'Menu':'Switch area')+'</button>':'')+'</header>';
+  const gh=$('#goHome');if(gh)gh.onclick=()=>go('home');
+  const ao=$('#asOp');if(ao)ao.onclick=()=>{S.asOp=!S.asOp;renderTop();renderForm();refreshRecent();};
+}
+setInterval(()=>{
+  const t=new Date(),c=$('#clock');if(c)c.textContent=ymd(t)+' '+pad(t.getHours())+':'+pad(t.getMinutes());
+  const d=ymd(t);
+  if(d!==S.today){const od=S.today;S.today=d;if(S.view==='area'&&S.date===od&&!adminEff()){S.date=d;S.day=null;S.editKey=null;subDay();}}
+  if(S.view==='area'){
+    const a=area(S.areaId);
+    if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;
+    if(a&&!a.timed&&!adminEff()&&!S.dirty&&S.date===S.today&&S.lastHour!==nowH()){S.hour=nowH();S.lastHour=nowH();refreshStrip();renderForm();}
+    else{S.lastHour=nowH();refreshStrip();applyWindow();}
+    refreshRecent();
+  }
+  if(S.view==='admin'&&S.tab==='overview')paintTab();
+},10000);
+window.addEventListener('online',()=>{S.online=true;renderTop();});
+window.addEventListener('offline',()=>{S.online=false;renderTop();});
+
+/* ---------- navigation ---------- */
+function go(view,areaId,tab){
+  unsub('day');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');
+  S.view=view;S.areaId=areaId||null;
+  if(tab)S.tab=tab;
+  if(view==='area'){S.date=S.today;S.hour=nowH();S.lastHour=nowH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;lsSet('plant.view','area:'+areaId);}
+  if(view==='admin'){lsSet('plant.view','admin');}
+  renderTop();
+  if(view==='home')renderHome();
+  if(view==='area')renderArea();
+  if(view==='admin')renderAdmin();
+}
+
+/* ---------- home ---------- */
+function renderHome(){
+  const cards=S.cfg.areas.map(a=>'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+'</b><span class="muted">'+a.params.length+' readings every hour</span></button>').join('');
+  $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Choose this tablet’s area</h1><p class="muted" style="margin:6px 0 0">The tablet remembers the area and opens straight to it next time.</p></div>'+
+   (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
+   '<div class="areas">'+cards+(S.isAdmin?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
+  $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__admin')go('admin',null,'overview');else go('area',a);});
+}
+
+/* ---------- area entry screen ---------- */
+function renderArea(){
+  const a=area(S.areaId);if(!a){go('home');return;}
+  const legend=a.timed?'':'<div class="strip" id="strip" style="margin-top:12px"></div><div class="legend"><span><i style="background:var(--okbg);border-color:var(--ok)"></i>Logged</span><span><i style="background:var(--warnbg);border-color:var(--warn)"></i>Out of range</span><span><i style="background:var(--stopbg);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span></div>';
+  $('#main').innerHTML=
+   '<div class="card"><div class="row" style="justify-content:space-between"><div><h2>'+esc(a.name)+' · '+(a.timed?'timed entries':'hourly reading')+'</h2><div class="muted small" id="whenLine"></div></div>'+
+   '<div class="row">'+(S.isAdmin?'<label class="l" style="width:190px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+(a.timed&&S.isAdmin?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
+   '<form class="card" id="entry" autocomplete="off" novalidate></form>'+
+   '<div class="card"><h3>Entries on this date</h3><div id="recent" class="tscroll"></div></div>'+
+   '<details class="d" id="issueBox"><summary>Report a problem or breakdown</summary><div style="display:grid;gap:12px;margin-top:12px"><label class="l">Equipment<select id="isEq">'+a.equipment.map(e=>'<option>'+esc(e)+'</option>').join('')+'<option>Other</option></select></label>'+
+   '<label class="l">What is wrong?<textarea id="isTx" placeholder="Noise, leak, alarm, stoppage…"></textarea></label><div><button type="button" class="btn pri" id="isSend">Send to maintenance</button></div></div></details>';
+  if($('#fDate'))$('#fDate').onchange=e=>{const v=e.target.value;if(!v)return;S.date=v;S.day=null;S.editKey=null;if(v===S.today&&S.hour>nowH())S.hour=nowH();S.dirty=false;subDay();refreshStrip();renderForm();refreshRecent();};
+  if(a.timed&&S.isAdmin)$('#newEntry').onclick=()=>{S.editKey=null;S.dirty=false;renderForm();window.scrollTo({top:0,behavior:'smooth'});};
+  $('#isSend').onclick=sendIssue;
+  subDay();refreshStrip();renderForm();refreshRecent();
+}
+function subDay(){
+  if(!S.db)return;
+  const id=S.areaId+'_'+S.date;
+  resub('day',()=>S.db.doc('logs/'+id).onSnapshot(snap=>{
+    S.day=snap.exists?snap.data():{hours:{}};
+    refreshStrip();refreshRecent();
+    if(!S.dirty)renderForm(true);else updateEntryState();
+  },e=>toast(dbErr(e),true)));
+}
+function refreshStrip(){
+  const a=area(S.areaId),w=$('#whenLine');
+  if(a&&a.timed){if(w)w.textContent='The time is recorded automatically when you save · '+S.date;return;}
+  const el=$('#strip');if(!el)return;
+  const sel=S.hour;
+  let html='';
+  for(let h=0;h<24;h++){
+    const st=cellState(S.day,S.date,h,a);
+    html+='<button type="button" class="hb '+st+(st==='now'?' now':'')+(h===sel?' sel':'')+'" data-h="'+h+'"'+(st==='future'?' disabled':'')+' aria-label="'+hh(h)+' '+st+'">'+pad(h)+'<small>'+(st==='done'?'logged':st==='alarm'?'alarm':st==='stop'?'stopped':st==='part'?'partial':st==='miss'?'missed':st==='now'?'now':'')+'</small></button>';
+  }
+  el.innerHTML=html;
+  $$('.hb',el).forEach(b=>b.onclick=()=>{S.hour=Number(b.dataset.h);S.dirty=false;refreshStrip();renderForm();});
+  if(w)w.textContent='Shift '+shiftOf(S.hour)+' · '+hh(S.hour)+' – '+hh((S.hour+1)%24)+' · '+S.date;
+}
+async function sha(t){
+  try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}}catch(e){}
+  let h=5381;for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))>>>0;return 'x'+h.toString(16);
+}
+const hashPw=(salt,pw)=>sha(salt+'|'+pw);
+const newSalt=()=>{let o='';for(let i=0;i<4;i++)o+=Math.floor(Math.random()*65536).toString(16).padStart(4,'0');return o;};
+async function findOperator(pw){for(const o of S.ops){if(o.active===false||!o.hash)continue;if(await hashPw(o.salt,pw)===o.hash)return o;}return null;}
+function ask(o){
+  return new Promise(resolve=>{
+    const old=$('#dlg');if(old)old.remove();
+    const noOps=S.ops.filter(x=>x.active!==false).length===0;
+    const blocked=!!(o.leaderOnly&&noOps);
+    const w=document.createElement('div');w.id='dlg';w.className='ovl';
+    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dT"><h2 id="dT">'+esc(o.title||'Do you want to save?')+'</h2><p>'+esc(o.msg||'')+'</p>'+
+      (blocked?'<p class="status bad">No shift leader accounts exist yet. The admin adds them in Setup, Operators and passwords.</p>':'')+(o.pw&&!blocked?(noOps?'<p class="status warn">No operator passwords exist yet (Setup, Operators). Type your name to continue.</p><label class="l">Your name<input type="text" id="dName" autocomplete="off"></label>':'<label class="l">Operator password<input type="password" id="dPw" autocomplete="off"></label><div id="dWho" class="who" aria-live="polite"></div>'):'')+
+      '<div class="row" style="margin-top:6px"><button type="button" class="btn big" id="dNo">Cancel</button><button type="button" class="btn pri big" id="dYes"'+(o.pw?' disabled':'')+'>'+esc(o.ok||'Yes, save')+'</button></div>'+(o.pw&&adminEff()?'<button type="button" class="btn" id="dAdmin">Continue as Admin (no password)</button>':'')+'</div>';
+    document.body.appendChild(w);
+    let op=null;
+    const done=v=>{w.remove();document.removeEventListener('keydown',onKey);resolve(v);};
+    const yes=()=>done(o.pw?{name:noOps?$('#dName').value.trim():op.name,id:op?op.id:null,leader:!!(op&&op.leader)}:{});
+    const onKey=e=>{if(e.key==='Escape')done(null);if(e.key==='Enter'&&!$('#dYes').disabled){e.preventDefault();yes();}};
+    document.addEventListener('keydown',onKey);
+    $('#dNo').onclick=()=>done(null);$('#dYes').onclick=yes;
+    const da=$('#dAdmin');if(da)da.onclick=()=>done({name:'Admin',id:'admin',leader:true});
+    if(o.pw&&!blocked){
+      if(noOps){const n=$('#dName');n.oninput=()=>{$('#dYes').disabled=!n.value.trim();};n.focus();}
+      else{const p=$('#dPw');let seq=0;p.oninput=async()=>{const my=++seq;op=null;$('#dYes').disabled=true;const who=$('#dWho');who.textContent='';who.className='who';if(!p.value)return;const f=await findOperator(p.value);if(my!==seq)return;
+        if(f&&o.leaderOnly&&!f.leader){who.textContent='Not a shift leader password';who.className='who bad';}
+        else if(f){op=f;who.textContent='Signed in as '+f.name+(f.leader?' (shift leader)':'');who.className='who ok';$('#dYes').disabled=false;}else if(p.value.length>=4){who.textContent='Password not recognised';who.className='who bad';}};p.focus();}
+    }else $('#dYes').focus();
+  });
+}
+const adminEff=()=>S.isAdmin&&!S.asOp;
+const leaderActive=()=>!!(S.unlock&&S.unlock.exp>Date.now());
+const EDIT_MS=5*60e3;
+const editLeft=e=>(e&&e.at)?EDIT_MS-(Date.now()-new Date(e.at).getTime()):0;
+const left5=ms=>{const t=Math.max(0,Math.ceil(ms/1000)),m=Math.floor(t/60);return m+':'+pad(t%60);};
+const t12=m=>{const h=Math.floor(m/60);return ((h%12)||12)+':'+pad(m%60);};
+const winText=w=>w.map(x=>t12(x[0])+'–'+t12(x[1])+(x[1]/60<12?' AM':' PM')).join(', ');
+function winBase(a,date,h){
+  if(a.timed)return {open:true};
+  if(date>S.today||(date===S.today&&h>nowH()))return {open:false,why:'future'};
+  const m=new Date().getMinutes();
+  if(date===S.today&&h===nowH()&&m<20)return {open:true,left:20-m,closeAt:pad(h)+':20'};
+  return {open:false,why:'closed'};
+}
+function winInfo(a,date,h){
+  const b=winBase(a,date,h);
+  if(b.open||b.why==='future')return b;
+  if(adminEff()||leaderActive())return {open:true,override:true};
+  return b;
+}
+function fieldMode(p){
+  if(!p.win)return 'on';
+  const m=nowMin();
+  if(p.win.some(w=>m>=w[0]&&m<w[1]))return 'on';
+  return (adminEff()||leaderActive())?'leader':'locked';
+}
+function curEntry(a){return S.day&&S.day.hours?(a.timed?(S.editKey?S.day.hours[S.editKey]:null):S.day.hours[String(S.hour)]):null;}
+function perm(){
+  const a=area(S.areaId),e=curEntry(a),L=adminEff()||leaderActive();
+  if(!S.canWrite)return {can:false,cls:'bad',msg:'You can view this logbook but not save readings.'};
+  let normal;
+  if(!a.timed){
+    const b=winBase(a,S.date,S.hour);
+    if(b.why==='future')return {can:false,cls:'bad',msg:'This hour has not started yet.'};
+    if(e){const l=editLeft(e);normal=l>0?{can:true,cls:'ok',msg:'Saved by '+e.by+'. You can change it for '+left5(l)+' more.'}:{can:false,cls:'bad',lockable:true,msg:'Locked. Saved by '+e.by+'. Changes are allowed for 5 minutes after saving.'};}
+    else normal=b.open?{can:true,cls:'ok',msg:'Entry window open until '+b.closeAt+' ('+b.left+' min left).'}:{can:false,cls:'bad',lockable:true,msg:'Entry window closed. Hourly readings can only be entered in the first 20 minutes of the hour ('+pad(S.hour)+':00 to '+pad(S.hour)+':20).'};
+  }else{
+    if(e){const l=editLeft(e);normal=l>0?{can:true,cls:'ok',msg:'Saved by '+e.by+'. You can change it for '+left5(l)+' more.'}:{can:false,cls:'bad',lockable:true,msg:'Locked. Saved by '+e.by+'. Changes are allowed for 5 minutes after saving.'};}
+    else normal={can:true,cls:'',msg:'The time is recorded automatically when you press Save.'};
+  }
+  if(normal.can)return normal;
+  if(L)return {can:true,cls:'warn',msg:(adminEff()?'Admin':'Shift leader '+(S.unlock?S.unlock.name:''))+' override: this screen is open for changes.'};
+  return normal;
+}
+function authorize(a,e,who){
+  const L=adminEff()||leaderActive()||!!who.leader;
+  if(!a.timed){
+    const b=winBase(a,S.date,S.hour);if(b.why==='future')return false;
+    if(e)return L||(sameP(who,e)&&editLeft(e)>0);
+    return b.open||L;
+  }
+  if(e)return L||(sameP(who,e)&&editLeft(e)>0);
+  return true;
+}
+const sameP=(who,e)=>(who.id&&who.id===e.byId)||(!who.id&&!e.byId&&who.name===e.by);
+async function unlockLeader(){
+  const L=await ask({title:'Shift leader',msg:'Enter a shift leader password to unlock this screen for 10 minutes.',pw:true,leaderOnly:true,ok:'Unlock'});
+  if(!L)return false;
+  S.unlock={id:L.id,name:L.name,leader:true,exp:Date.now()+10*60e3};
+  applyWindow();refreshRecent();return true;
+}
+function applyWindow(){
+  const a=area(S.areaId);if(!a)return;
+  const msg=$('#winMsg'),fs=$('#fset'),btn=$('#fSave'),row=$('#lockRow');if(!msg)return;
+  const pm=perm();
+  msg.className='status '+(pm.cls||'');msg.textContent=pm.msg;
+  if(fs)fs.disabled=!pm.can;if(btn)btn.disabled=!pm.can;
+  let anyLocked=false;
+  if(pm.can)a.params.forEach(p=>{if(!p.win)return;const inp=ctl(p.id);if(!inp)return;const lab=inp.closest('.fld'),md=fieldMode(p),h=$('.hint',lab);
+    inp.disabled=(md==='locked');lab.classList.toggle('locked',md==='locked');lab.classList.toggle('lead',md==='leader');if(md==='locked')anyLocked=true;
+    if(h&&!lab.classList.contains('need'))h.textContent=md==='locked'?'Opens '+winText(p.win):md==='leader'?'Open for shift leader (optional)':'Open now until '+t12(p.win.find(w=>nowMin()>=w[0]&&nowMin()<w[1])[1])+' · '+winText(p.win);});
+  if(row){row.innerHTML=((!pm.can&&pm.lockable)||anyLocked)&&!adminEff()&&!leaderActive()?'<button type="button" class="btn" id="unlockBtn">Shift leader: unlock</button>':(leaderActive()?'<span class="chip warn">Unlocked by '+esc(S.unlock.name)+'</span>':'');const ub=$('#unlockBtn');if(ub)ub.onclick=unlockLeader;}
+}
+function evalCalc(expr,get){
+  let ok=true;
+  const t=String(expr).replace(/[A-Za-z_][A-Za-z_0-9]*/g,id=>{const v=get(id);if(v==null){ok=false;return '0';}return '('+v+')';});
+  if(!ok||!/^[0-9.+\-*\/() eE]*$/.test(t))return null;
+  try{const r=Function('"use strict";return ('+t+')')();return isFinite(r)?Math.round(r*100)/100:null;}catch(x){return null;}
+}
+const ctl=id=>$('input[data-p="'+id+'"],select[data-p="'+id+'"]');
+function fieldHTML(p,v){
+  const kind=p.kind||'num';
+  if(kind==='select'){
+    return '<label class="fld" data-p="'+esc(p.id)+'"><span class="fl">'+esc(p.label)+'</span><span class="ir"><select data-p="'+esc(p.id)+'" data-k="select" style="border:0;min-height:50px;font-size:20px;background:transparent"><option value="">Choose…</option>'+(p.options||[]).map(o=>'<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select></span><span class="hint">choose one</span></label>';
+  }
+  if(kind!=='num'){
+    return '<label class="fld" data-p="'+esc(p.id)+'"><span class="fl">'+esc(p.label)+'</span><span class="ir"><input type="'+(kind==='time'?'time':'text')+'" data-p="'+esc(p.id)+'" data-k="'+kind+'" value="'+(v==null?'':esc(v))+'" style="font-size:20px"><i>'+esc(p.unit)+'</i></span><span class="hint">'+(p.total?'hourly total':'optional')+'</span></label>';
+  }
+  const st=pState(p,v);
+  return '<label class="fld '+(st==='high'||st==='low'?st:'')+'" data-p="'+esc(p.id)+'"><span class="fl">'+esc(p.label)+'</span><span class="ir"><input type="number" inputmode="decimal" step="any" data-p="'+esc(p.id)+'" data-k="num"'+(p.calc?' data-calc="'+esc(p.calc)+'" readonly tabindex="-1"':'')+' value="'+(v==null?'':esc(v))+'"><i>'+esc(p.unit)+'</i></span><span class="hint">'+(p.calc?'calculated · ':'')+(st==='high'?'Above '+p.max+' '+esc(p.unit):st==='low'?'Below '+p.min+' '+esc(p.unit):esc(limitText(p)))+(p.total?' · hourly total':'')+'</span></label>';
+}
+function refreshCalcs(){
+  const get=id=>num((ctl(id)||{}).value);
+  $$('input[data-calc]').forEach(inp=>{const r=evalCalc(inp.dataset.calc,get);inp.value=r==null?'':r;markField(inp);});
+}
+function markField(t){
+  const p=area(S.areaId).params.find(x=>x.id===t.dataset.p);if(!p||(p.kind||'num')!=='num')return;
+  const st=pState(p,t.value),lab=t.closest('.fld');
+  lab.classList.toggle('high',st==='high');lab.classList.toggle('low',st==='low');
+  $('.hint',lab).textContent=(p.calc?'calculated · ':'')+(st==='high'?'Above '+p.max+' '+p.unit:st==='low'?'Below '+p.min+' '+p.unit:limitText(p))+(p.total?' · hourly total':'');
+}
+function renderForm(fromSnap){
+  const f=$('#entry');if(!f)return;
+  const a=area(S.areaId),timed=!!a.timed;
+  const e=S.day&&S.day.hours?(timed?(S.editKey?S.day.hours[S.editKey]:null):S.day.hours[String(S.hour)]):null;
+  const groups=[];a.params.forEach(p=>{let g=groups.find(x=>x.n===p.group);if(!g){g={n:p.group,ps:[]};groups.push(g);}g.ps.push(p);});
+  let html='<div id="winMsg" class="status"></div><div id="lockRow" class="row"></div><fieldset id="fset" class="plain">';
+  html+='<div class="status">Every reading must be filled before you can save.'+(a.noStatus?'':' If the line is stopped, choose Stopped and the readings can stay blank.')+'</div>';
+  groups.forEach(g=>{
+    html+='<fieldset class="grp"><legend>'+esc(g.n||'Readings')+'</legend><div class="fields">'+g.ps.map(p=>fieldHTML(p,e&&e.v?e.v[p.id]:null)).join('')+'</div></fieldset>';
+  });
+  const run=!e||e.run!==false;
+  if(!a.noStatus)html+='<fieldset class="grp"><legend>Line status'+(timed?'':' this hour')+'</legend><div class="seg"><label><input type="radio" name="run" value="1"'+(run?' checked':'')+'><span class="go">Running</span></label><label><input type="radio" name="run" value="0"'+(run?'':' checked')+'><span class="no">Stopped</span></label></div>'+
+   '<div class="fields" id="stopBox" style="margin-top:12px"'+(run?' hidden':'')+'><label class="l">Minutes stopped<input type="number" inputmode="numeric" min="0" max="'+(timed?720:60)+'" id="fDown" value="'+(e&&e.down!=null?e.down:(timed?30:60))+'"></label>'+
+   '<label class="l">Reason<select id="fWhy">'+REASONS.map(r=>'<option'+(e&&e.why===r?' selected':'')+'>'+r+'</option>').join('')+'</select></label>'+
+   '<label class="l">Stopped at<input type="time" id="fStopAt" value="'+esc(e&&e.stopAt||'')+'"></label><label class="l">Started again at<input type="time" id="fStartAt" value="'+esc(e&&e.startAt||'')+'"></label></div></fieldset>';
+  html+='<div class="fields"><label class="l">Crew<select id="fCrew">'+(S.cfg.crews||['A-B','B-C']).map(c=>'<option'+((e&&e.crew||lsGet('plant.crew'))===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></label>'+
+   '<label class="l" style="grid-column:1/-1">Notes<textarea id="fNote" placeholder="Anything unusual">'+esc(e&&e.note||'')+'</textarea></label></div></fieldset>'+
+   (S.canWrite?'':'<div class="status">You can view this logbook but not save readings. Ask the plant manager for contributor access.</div>')+
+   '<div class="row"><button class="btn pri big" type="submit" id="fSave">'+(timed?'Save entry':'Save '+hh(S.hour)+' reading')+'</button><span class="status" id="eState"></span></div>';
+  f.innerHTML=html;
+  S.dirty=false;
+  refreshCalcs();
+  f.oninput=ev=>{
+    S.dirty=true;
+    const t=ev.target,fl=t.closest&&t.closest('.fld');if(fl)fl.classList.remove('need');
+    if(t.dataset&&t.dataset.p&&t.dataset.k==='num'){markField(t);refreshCalcs();}
+  };
+  f.onchange=ev=>{if(ev.target.name==='run'){$('#stopBox').hidden=ev.target.value==='1';S.dirty=true;}else{S.dirty=true;const fl=ev.target.closest&&ev.target.closest('.fld');if(fl)fl.classList.remove('need');}};
+  f.onsubmit=ev=>{ev.preventDefault();saveEntry();};
+  updateEntryState();applyWindow();
+}
+function updateEntryState(){
+  const el=$('#eState');if(!el)return;
+  const a=area(S.areaId),timed=!!a.timed;
+  const e=S.day&&S.day.hours?(timed?(S.editKey?S.day.hours[S.editKey]:null):S.day.hours[String(S.hour)]):null;
+  if(!timed&&S.date===S.today&&S.hour>nowH())el.textContent='This hour has not started yet.';
+  else el.textContent=e?'Saved '+(e.at?new Date(e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')+' by '+(e.by||'?')+(e.late?' (late entry)':''):(timed?'New entry, not saved yet':'Not logged yet');
+}
+async function saveEntry(){
+  if(!S.db)return toast('No database connection.',true);
+  const a=area(S.areaId),timed=!!a.timed,btn=$('#fSave'),e0=curEntry(a);
+  const pm=perm();if(!pm.can){applyWindow();toast(pm.msg,true);return;}
+  refreshCalcs();
+  const run=a.noStatus?true:$('input[name=run]:checked').value==='1';
+  const mode=p=>p.win?fieldMode(p):'on';
+  if(run){
+    const missing=[];
+    a.params.forEach(p=>{const inp=ctl(p.id),md=mode(p),bad=md==='on'&&(inp.value||'').trim()==='';inp.closest('.fld').classList.toggle('need',bad);if(bad)missing.push(p.label);});
+    if(missing.length){toast(missing.length+' reading'+(missing.length>1?'s':'')+' still empty ('+missing.slice(0,3).join(', ')+(missing.length>3?', …':'')+'). Fill every open reading'+(a.noStatus?'':', or choose Stopped')+'.',true);const f1=$('.fld.need input,.fld.need select');if(f1){f1.focus();f1.scrollIntoView({block:'center',behavior:'smooth'});}return;}
+  }
+  const v={};let alarms=0,empty=0;
+  a.params.forEach(p=>{
+    if(mode(p)==='locked'){v[p.id]=null;return;}
+    const raw=ctl(p.id).value;
+    if((p.kind||'num')!=='num'){v[p.id]=(raw||'').trim()||null;return;}
+    const n=num(raw);v[p.id]=n;if(n==null){if(!p.win)empty++;}else if(pState(p,n)!=='ok')alarms++;});
+  const what=timed?(e0?'Save changes to this entry in '+a.name+'?':'Save a new entry in '+a.name+' now?'):a.name+' · '+hh(S.hour)+' reading on '+S.date+(e0?' (changes)':'');
+  let who;
+  if(leaderActive()){
+    const okc=await ask({title:'Do you want to save?',msg:what+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;
+    who={name:S.unlock.name,id:S.unlock.id,leader:true};
+  }else{
+    who=await ask({title:'Do you want to save?',msg:what,pw:true,ok:'Yes, save'});if(!who)return;
+  }
+  const e1=curEntry(a);
+  if(!authorize(a,e1,who)){applyWindow();toast(e1?'Only the operator who saved this entry (within 5 minutes) or a shift leader can change it.':'The entry window is closed. A shift leader can unlock it.',true);return;}
+  let key,min;
+  if(timed){
+    if(S.editKey){key=S.editKey;const c=key.charAt(0);min=c==='s'?Math.floor(Number(key.slice(1))/60):Number(key.slice(1));}
+    else{const d=new Date(),sec=d.getHours()*3600+d.getMinutes()*60+d.getSeconds();key='s'+sec;min=Math.floor(sec/60);}
+  }else{key=String(S.hour);min=S.hour*60;}
+  const nowIso=new Date().toISOString();
+  const base=winBase(a,S.date,S.hour);
+  const obj={v,run,down:run?0:Math.max(0,Math.min(timed?720:60,num($('#fDown')?$('#fDown').value:0)||0)),why:run?'':$('#fWhy').value,note:($('#fNote').value||'').trim(),crew:$('#fCrew').value,stopAt:run?'':($('#fStopAt')?$('#fStopAt').value:''),startAt:run?'':($('#fStartAt')?$('#fStartAt').value:''),alarms,empty};
+  if(e1){obj.by=e1.by;obj.byId=e1.byId||null;obj.at=e1.at;obj.editedAt=nowIso;obj.editedBy=who.name;obj.late=!!e1.late;}
+  else{obj.by=who.name;obj.byId=who.id||null;obj.at=nowIso;obj.late=!timed&&!base.open;}
+  btn.disabled=true;
+  try{
+    await writeEntry(S.areaId,S.date,key,obj,null);
+    lsSet('plant.crew',$('#fCrew').value);S.dirty=false;
+    toast((timed?hm(min):hh(S.hour))+(e1?' changed by ':' saved by ')+who.name+(alarms?' · '+alarms+' reading'+(alarms>1?'s':'')+' out of range':''));
+    S.unlock=null;
+    if(timed){S.editKey=null;renderForm();}
+  }catch(e){toast(dbErr(e),true);}
+  btn.disabled=false;applyWindow();
+}
+async function writeEntry(areaId,date,key,obj,oldKey){
+  const ref=S.db.doc('logs/'+areaId+'_'+date);
+  const hrs={[key]:obj};if(oldKey)hrs[oldKey]=null;
+  const body={area:areaId,date:date,hours:hrs};
+  try{await ref.update(body);}catch(e){if(e&&e.code==='invalid_argument'){await ref.set({area:areaId,date:date,hours:{[key]:obj}});}else throw e;}
+}
+function refreshRecent(){
+  const el=$('#recent');if(!el)return;
+  const a=area(S.areaId),es=entries(S.day).reverse();
+  if(!es.length){el.innerHTML='<div class="empty">No readings saved for '+S.date+' yet. Fill in the form above and press Save.</div>';return;}
+  const chip=e=>editLeft(e)>0?' <span class="chip ok">editable '+left5(editLeft(e))+'</span>':'';
+  if(a.timed){
+    el.innerHTML='<table><thead><tr><th>Time</th><th>Operator</th>'+a.params.map(p=>'<th>'+esc(p.label)+'</th>').join('')+'<th>Notes</th></tr></thead><tbody>'+es.map(x=>{const e=x.e;
+      return '<tr class="clk" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td>'+esc(e.by)+chip(e)+(e.editedBy?'<div class="muted small">edited by '+esc(e.editedBy)+'</div>':'')+'</td>'+a.params.map(p=>{const v=e.v&&e.v[p.id];return '<td class="mono">'+((p.kind||'num')==='num'?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&(p.kind||'num')==='num'?' <span class="muted">'+esc(p.unit)+'</span>':'')+'</td>';}).join('')+'<td>'+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table><p class="muted small">Tap a row to open it. Operators can change their own entry for 5 minutes after saving; a shift leader can change any entry.</p>';
+  }else{
+    el.innerHTML='<table><thead><tr><th>Hour</th><th>Operator</th><th>Line</th><th class="n">Out of range</th><th>Notes</th></tr></thead><tbody>'+es.map(x=>{const e=x.e;
+      return '<tr class="clk" data-h="'+x.h+'"><td class="mono">'+hh(x.h)+'</td><td>'+esc(e.by)+chip(e)+'</td><td>'+(e.run===false?'<span class="chip">Stopped '+(e.down||0)+' min</span>':'<span class="chip ok">Running</span>')+'</td><td class="n mono">'+(e.alarms?'<span class="chip warn">'+e.alarms+'</span>':'0')+'</td><td>'+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table>';
+  }
+  $$('tr.clk',el).forEach(r=>r.onclick=()=>{if(a.timed)S.editKey=r.dataset.k;else S.hour=Number(r.dataset.h);S.dirty=false;refreshStrip();renderForm();window.scrollTo({top:0,behavior:'smooth'});});
+}
+async function sendIssue(){
+  const tx=($('#isTx').value||'').trim();if(!tx){toast('Describe the problem first.',true);return;}
+  const who=await ask({title:'Send this problem report?',msg:$('#isEq').value+': '+tx,pw:true,ok:'Yes, send'});if(!who)return;
+  try{
+    await S.db.collection('issues').add({area:S.areaId,equipment:$('#isEq').value,text:tx,by:who.name,ts:new Date().toISOString(),status:'open'});
+    $('#isTx').value='';$('#issueBox').open=false;toast('Sent to maintenance.');
+  }catch(e){toast(dbErr(e),true);}
+}
+/* ---------- control room ---------- */
+const TABS=[['overview','Overview'],['trends','Trends & export'],['maint','Maintenance'],['issues','Problems'],['setup','Setup']];
+function renderAdmin(){
+  if(!S.isAdmin){go('home');return;}
+  $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+'</button>').join('')+'</div><div id="tab"></div>';
+  $$('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;S.setupEditing=false;$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));buildTab();});
+  subAdmin();buildTab();
+}
+function subAdmin(){
+  const from=addDays(S.today,-6);
+  resub('logs',()=>S.db.collection('logs').where('date','>=',from).limit(200).onSnapshot(snap=>{
+    const m={};snap.docs.forEach(d=>{m[d.id]=d.data();});S.logs=m;paintTab();},e=>toast(dbErr(e),true)));
+  resub('issues',()=>S.db.collection('issues').orderBy('ts','desc').limit(80).onSnapshot(snap=>{
+    S.issues=snap.docs.map(d=>Object.assign({id:d.id},d.data()));paintBadge();if(S.tab==='issues'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
+  resub('tasks',()=>S.db.collection('maint_tasks').onSnapshot(snap=>{
+    S.tasks=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+    const sig=S.tasks.map(t=>t.id+t.lastDone+t.lastHour).join('|');
+    if(sig!==S.pmSig){S.pmSig=sig;loadPM();}
+    if(S.tab==='maint'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
+  resub('hist',()=>S.db.collection('maint_history').orderBy('at','desc').limit(15).onSnapshot(snap=>{
+    S.hist=snap.docs.map(d=>d.data());if(S.tab==='maint')paintTab();},e=>toast(dbErr(e),true)));
+}
+function paintBadge(){const b=$('#issBadge');if(!b)return;const n=S.issues.filter(i=>i.status==='open').length;b.hidden=!n;b.textContent=n;}
+async function loadPM(){
+  if(!S.db||!S.tasks.length){S.mlogs={};paintTab();return;}
+  const min=S.tasks.map(t=>t.lastDone||S.today).sort()[0];
+  try{
+    const snap=await S.db.collection('logs').where('date','>=',min).limit(1000).get();
+    const m={};snap.docs.forEach(d=>{m[d.id]=d.data();});S.mlogs=m;S.mTrunc=snap.size>=1000;
+  }catch(e){toast(dbErr(e),true);}
+  paintTab();
+}
+function buildTab(){
+  const t=$('#tab');if(!t)return;
+  if(S.tab==='overview')t.innerHTML='<div class="ctlrow" style="margin-bottom:12px"><label class="l">Date<input type="date" id="ovDate" value="'+S.ovDate+'" min="'+addDays(S.today,-6)+'" max="'+S.today+'"></label><button class="btn" id="ovToday">Today</button></div><div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
+  if(S.tab==='trends')t.innerHTML=trendShell();
+  if(S.tab==='maint')t.innerHTML=maintShell();
+  if(S.tab==='issues')t.innerHTML='<div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
+  if(S.tab==='setup')t.innerHTML=setupShell();
+  bindTab();paintTab();paintBadge();
+}
+function paintTab(){
+  if(S.view!=='admin'||!$('#tab'))return;
+  if(S.tab==='overview')paintOverview();
+  if(S.tab==='trends')paintTrend();
+  if(S.tab==='maint')paintMaint();
+  if(S.tab==='issues')paintIssues();
+}
+function bindTab(){
+  if(S.tab==='overview'){
+    $('#ovDate').onchange=e=>{if(e.target.value){S.ovDate=e.target.value;S.sel=null;paintTab();}};
+    $('#ovToday').onclick=()=>{S.ovDate=S.today;$('#ovDate').value=S.today;S.sel=null;paintTab();};
+  }
+  if(S.tab==='trends')bindTrend();
+  if(S.tab==='maint')bindMaint();
+  if(S.tab==='setup')bindSetup();
+}
+
+/* ---- overview ---- */
+function dayStats(a,date){
+  const doc=S.logs[a.id+'_'+date],es=entries(doc);
+  if(a.timed){
+    let down=0,alarms=0,due=0,missed=0;const runH={};
+    es.forEach(x=>{if(x.e.run===false)down+=x.e.down||0;else runH[x.h]=1;alarms+=x.e.alarms||0;});
+    if(a.every==='shift')shiftWindows(date).forEach(w=>{if(!w.ended)return;due++;if(!es.some(x=>w.segs.some(sg=>x.min>=sg[0]&&x.min<sg[1])))missed++;});
+    return {logged:es.length,missed,run:Object.keys(runH).length,down,alarms,due,timed:true};
+  }
+  const hrs={};es.forEach(x=>{hrs[x.h]=x.e;});
+  const lastDue=date<S.today?23:(date===S.today?nowH()-1:-1);
+  let logged=0,missed=0,run=0,down=0,alarms=0,due=0;
+  for(let h=0;h<24;h++){const e=hrs[h];if(e){logged++;if(e.run===false)down+=(e.down||0);else run++;alarms+=e.alarms||0;}
+    if(h<=lastDue){due++;if(!e)missed++;}}
+  return {logged,missed,run,down,alarms,due};
+}
+function paintOverview(){
+  const body=$('#body');if(!body)return;
+  const date=S.ovDate,areas=S.cfg.areas;
+  const st=areas.map(a=>dayStats(a,date));
+  const sum=k=>st.reduce((s,x)=>s+x[k],0);
+  const due=sum('due'),missed=sum('missed');
+  const onTime=due?Math.round((1-missed/due)*100):100;
+  const open=S.issues.filter(i=>i.status==='open').length;
+  const pm=S.tasks.map(pmState),pmDue=pm.filter(x=>x.status!=='ok').length;
+  let html='<div class="kpis"><div class="kpi'+(onTime<90?' warn':'')+'"><b>'+onTime+'%</b><span>Hours logged on time</span></div>'+
+   '<div class="kpi"><b>'+sum('run')+'</b><span>Line running hours</span></div>'+
+   '<div class="kpi'+(sum('down')?' warn':'')+'"><b>'+sum('down')+'</b><span>Downtime minutes</span></div>'+
+   '<div class="kpi'+(sum('alarms')?' warn':'')+'"><b>'+sum('alarms')+'</b><span>Readings out of range</span></div>'+
+   '<div class="kpi'+(open?' bad':'')+'"><b>'+open+'</b><span>Open problems</span></div>'+
+   '<div class="kpi'+(pmDue?' bad':'')+'"><b>'+pmDue+'</b><span>Maintenance due</span></div></div>';
+  html+='<section class="card"><h2>Hour by hour · '+date+'</h2><div class="hscroll"><div class="hg"><div class="hrow"><span></span><div class="hcells">'+Array.from({length:24},(_,h)=>'<span class="hlab">'+pad(h)+'</span>').join('')+'</div><span></span></div>';
+  areas.forEach((a,i)=>{
+    const doc=S.logs[a.id+'_'+date];
+    let cells='';for(let h=0;h<24;h++){const c=cellState(doc,date,h,a);cells+='<button class="cell '+(c==='now'?'':c)+(S.sel&&S.sel.area===a.id&&S.sel.hour===h?' sel':'')+'" data-a="'+esc(a.id)+'" data-h="'+h+'" title="'+esc(a.name)+' '+hh(h)+' · '+c+'"'+(c==='future'?' disabled':'')+'></button>';}
+    const x=st[i];
+    html+='<div class="hrow"><span class="hname">'+esc(a.name)+'</span><div class="hcells">'+cells+'</div><span class="hsum mono">'+(x.timed?x.logged+' entries'+(x.due?' · '+(x.due-x.missed)+'/'+x.due+' shifts covered':''):x.logged+'/'+(x.due||'–')+' logged')+' · run '+x.run+' h<br>down '+x.down+' min'+(x.missed?' · <b style="color:var(--bad)">'+x.missed+' missed</b>':'')+'</span></div>';
+  });
+  html+='</div></div><div class="legend"><span><i style="background:var(--ok);border-color:var(--ok)"></i>Logged</span><span><i style="background:var(--warn);border-color:var(--warn)"></i>Out of range</span><span><i style="background:var(--stop);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--okbg);border-style:dashed;border-color:var(--ok)"></i>Partial</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span><span><i></i>Not due (timed areas: lab, RO, packaging)</span></div></section>';
+  html+=detailHTML();
+  html+='<div class="two"><section class="card"><h3>Watch list · last 24 hours</h3>'+watchHTML()+'</section><section class="card"><h3>Production totals · '+date+'</h3>'+totalsHTML(date)+'</section></div>';
+  body.innerHTML=html;
+  $$('.cell',body).forEach(b=>b.onclick=()=>{S.sel={area:b.dataset.a,date:date,hour:Number(b.dataset.h)};paintOverview();});
+}
+function detailHTML(){
+  if(!S.sel)return '<section class="card"><div class="empty">Select an hour in the grid to see the readings logged for it.</div></section>';
+  const a=area(S.sel.area),doc=S.logs[S.sel.area+'_'+S.sel.date],es=entries(doc).filter(x=>x.h===S.sel.hour);
+  const head='<h2>'+esc(a.name)+' · '+hh(S.sel.hour)+' · '+S.sel.date+'</h2>';
+  if(!es.length)return '<section class="card">'+head+'<div class="empty">No reading was logged in this hour.</div></section>';
+  return '<section class="card">'+head+es.map(x=>{const e=x.e;
+   const cells=a.params.map(p=>{const v=e.v&&e.v[p.id],st=pState(p,v),isNum=(p.kind||'num')==='num',hi=st==='high'||st==='low';
+     return '<div class="'+(hi?'hi':v==null?'empty0':'')+'"><small>'+esc(p.label)+'</small><b>'+(isNum?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&isNum?' <span class="muted" style="font-size:12px">'+esc(p.unit)+'</span>':'')+(hi?' <span class="chip warn">'+(st==='high'?'High':'Low')+'</span>':'')+'</b></div>';}).join('');
+   return '<div class="ent"><div class="row small" style="gap:10px"><b class="mono" style="font-size:15px">'+hm(x.min)+'</b><span class="muted">Shift '+esc(shiftOf(x.h))+'</span><span><b>'+esc(e.by)+'</b>'+(e.crew?' · '+esc(e.crew):'')+'</span>'+(e.run===false?'<span class="chip">Stopped '+(e.down||0)+' min · '+esc(e.why)+'</span>':'')+(e.late?'<span class="chip warn">Late entry</span>':'')+(e.editedBy?'<span class="chip">edited by '+esc(e.editedBy)+'</span>':'')+(e.note?'<span class="muted">“'+esc(e.note)+'”</span>':'')+'</div><div class="vals">'+cells+'</div></div>';}).join('')+'</section>';
+}
+function watchHTML(){
+  const cut=Date.now()-24*3600e3,out=[];
+  S.cfg.areas.forEach(a=>{
+    const cnt={};
+    Object.keys(S.logs).forEach(id=>{const d=S.logs[id];if(d.area!==a.id)return;entries(d).forEach(x=>{if(entTime(d.date,x.min)<cut)return;a.params.forEach(p=>{const s=pState(p,x.e.v&&x.e.v[p.id]);if(s==='high'||s==='low'){cnt[p.id]=cnt[p.id]||{n:0,s:s};cnt[p.id].n++;}});});});
+    a.params.forEach(p=>{if(cnt[p.id]&&cnt[p.id].n>=2)out.push({a:a.name,p:p.label,n:cnt[p.id].n,s:cnt[p.id].s});});
+  });
+  if(!out.length)return '<div class="empty">No reading has been out of range twice or more in the last 24 hours.</div>';
+  return '<table><tbody>'+out.sort((x,y)=>y.n-x.n).map(o=>'<tr><td>'+esc(o.p)+'<div class="muted small">'+esc(o.a)+'</div></td><td class="n"><span class="chip warn">'+o.n+'× '+(o.s==='high'?'high':'low')+'</span></td></tr>').join('')+'</tbody></table><p class="muted small">Repeated drift is an early sign for preventive maintenance on that equipment.</p>';
+}
+function totalsHTML(date){
+  const out=[];
+  S.cfg.areas.forEach(a=>{
+    const ps=a.params.filter(p=>p.total&&(p.kind||'num')==='num');if(!ps.length)return;
+    const doc=S.logs[a.id+'_'+date],tot={};
+    entries(doc).forEach(x=>ps.forEach(p=>{const v=num(x.e.v&&x.e.v[p.id]);if(v!=null)tot[p.id]=(tot[p.id]||0)+v;}));
+    let rows=ps.map(p=>'<tr><td>'+esc(p.label)+'</td><td class="n mono">'+fmtN(tot[p.id]||0)+' <span class="muted">'+esc(p.unit)+'</span></td></tr>').join('');
+    if(tot.film_used&&tot.film_waste!=null)rows+='<tr><td><b>Film wastage rate</b></td><td class="n mono"><b>'+(tot.film_waste/tot.film_used*100).toFixed(1)+' %</b></td></tr>';
+    out.push('<h3 style="margin:4px 0">'+esc(a.name)+'</h3><table><tbody>'+rows+'</tbody></table>');
+  });
+  return out.length?out.join(''):'<div class="empty">Mark readings as a total (Σ) in Setup to see daily totals here.</div>';
+}
+
+/* ---- trends & export ---- */
+function trendShell(){
+  const a=S.cfg.areas;if(!area(S.trend.area))S.trend.area=a[0].id;
+  const ar=area(S.trend.area);if(!numParams(ar).find(p=>p.id===S.trend.param))S.trend.param=numParams(ar)[0].id;
+  return '<section class="card"><div class="ctlrow"><label class="l">Area<select id="trA">'+a.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===S.trend.area?' selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'+
+   '<label class="l">Reading<select id="trP"></select></label><label class="l">Period<select id="trD">'+[1,3,7].map(d=>'<option value="'+d+'"'+(d===S.trend.days?' selected':'')+'>Last '+d+(d>1?' days':' day')+'</option>').join('')+'</select></label></div><div id="chartBody" style="margin-top:14px"></div></section>'+
+   '<section class="card"><h2>Export hourly data (CSV)</h2><div class="ctlrow"><label class="l">Area<select id="exA">'+a.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('')+'</select></label>'+
+   '<label class="l">From<input type="date" id="exF" value="'+addDays(S.today,-6)+'"></label><label class="l">To<input type="date" id="exT" value="'+S.today+'"></label><button class="btn pri" id="exGo">Download CSV</button></div><p class="muted small" id="exMsg">Opens in Excel. One row per hour, one column per reading.</p></section>';
+}
+function numParams(a){return a.params.filter(p=>(p.kind||'num')==='num');}
+function fillTrendParams(){
+  const ar=area(S.trend.area);$('#trP').innerHTML=numParams(ar).map(p=>'<option value="'+esc(p.id)+'"'+(p.id===S.trend.param?' selected':'')+'>'+esc(p.label)+' ('+esc(p.unit)+')</option>').join('');
+}
+function bindTrend(){
+  fillTrendParams();
+  $('#trA').onchange=e=>{S.trend.area=e.target.value;S.trend.param=numParams(area(S.trend.area))[0].id;fillTrendParams();paintTrend();};
+  $('#trP').onchange=e=>{S.trend.param=e.target.value;paintTrend();};
+  $('#trD').onchange=e=>{S.trend.days=Number(e.target.value);paintTrend();};
+  $('#exGo').onclick=exportCsv;
+}
+function paintTrend(){
+  const el=$('#chartBody');if(!el)return;
+  const ar=area(S.trend.area),p=ar&&ar.params.find(x=>x.id===S.trend.param);if(!p)return;
+  const days=S.trend.days,endT=Date.now(),startD=addDays(S.today,-(days-1)),startT=parseYmd(startD).getTime();
+  const pts=[];
+  Object.keys(S.logs).forEach(id=>{const d=S.logs[id];if(d.area!==ar.id||d.date<startD)return;entries(d).forEach(x=>{const v=num(x.e.v&&x.e.v[p.id]);if(v==null)return;pts.push({t:entTime(d.date,x.min),v});});});
+  pts.sort((a,b)=>a.t-b.t);
+  if(!pts.length){el.innerHTML='<div class="empty">No “'+esc(p.label)+'” readings in this period yet.</div>';return;}
+  const vs=pts.map(x=>x.v);let lo=Math.min.apply(null,vs),hi=Math.max.apply(null,vs);
+  if(p.min!=null)lo=Math.min(lo,p.min);if(p.max!=null)hi=Math.max(hi,p.max);
+  if(lo===hi){lo-=1;hi+=1;}const padY=(hi-lo)*0.08;lo-=padY;hi+=padY;
+  const W=860,H=300,L=56,R=14,T=14,B=34,pw=W-L-R,ph=H-T-B;
+  const X=t=>L+(t-startT)/(endT-startT)*pw,Y=v=>T+(1-(v-lo)/(hi-lo))*ph;
+  let g='';for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);g+='<line class="grid" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+fmtN(v)+'</text>';}
+  if(days===1){for(let h=0;h<=24;h+=3){const t=startT+h*3600e3;if(t>endT)break;g+='<text x="'+X(t)+'" y="'+(H-10)+'" text-anchor="middle">'+pad(h%24)+':00</text>';}}
+  else for(let d=0;d<days;d++){const t=startT+d*864e5,q=new Date(t);g+='<line class="grid" x1="'+X(t)+'" x2="'+X(t)+'" y1="'+T+'" y2="'+(T+ph)+'"/><text x="'+(X(t)+4)+'" y="'+(H-10)+'">'+DOW[q.getDay()]+' '+q.getDate()+'</text>';}
+  let band='';if(p.min!=null&&p.max!=null)band='<rect class="band" x="'+L+'" y="'+Y(p.max)+'" width="'+pw+'" height="'+(Y(p.min)-Y(p.max))+'"/>';
+  let lim='';if(p.max!=null)lim+='<line class="lim" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(p.max)+'" y2="'+Y(p.max)+'"/>';if(p.min!=null)lim+='<line class="lim" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(p.min)+'" y2="'+Y(p.min)+'"/>';
+  let path='',prev=null;pts.forEach(q=>{path+=(prev&&q.t-prev<2.5*3600e3?'L':'M')+X(q.t).toFixed(1)+' '+Y(q.v).toFixed(1)+' ';prev=q.t;});
+  const dots=pts.map(q=>'<circle class="pt'+(pState(p,q.v)==='ok'?'':' x')+'" cx="'+X(q.t).toFixed(1)+'" cy="'+Y(q.v).toFixed(1)+'" r="3.5"/>').join('');
+  const out=pts.filter(q=>pState(p,q.v)!=='ok').length,avg=vs.reduce((a,b)=>a+b,0)/vs.length,last=pts[pts.length-1];
+  el.innerHTML='<div class="row small" style="margin-bottom:8px"><span class="chip acc">Last '+fmtN(last.v)+' '+esc(p.unit)+'</span><span class="chip">Avg '+fmtN(avg)+'</span><span class="chip">Min '+fmtN(Math.min.apply(null,vs))+'</span><span class="chip">Max '+fmtN(Math.max.apply(null,vs))+'</span><span class="chip '+(out?'warn':'ok')+'">'+out+' out of range</span><span class="muted">Limits: '+esc(limitText(p))+'</span></div>'+
+   '<svg class="ch" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+esc(p.label)+' trend">'+band+g+lim+'<path class="ln" d="'+path+'"/>'+dots+'</svg>';
+}
+async function exportCsv(){
+  const msg=$('#exMsg'),ar=area($('#exA').value),f=$('#exF').value,t=$('#exT').value;
+  if(!f||!t||f>t){msg.textContent='Choose a valid date range.';return;}
+  msg.textContent='Collecting data…';
+  try{
+    const snap=await S.db.collection('logs').where('date','>=',f).where('date','<=',t).limit(1000).get();
+    const docs=snap.docs.map(d=>d.data()).filter(d=>d.area===ar.id).sort((a,b)=>a.date<b.date?-1:1);
+    const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+    const head=['Date','Time','Shift','Crew','Operator','Running','Downtime min','Downtime reason'].concat(ar.params.map(p=>p.label+' ('+p.unit+')'),['Out of range','Late entry','Notes']);
+    const rows=[head.map(q).join(',')];let n=0;
+    docs.forEach(d=>entries(d).forEach(x=>{const e=x.e;n++;
+      rows.push([d.date,hm(x.min),shiftOf(x.h),e.crew||'',e.by,e.run===false?'No':'Yes',e.down||0,e.why||''].concat(ar.params.map(p=>e.v&&e.v[p.id]!=null?e.v[p.id]:''),[e.alarms||0,e.late?'Yes':'',e.note||'']).map(q).join(','));}));
+    if(!n){msg.textContent='No readings for that area and period.';return;}
+    const dl=await window.claude.use('downloads');
+    if(!dl){msg.textContent='Download is not available in this view.';return;}
+    await dl.save({filename:ar.id+'_'+f+'_to_'+t+'.csv',data:'﻿'+rows.join('\r\n')});
+    msg.textContent=n+' rows exported.';
+  }catch(e){msg.textContent=(e&&e.code==='declined')?'Download cancelled.':dbErr(e);}
+}
+
+/* ---- maintenance ---- */
+function allLogs(){return Object.assign({},S.mlogs,S.logs);}
+function pmState(t){
+  const base=(t.lastDone||S.today)+pad(t.lastHour||0),logs=allLogs();let hrs=0;
+  Object.keys(logs).forEach(id=>{const d=logs[id];if(d.area!==t.area)return;const seen={};entries(d).forEach(x=>{const kk=d.date+pad(x.h);if(kk>=base&&x.e.run===true&&!seen[kk]){seen[kk]=1;hrs++;}});});
+  const days=daysBetween(t.lastDone||S.today,S.today);
+  const rh=t.intervalHours>0?hrs/t.intervalHours:0,rd=t.intervalDays>0?days/t.intervalDays:0,r=Math.max(rh,rd);
+  return {hrs,days,r,status:r>=1?'overdue':r>=0.9?'soon':'ok'};
+}
+function maintShell(){
+  const a=S.cfg.areas;
+  return '<details class="d" id="mtForm"><summary id="mtSum">Add maintenance task</summary><div style="display:grid;gap:12px;margin-top:12px"><div class="ctlrow"><label class="l" style="flex:2 1 260px">Task<input type="text" id="mtName" placeholder="e.g. Vacuum pump oil change"></label>'+
+   '<label class="l">Area<select id="mtArea">'+a.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('')+'</select></label><label class="l">Equipment<select id="mtEq"></select></label>'+
+   '<label class="l">Every (running hours)<input type="number" id="mtH" min="0" placeholder="0 = not by hours"></label><label class="l">Every (days)<input type="number" id="mtD" min="0" placeholder="0 = not by days"></label></div>'+
+   '<div class="row"><button class="btn pri" id="mtSave">Save task</button><button class="btn" id="mtCancel" hidden>Cancel edit</button></div></div></details><div id="mtBody" style="display:flex;flex-direction:column;gap:16px"></div>';
+}
+function fillMtEq(sel){const ar=area($('#mtArea').value);$('#mtEq').innerHTML=ar.equipment.concat(['General']).map(e=>'<option'+(e===sel?' selected':'')+'>'+esc(e)+'</option>').join('');}
+function bindMaint(){
+  fillMtEq();$('#mtArea').onchange=()=>fillMtEq();
+  $('#mtSave').onclick=saveTask;$('#mtCancel').onclick=()=>{S.editTask=null;resetTaskForm();};
+}
+function resetTaskForm(){$('#mtName').value='';$('#mtH').value='';$('#mtD').value='';$('#mtSum').textContent='Add maintenance task';$('#mtCancel').hidden=true;$('#mtForm').open=false;}
+async function saveTask(){
+  const name=$('#mtName').value.trim(),h=Number($('#mtH').value)||0,d=Number($('#mtD').value)||0;
+  if(!name){toast('Name the task first.',true);return;}
+  if(!h&&!d){toast('Set an interval in running hours, days, or both.',true);return;}
+  const data={name,area:$('#mtArea').value,equipment:$('#mtEq').value,intervalHours:h,intervalDays:d};
+  if(!await ask({title:'Do you want to save?',msg:'Maintenance task: '+name,ok:'Yes, save'}))return;
+  try{
+    if(S.editTask)await S.db.doc('maint_tasks/'+S.editTask).update(data);
+    else await S.db.collection('maint_tasks').add(Object.assign(data,{lastDone:S.today,lastHour:nowH(),doneBy:'Start of tracking'}));
+    S.editTask=null;resetTaskForm();toast('Task saved.');
+  }catch(e){toast(dbErr(e),true);}
+}
+function paintMaint(){
+  const el=$('#mtBody');if(!el)return;
+  if(!S.tasks.length){el.innerHTML='<div class="empty">No maintenance tasks yet. Add the first one above. Each task counts running hours from the hourly logs and days from the last service.</div>';return;}
+  const rows=S.tasks.map(t=>Object.assign({t},pmState(t))).sort((a,b)=>b.r-a.r);
+  el.innerHTML=(S.mTrunc?'<div class="status">Running hours are counted from the latest 1000 daily records; older history is not included.</div>':'')+'<section class="card"><h2>Preventive maintenance schedule</h2><div class="tscroll"><table><thead><tr><th>Task</th><th>Progress</th><th>Last done</th><th>Status</th><th></th></tr></thead><tbody>'+rows.map(x=>{
+    const t=x.t,a=area(t.area),pc=Math.min(100,Math.round(x.r*100));
+    const parts=[];if(t.intervalHours>0)parts.push(x.hrs+' / '+t.intervalHours+' h');if(t.intervalDays>0)parts.push(x.days+' / '+t.intervalDays+' days');
+    return '<tr><td><b>'+esc(t.name)+'</b><div class="muted small">'+esc(a?a.name:t.area)+' · '+esc(t.equipment)+'</div></td><td style="min-width:170px"><div class="bartrack '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'')+'"><div style="width:'+pc+'%"></div></div><div class="mono small muted">'+parts.join(' · ')+'</div></td><td class="small">'+esc(t.lastDone)+' '+pad(t.lastHour||0)+':00<div class="muted">'+esc(t.doneBy||'')+'</div></td><td><span class="chip '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'ok')+'">'+(x.status==='overdue'?'Overdue':x.status==='soon'?'Due soon':'OK')+'</span></td>'+
+     '<td style="white-space:nowrap"><button class="btn sm pri" data-act="done" data-id="'+esc(t.id)+'">Mark done</button> <button class="btn sm" data-act="edit" data-id="'+esc(t.id)+'">Edit</button> <button class="btn sm bad" data-act="del" data-id="'+esc(t.id)+'">Delete</button></td></tr>';}).join('')+'</tbody></table></div></section>'+
+   '<section class="card"><h3>Recent maintenance done</h3>'+(S.hist.length?'<table><tbody>'+S.hist.map(h=>'<tr><td class="mono small">'+esc(h.date)+' '+pad(h.hour||0)+':00</td><td>'+esc(h.name)+'</td><td class="muted">'+esc(h.by)+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">Nothing recorded yet.</div>')+'</section>';
+  $$('button[data-act]',el).forEach(b=>b.onclick=()=>taskAct(b));
+}
+let delArm=null;
+async function taskAct(b){
+  const id=b.dataset.id,t=S.tasks.find(x=>x.id===id);if(!t)return;
+  try{
+    if(b.dataset.act==='done'){
+      if(!await ask({title:'Mark as done?',msg:t.name+' will restart its counters now.',ok:'Yes, mark done'}))return;
+      const by='Admin';
+      await S.db.doc('maint_tasks/'+id).update({lastDone:S.today,lastHour:nowH(),doneBy:by});
+      await S.db.collection('maint_history').add({taskId:id,name:t.name,area:t.area,date:S.today,hour:nowH(),by:by,at:new Date().toISOString()});
+      toast('Marked done.');
+    }else if(b.dataset.act==='edit'){
+      S.editTask=id;$('#mtForm').open=true;$('#mtSum').textContent='Edit task';$('#mtName').value=t.name;$('#mtArea').value=t.area;fillMtEq(t.equipment);$('#mtH').value=t.intervalHours||'';$('#mtD').value=t.intervalDays||'';$('#mtCancel').hidden=false;window.scrollTo({top:0,behavior:'smooth'});
+    }else if(b.dataset.act==='del'){
+      if(!await ask({title:'Delete this task?',msg:t.name,ok:'Yes, delete'}))return;
+      await S.db.doc('maint_tasks/'+id).delete();toast('Task deleted.');
+    }
+  }catch(e){toast(dbErr(e),true);}
+}
+
+/* ---- problems ---- */
+function paintIssues(){
+  const el=$('#body');if(!el)return;
+  const open=S.issues.filter(i=>i.status==='open'),closed=S.issues.filter(i=>i.status!=='open').slice(0,10);
+  const row=(i,o)=>{const a=area(i.area);return '<tr><td class="mono small">'+esc((i.ts||'').slice(0,16).replace('T',' '))+'</td><td><b>'+esc(a?a.name:i.area)+'</b><div class="muted small">'+esc(i.equipment)+'</div></td><td>'+esc(i.text)+'<div class="muted small">Reported by '+esc(i.by)+'</div></td><td>'+(o?'<button class="btn sm pri" data-id="'+esc(i.id)+'">Close</button>':'<span class="chip ok">Closed</span>')+'</td></tr>';};
+  el.innerHTML='<section class="card"><h2>Open problems</h2>'+(open.length?'<div class="tscroll"><table><tbody>'+open.map(i=>row(i,true)).join('')+'</tbody></table></div>':'<div class="empty">No open problems. Operators report them from the bottom of their area screen.</div>')+'</section>'+
+   (closed.length?'<section class="card"><h3>Recently closed</h3><div class="tscroll"><table><tbody>'+closed.map(i=>row(i,false)).join('')+'</tbody></table></div></section>':'');
+  $$('button[data-id]',el).forEach(b=>b.onclick=async()=>{if(!await ask({title:'Close this problem?',msg:'It will move to the closed list.',ok:'Yes, close'}))return;try{await S.db.doc('issues/'+b.dataset.id).update({status:'closed',closedAt:new Date().toISOString()});toast('Closed.');}catch(e){toast(dbErr(e),true);}});
+}
+
+/* ---- setup ---- */
+function paramRow(p){
+  return '<div class="prow" data-id="'+esc(p.id)+'" data-kind="'+esc(p.kind||'num')+'" data-calc="'+esc(p.calc||'')+'" data-opts="'+esc(JSON.stringify(p.options||[]))+'" data-win="'+esc(JSON.stringify(p.win||null))+'"><input type="text" class="s-label" value="'+esc(p.label)+'" aria-label="Reading name"><input type="text" class="s-group" value="'+esc(p.group||'')+'" aria-label="Group">'+
+   '<input type="text" class="s-unit" value="'+esc(p.unit)+'" aria-label="Unit"><input type="number" step="any" class="s-min" value="'+(p.min==null?'':p.min)+'" aria-label="Minimum"><input type="number" step="any" class="s-max" value="'+(p.max==null?'':p.max)+'" aria-label="Maximum">'+
+   '<label class="small" style="display:flex;gap:4px;align-items:center" title="Hourly total, summed into daily totals"><input type="checkbox" class="s-tot" style="width:20px;height:20px"'+(p.total?' checked':'')+'>Σ</label><button type="button" class="btn sm bad s-del" aria-label="Remove reading">✕</button></div>';
+}
+function opRow(o){return '<div class="orow" data-id="'+esc(o.id)+'"><input type="text" class="o-name" value="'+esc(o.name)+'" placeholder="Operator name" aria-label="Operator name"><input type="password" class="o-pw" autocomplete="new-password" placeholder="'+(o.hash?'unchanged':'new password')+'" aria-label="Password"><label class="small" style="display:flex;gap:4px;align-items:center" title="Shift leaders can enter data after the time windows and change saved entries"><input type="checkbox" class="o-lead" style="width:20px;height:20px"'+(o.leader?' checked':'')+'>Leader</label><label class="small" style="display:flex;gap:4px;align-items:center"><input type="checkbox" class="o-act" style="width:20px;height:20px"'+(o.active===false?'':' checked')+'>Active</label><button type="button" class="btn sm bad o-del" aria-label="Remove operator">✕</button></div>';}
+function setupShell(){
+  const c=S.cfg;
+  return '<section class="card"><h2>Plant</h2><div class="ctlrow"><label class="l" style="flex:2 1 260px">Plant name<input type="text" id="sName" value="'+esc(c.plantName)+'"></label>'+
+   c.shifts.map((s,i)=>'<label class="l">Shift '+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'</div>'+
+   '</section><section class="card" id="opSec"><h2>Operators and passwords</h2><p class="muted small">Operators type their password to save a reading, and the app shows and records their name. Tick Leader for shift leaders: they can enter data after the time windows close and change saved entries. Each password must be different. Leave a password blank to keep it unchanged.</p>'+
+   '<div id="opList">'+S.ops.map(opRow).join('')+'</div><div class="row" style="margin-top:8px"><button type="button" class="btn sm" id="opAdd">Add operator</button></div></section>'+
+   c.areas.map(a=>'<section class="card" data-area="'+esc(a.id)+'"><h2>'+esc(a.name)+'</h2><p class="muted small">Limits that are blank are not checked. “Σ” marks a reading that is a total for the hour (packs, kg) and is added up into daily totals. No limits are set yet: type the normal min and max for each reading and the app will flag values outside them.</p>'+
+    '<div class="prow h"><span>Reading</span><span>Group</span><span>Unit</span><span>Min</span><span>Max</span><span>Σ</span></div><div class="plist">'+a.params.map(paramRow).join('')+'</div>'+
+    '<div class="row" style="margin-top:8px"><button type="button" class="btn sm s-add">Add reading</button></div>'+
+    '<label class="l" style="margin-top:12px">Equipment in this area (one per line, used for problem reports and maintenance)<textarea class="s-eq">'+esc(a.equipment.join('\n'))+'</textarea></label></section>').join('')+
+   '<div class="row"><button class="btn pri big" id="sSave">Save setup</button><button class="btn" id="sReset">Restore starter setup</button></div>';
+}
+function bindSetup(){
+  const t=$('#tab');
+  t.oninput=()=>{S.setupEditing=true;};
+  t.onclick=e=>{
+    const od=e.target.closest('.o-del');if(od){od.closest('.orow').remove();S.setupEditing=true;return;}
+    if(e.target.closest('#opAdd')){$('#opList').insertAdjacentHTML('beforeend',opRow({id:'o_'+Date.now().toString(36)+Math.floor(Math.random()*99),name:'',hash:'',active:true,leader:false}));$('#opList').lastElementChild.querySelector('input').focus();S.setupEditing=true;return;}
+    const del=e.target.closest('.s-del');if(del){del.closest('.prow').remove();S.setupEditing=true;return;}
+    const add=e.target.closest('.s-add');if(add){const l=add.closest('section').querySelector('.plist');l.insertAdjacentHTML('beforeend',paramRow({id:'p_'+Date.now().toString(36)+Math.floor(Math.random()*99),label:'',unit:'',group:'',min:null,max:null,total:false}));l.lastElementChild.querySelector('input').focus();S.setupEditing=true;}
+  };
+  $('#sSave').onclick=saveSetup;
+  $('#sReset').onclick=async()=>{if(!await ask({title:'Restore the starter setup?',msg:'Readings, limits and units return to the starter list. Operators are not changed.',ok:'Yes, restore'}))return;try{await S.db.doc('config/main').delete();S.setupEditing=false;toast('Starter setup restored.');}catch(e){toast(dbErr(e),true);}};
+}
+async function saveSetup(){
+  const cfg={plantName:$('#sName').value.trim()||'Plant Logbook',crews:S.cfg.crews||['A-B','B-C'],shifts:S.cfg.shifts.map((s,i)=>({name:s.name,start:Math.max(0,Math.min(23,Number($('.sShift[data-i="'+i+'"]').value)||0))})),
+    operators:[],areas:[]};
+  $$('section[data-area]').forEach(sec=>{
+    const base=area(sec.dataset.area),params=[];
+    $$('.prow',sec).forEach(r=>{if(r.classList.contains('h'))return;const label=$('.s-label',r).value.trim();if(!label)return;
+      params.push({id:r.dataset.id,label,group:$('.s-group',r).value.trim(),unit:$('.s-unit',r).value.trim(),min:num($('.s-min',r).value),max:num($('.s-max',r).value),total:$('.s-tot',r).checked,kind:r.dataset.kind||'num',calc:r.dataset.calc||'',options:JSON.parse(r.dataset.opts||'[]'),win:JSON.parse(r.dataset.win||'null')||undefined});});
+    cfg.areas.push({id:base.id,name:base.name,every:base.every||'hour',timed:!!base.timed,noStatus:!!base.noStatus,noStatus:!!base.noStatus,equipment:$('.s-eq',sec).value.split('\n').map(s=>s.trim()).filter(Boolean),params});
+  });
+  const rows=$$('#opList .orow').map(r=>({id:r.dataset.id,name:$('.o-name',r).value.trim(),plain:$('.o-pw',r).value,active:$('.o-act',r).checked,leader:$('.o-lead',r).checked})).filter(r=>r.name||r.plain);
+  const list=[];
+  for(const r of rows){
+    const old=S.ops.find(o=>o.id===r.id);
+    if(!r.name){toast('Every operator needs a name.',true);return;}
+    if(!old&&!r.plain){toast('Set a password for '+r.name+'.',true);return;}
+    if(r.plain&&r.plain.length<4){toast('Passwords need at least 4 characters ('+r.name+').',true);return;}
+    list.push(r.plain?{id:r.id,name:r.name,active:r.active,leader:r.leader,salt:'',hash:'',plain:r.plain}:{id:r.id,name:r.name,active:r.active,leader:r.leader,salt:old.salt,hash:old.hash});
+  }
+  for(const o of list){if(!o.plain)continue;
+    for(const q of list){if(q===o)continue;if((q.plain&&q.plain===o.plain)||(!q.plain&&await hashPw(q.salt,o.plain)===q.hash)){toast('The password for '+o.name+' is already used by '+q.name+'. Passwords must be different.',true);return;}}
+    o.salt=newSalt();o.hash=await hashPw(o.salt,o.plain);}
+  if(!await ask({title:'Do you want to save?',msg:'Save the plant setup and '+list.length+' operator'+(list.length===1?'':'s')+'.',ok:'Yes, save'}))return;
+  try{
+    await S.db.doc('config/main').set(cfg);
+    await S.db.doc('config/operators').set({list:list.map(o=>({id:o.id,name:o.name,active:o.active,leader:!!o.leader,salt:o.salt,hash:o.hash}))});
+    S.setupEditing=false;toast('Setup saved. Tablets update automatically.');
+  }catch(e){toast(dbErr(e),true);}
+}
+
+/* ---------- config sync ---------- */
+function onCfg(){
+  renderTop();
+  if(S.view==='home')renderHome();
+  if(S.view==='area'&&!S.dirty){refreshStrip();renderForm();}
+  if(S.view==='admin'){if(S.tab==='setup'&&!S.setupEditing)buildTab();else if(S.tab!=='setup'){if(S.tab==='trends'||S.tab==='maint')buildTab();else paintTab();}}
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  renderTop();renderHome();
+  try{
+    const c=window.claude;
+    if(c&&c.use){
+      const res=await Promise.all([c.use('db'),c.use('user')]);
+      S.db=res[0];S.user=res[1];
+    }
+  }catch(e){}
+  if(S.user){
+    try{S.isAdmin=!!(await S.user.canEdit());}catch(e){}
+    try{const w=await S.user.can('data.write');S.canWrite=(w!==false);}catch(e){}
+  }
+  if(!S.db){renderTop();renderHome();return;}
+  S.db.doc('config/main').onSnapshot(snap=>{
+    let c=DEFAULT_CFG;
+    if(snap.exists){const d=snap.data();if(d&&Array.isArray(d.areas)&&d.areas.length&&Array.isArray(d.shifts))c=migrateCfg(JSON.parse(JSON.stringify(Object.assign({},DEFAULT_CFG,d,{operators:d.operators||[]}))));}
+    const j=JSON.stringify(c);if(j===S.cfgJ&&S.cfgLoaded)return;
+    S.cfg=c;S.cfgJ=j;S.cfgLoaded=true;onCfg();
+  },e=>toast(dbErr(e),true));
+  S.db.doc('config/operators').onSnapshot(snap=>{
+    const d=snap.exists?snap.data():null;S.ops=d&&Array.isArray(d.list)?d.list:[];
+    if(S.view==='admin'&&S.tab==='setup'&&!S.setupEditing)buildTab();
+  },e=>toast(dbErr(e),true));
+  const v=lsGet('plant.view')||'';
+  if(v==='admin'&&S.isAdmin)go('admin',null,'overview');
+  else if(v.indexOf('area:')===0&&area(v.slice(5)))go('area',v.slice(5));
+  else{renderTop();renderHome();}
+}
+boot();
+})();
+</script>
+
+<script>if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+</body></html>
