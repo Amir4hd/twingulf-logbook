@@ -16,17 +16,19 @@
   const writeErr=e=>{try{window.dispatchEvent(new CustomEvent('plant-write-error',{detail:e}));}catch(_){}};
   // Offline writes are stored on the device and sent later; do not make the screen wait for the server.
   const w=p=>{const slow=new Promise(r=>setTimeout(r,1200));p.catch(writeErr);return Promise.race([p,slow]);};
+  // Firestore refuses 'undefined' values (the Claude version silently dropped them), so remove them before saving.
+  const clean=v=>{if(v===undefined)return undefined;if(v===null||typeof v!=='object')return v;if(Array.isArray(v))return v.map(x=>{const c=clean(x);return c===undefined?null:c;});if(typeof v.toDate==='function'||v instanceof Date)return v;const o={};for(const k in v){const c=clean(v[k]);if(c!==undefined)o[k]=c;}return o;};
   const wrapDoc=r=>({id:r.id,path:r.path,
     get:()=>r.get(),
-    set:d=>w(r.set(d)),
-    update:d=>w(r.set(d,{merge:true})),
+    set:d=>w(r.set(clean(d))),
+    update:d=>w(r.set(clean(d),{merge:true})),
     delete:()=>w(r.delete()),
     onSnapshot:(n,e)=>r.onSnapshot({includeMetadataChanges:false},n,e||(()=>{}))});
   const wrapQ=c=>({
     where:(f,o,v)=>wrapQ(c.where(f,o,v)),orderBy:(f,d)=>wrapQ(c.orderBy(f,d)),limit:n=>wrapQ(c.limit(n)),
     get:()=>c.get(),onSnapshot:(n,e)=>c.onSnapshot(n,e||(()=>{})),
     doc:id=>wrapDoc(id?c.doc(id):c.doc()),
-    add:async d=>{const r=c.doc();w(r.set(d));return wrapDoc(r);}});
+    add:async d=>{const r=c.doc();w(r.set(clean(d)));return wrapDoc(r);}});
   const db={doc:p=>wrapDoc(fs.doc(p)),collection:p=>wrapQ(fs.collection(p))};
   let ready=null;
   function signedIn(){
