@@ -6,7 +6,6 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Twin Gulf Plant Logbook</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -169,6 +168,10 @@ fieldset.plain{border:0;padding:0;margin:0;min-width:0;display:flex;flex-directi
 .ent{padding:10px 0;border-top:1px solid var(--line)}.ent:first-of-type{border-top:0}
 .fld.locked{opacity:.5}.fld.lead .ir{border-style:dashed}
 .orow{grid-template-columns:minmax(140px,2fr) minmax(140px,2fr) 80px 70px 40px !important}
+.usr{font-size:14px;font-weight:600;white-space:nowrap;max-width:26vw;overflow:hidden;text-overflow:ellipsis}.usr .r{font-weight:400;opacity:.8}
+@media (max-width:760px){.usr .r{display:none}}
+.logbox{max-width:480px;margin:18px auto 0;display:flex;flex-direction:column;gap:16px}
+.logbox select,.logbox input{font:500 22px var(--f-m);min-height:56px;padding:6px 12px;border:2px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:8px;z-index:50;max-width:92vw;font-weight:500}
 .toast.bad{background:var(--bad);color:#fff}
 .prow{display:grid;grid-template-columns:minmax(140px,2fr) 1fr 70px 70px 70px 40px;gap:8px;align-items:center;margin-bottom:6px}
@@ -194,6 +197,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 <script src="vendor/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="platform.js"></script>
+
 <script>
 (function(){
 'use strict';
@@ -230,6 +234,7 @@ const DEFAULT_CFG={
   plantName:'Twin Gulf Industries',
   shifts:[{name:'Day',start:7},{name:'Night',start:19}],
   crews:['A-B','B-C'],
+  entryMin:20,
   operators:[],
   areas:[
     {id:'macaroni',name:'Macaroni Line',every:'hour',equipment:['Press','Screw','Vacuum pump','Dryer','Cutter','Cooler'],params:[
@@ -262,7 +267,7 @@ const DEFAULT_CFG={
 const S={db:null,user:null,isAdmin:false,canWrite:true,cfg:DEFAULT_CFG,cfgJ:JSON.stringify(DEFAULT_CFG),
   view:'home',areaId:null,tab:'overview',today:ymd(new Date()),date:ymd(new Date()),hour:new Date().getHours(),
   day:null,dirty:false,logs:{},mlogs:{},tasks:[],hist:[],issues:[],ovDate:ymd(new Date()),sel:null,
-  trend:{area:'press',param:'',days:3},subs:{},ops:[],asOp:false,unlock:null,lastHour:new Date().getHours(),online:navigator.onLine,setupEditing:false,pmSig:'',mTrunc:false,editTask:null};
+  trend:{area:'press',param:'',days:3},subs:{},ops:[],dev:null,pickPlace:false,unlock:null,lastHour:new Date().getHours(),online:navigator.onLine,setupEditing:false,pmSig:'',mTrunc:false,editTask:null};
 const nowH=()=>new Date().getHours();
 const area=id=>S.cfg.areas.find(a=>a.id===id)||null;
 const shiftOf=h=>{const sh=S.cfg.shifts.slice().sort((a,b)=>a.start-b.start);let r=sh[sh.length-1];sh.forEach(s=>{if(s.start<=h)r=s;});return r?r.name:'';};
@@ -298,6 +303,50 @@ function cellState(doc,date,h,a){
   if(isToday&&h===nowH())return 'now';
   return 'miss';
 }
+/* ---------- places: a shift leader assigns each tablet to a place ---------- */
+const PLACES=[['press','Press'],['lab','Laboratory'],['pack','Packaging'],['all','All places']];
+const PLACE_OF={macaroni:'press',spaghetti:'press',boiler:'press',lab_mac:'lab',lab_spa:'lab',ro:'lab',pack_mac:'pack',pack_spa:'pack'};
+const placeName=id=>id==='admin'?'Admin':(PLACES.find(p=>p[0]===id)||['',''])[1];
+const adminEff=()=>!!(S.dev&&S.dev.place==='admin'&&S.isAdmin);
+const unlockOn=()=>!!(S.unlock&&S.unlock.exp>Date.now());
+const leaderActive=()=>adminEff()||unlockOn();
+const canSee=a=>!!(S.dev&&a&&(adminEff()||S.dev.place==='all'||PLACE_OF[a.id]===S.dev.place));
+function saveDev(){if(S.dev)lsSet('plant.dev',JSON.stringify(S.dev));else{try{localStorage.removeItem('plant.dev')}catch(e){}}}
+function loadDev(){
+  let x=null;try{x=JSON.parse(lsGet('plant.dev')||'null');}catch(e){}
+  try{localStorage.removeItem('plant.sess');}catch(e){}
+  if(x&&x.place==='admin'&&!S.isAdmin)x=null;
+  if(x&&x.place!=='admin'&&!PLACES.some(p=>p[0]===x.place))x=null;
+  S.dev=x;
+}
+function renderPlaceSetup(){
+  const leaders=S.ops.filter(o=>o.active!==false&&o.leader&&o.hash);
+  $('#main').innerHTML='<section class="card logbox"><div><h1 style="font-size:34px;text-transform:uppercase">Assign this tablet</h1><p class="muted" style="margin:6px 0 0">A shift leader chooses the place of this tablet and types the shift leader password. Operators then fill in the readings and type their own password when they save.</p></div>'+
+   (S.db?'':'<div class="empty">The database is not available in this view.</div>')+
+   '<label class="l">Place<select id="pcPlace"><option value="">Choose place…</option>'+PLACES.map(p=>'<option value="'+p[0]+'"'+(S.dev&&S.dev.place===p[0]?' selected':'')+'>'+esc(p[1])+'</option>').join('')+'</select></label>'+
+   (leaders.length?'<label class="l">Shift leader password<input type="password" id="pcPw" autocomplete="off"></label><div id="pcWho" class="who" aria-live="polite"></div>':'<p class="status warn">No shift leader password exists yet. The admin adds one in Control room, Setup, Operators (tick Leader).</p>')+
+   '<button type="button" class="btn pri big" id="pcGo" disabled>Assign place</button>'+(S.dev?'<button type="button" class="btn" id="pcCancel">Cancel</button>':'')+(S.isAdmin?'<button type="button" class="btn" id="pcAdmin">Continue as Admin</button>':'')+'</section>';
+  let op=null,seq=0;
+  const ready=()=>{$('#pcGo').disabled=!($('#pcPlace').value&&op);};
+  const apply=d=>{S.dev=Object.assign({at:new Date().toISOString()},d);S.pickPlace=false;S.unlock=null;S.dirty=false;saveDev();lsSet('plant.view','');go('home');};
+  $('#pcPlace').onchange=ready;
+  if(leaders.length){const p=$('#pcPw');p.oninput=async()=>{const my=++seq;op=null;ready();const w=$('#pcWho');w.textContent='';w.className='who';if(!p.value)return;const f=await findOperator(p.value);if(my!==seq)return;
+    if(f&&f.leader){op=f;w.textContent=f.name+' (shift leader)';w.className='who ok';}else if(f){w.textContent='Not a shift leader password';w.className='who bad';}else if(p.value.length>=4){w.textContent='Password not recognised';w.className='who bad';}ready();};}
+  const go1=()=>{if($('#pcGo').disabled)return;apply({place:$('#pcPlace').value,by:op.name,byId:op.id});};
+  $('#pcGo').onclick=go1;
+  $('#main').onkeydown=e=>{if(e.key==='Enter')go1();};
+  const cn=$('#pcCancel');if(cn)cn.onclick=()=>{S.pickPlace=false;renderHome();};
+  const ad=$('#pcAdmin');if(ad)ad.onclick=()=>apply({place:'admin',by:'Admin',byId:'admin'});
+  const f1=$('#pcPlace');f1.focus();
+}
+function restoreView(){
+  const v=lsGet('plant.view')||'';
+  if(!S.dev){go('home');return;}
+  if(v==='admin'&&adminEff())go('admin',null,'overview');
+  else if(v.indexOf('area:')===0&&canSee(area(v.slice(5))))go('area',v.slice(5));
+  else go('home');
+}
+
 /* ---------- top bar ---------- */
 function renderTop(){
   const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':'');
@@ -305,9 +354,9 @@ function renderTop(){
   $('#top').innerHTML='<header class="bar"><span class="brand">'+esc(S.cfg.plantName||'Plant Logbook')+'</span>'+(where?'<span class="where">'+esc(where)+'</span>':'')+'<span class="sp"></span>'+
    '<span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'No database')+'</span></span>'+
    '<span class="clock" id="clock">'+ymd(t)+' '+pad(t.getHours())+':'+pad(t.getMinutes())+'</span>'+
-   (S.isAdmin&&S.view==='area'?'<button class="bbtn" id="asOp" aria-pressed="'+S.asOp+'">'+(S.asOp?'Operator view: on':'Operator view')+'</button>':'')+(S.view!=='home'?'<button class="bbtn" id="goHome">'+(S.isAdmin?'Menu':'Switch area')+'</button>':'')+'</header>';
+   (S.dev?'<span class="usr">'+esc(placeName(S.dev.place))+'</span>':'')+(S.dev&&S.view!=='home'?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+(S.dev?'<button class="bbtn" id="chgPlace">Change place</button>':'')+'</header>';
   const gh=$('#goHome');if(gh)gh.onclick=()=>go('home');
-  const ao=$('#asOp');if(ao)ao.onclick=()=>{S.asOp=!S.asOp;renderTop();renderForm();refreshRecent();};
+  const cp=$('#chgPlace');if(cp)cp.onclick=()=>{S.pickPlace=true;S.dirty=false;go('home');};
 }
 setInterval(()=>{
   const t=new Date(),c=$('#clock');if(c)c.textContent=ymd(t)+' '+pad(t.getHours())+':'+pad(t.getMinutes());
@@ -327,6 +376,10 @@ window.addEventListener('offline',()=>{S.online=false;renderTop();});
 
 /* ---------- navigation ---------- */
 function go(view,areaId,tab){
+  if(!S.dev)view='home';
+  if(view!=='home')S.pickPlace=false;
+  if(view==='admin'&&!adminEff())view='home';
+  if(view==='area'&&!canSee(area(areaId)))view='home';
   unsub('day');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');
   S.view=view;S.areaId=areaId||null;
   if(tab)S.tab=tab;
@@ -340,10 +393,14 @@ function go(view,areaId,tab){
 
 /* ---------- home ---------- */
 function renderHome(){
-  const cards=S.cfg.areas.map(a=>'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+'</b><span class="muted">'+a.params.length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>').join('');
-  $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Choose this tablet’s area</h1><p class="muted" style="margin:6px 0 0">The tablet remembers the area and opens straight to it next time.</p></div>'+
+  if(!S.dev||S.pickPlace){renderPlaceSetup();return;}
+  const vis=S.cfg.areas.filter(canSee);
+  const cards=vis.map(a=>'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+'</b><span class="muted">'+a.params.length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>').join('');
+  const sub=adminEff()?'Admin: every area and the Control room.':'This tablet is assigned to: '+placeName(S.dev.place)+'. A shift leader can change it with the Change place button.';
+  $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
-   '<div class="areas">'+cards+(S.isAdmin?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
+   (vis.length||adminEff()?'':'<div class="empty">No areas are set up for this place.</div>')+
+   '<div class="areas">'+cards+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
   $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__admin')go('admin',null,'overview');else go('area',a);});
 }
 
@@ -353,13 +410,13 @@ function renderArea(){
   const legend=a.timed?'':'<div class="strip" id="strip" style="margin-top:12px"></div><div class="legend"><span><i style="background:var(--okbg);border-color:var(--ok)"></i>Logged</span><span><i style="background:var(--warnbg);border-color:var(--warn)"></i>Out of range</span><span><i style="background:var(--stopbg);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span></div>';
   $('#main').innerHTML=
    '<div class="card"><div class="row" style="justify-content:space-between"><div><h2>'+esc(a.name)+' · '+(a.timed?'timed entries':'hourly reading')+'</h2><div class="muted small" id="whenLine"></div></div>'+
-   '<div class="row">'+(S.isAdmin?'<label class="l" style="width:190px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+(a.timed&&S.isAdmin?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
+   '<div class="row">'+(adminEff()?'<label class="l" style="width:190px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+(a.timed&&adminEff()?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
    '<form class="card" id="entry" autocomplete="off" novalidate></form>'+
    '<div class="card"><h3>Entries on this date</h3><div id="recent" class="tscroll"></div></div>'+
    '<details class="d" id="issueBox"><summary>Report a problem or breakdown</summary><div style="display:grid;gap:12px;margin-top:12px"><label class="l">Equipment<select id="isEq">'+a.equipment.map(e=>'<option>'+esc(e)+'</option>').join('')+'<option>Other</option></select></label>'+
    '<label class="l">What is wrong?<textarea id="isTx" placeholder="Noise, leak, alarm, stoppage…"></textarea></label><div><button type="button" class="btn pri" id="isSend">Send to maintenance</button></div></div></details>';
   if($('#fDate'))$('#fDate').onchange=e=>{const v=e.target.value;if(!v)return;S.date=v;S.day=null;S.editKey=null;if(v===S.today&&S.hour>nowH())S.hour=nowH();S.dirty=false;subDay();refreshStrip();renderForm();refreshRecent();};
-  if(a.timed&&S.isAdmin)$('#newEntry').onclick=()=>{S.editKey=null;S.dirty=false;renderForm();window.scrollTo({top:0,behavior:'smooth'});};
+  if(a.timed&&adminEff())$('#newEntry').onclick=()=>{S.editKey=null;S.dirty=false;renderForm();window.scrollTo({top:0,behavior:'smooth'});};
   $('#isSend').onclick=sendIssue;
   subDay();refreshStrip();renderForm();refreshRecent();
 }
@@ -418,18 +475,17 @@ function ask(o){
     }else $('#dYes').focus();
   });
 }
-const adminEff=()=>S.isAdmin&&!S.asOp;
-const leaderActive=()=>!!(S.unlock&&S.unlock.exp>Date.now());
 const EDIT_MS=5*60e3;
 const editLeft=e=>(e&&e.at)?EDIT_MS-(Date.now()-new Date(e.at).getTime()):0;
 const left5=ms=>{const t=Math.max(0,Math.ceil(ms/1000)),m=Math.floor(t/60);return m+':'+pad(t%60);};
 const t12=m=>{const h=Math.floor(m/60);return ((h%12)||12)+':'+pad(m%60);};
 const winText=w=>w.map(x=>t12(x[0])+'–'+t12(x[1])+(x[1]/60<12?' AM':' PM')).join(', ');
+const entryMin=()=>{const n=Math.round(Number(S.cfg.entryMin));return n>=1&&n<=59?n:20;};
 function winBase(a,date,h){
   if(a.timed)return {open:true};
   if(date>S.today||(date===S.today&&h>nowH()))return {open:false,why:'future'};
   const m=new Date().getMinutes();
-  if(date===S.today&&h===nowH()&&m<20)return {open:true,left:20-m,closeAt:pad(h)+':20'};
+  if(date===S.today&&h===nowH()&&m<entryMin())return {open:true,left:entryMin()-m,closeAt:pad(h)+':'+pad(entryMin())};
   return {open:false,why:'closed'};
 }
 function winInfo(a,date,h){
@@ -453,7 +509,7 @@ function perm(){
     const b=winBase(a,S.date,S.hour);
     if(b.why==='future')return {can:false,cls:'bad',msg:'This hour has not started yet.'};
     if(e){const l=editLeft(e);normal=l>0?{can:true,cls:'ok',msg:'Saved by '+e.by+'. You can change it for '+left5(l)+' more.'}:{can:false,cls:'bad',lockable:true,msg:'Locked. Saved by '+e.by+'. Changes are allowed for 5 minutes after saving.'};}
-    else normal=b.open?{can:true,cls:'ok',msg:'Entry window open until '+b.closeAt+' ('+b.left+' min left).'}:{can:false,cls:'bad',lockable:true,msg:'Entry window closed. Hourly readings can only be entered in the first 20 minutes of the hour ('+pad(S.hour)+':00 to '+pad(S.hour)+':20).'};
+    else normal=b.open?{can:true,cls:'ok',msg:'Entry window open until '+b.closeAt+' ('+b.left+' min left).'}:{can:false,cls:'bad',lockable:true,msg:'Entry window closed. Hourly readings can only be entered in the first '+entryMin()+' minutes of the hour ('+pad(S.hour)+':00 to '+pad(S.hour)+':'+pad(entryMin())+').'};
   }else{
     if(e){const l=editLeft(e);normal=l>0?{can:true,cls:'ok',msg:'Saved by '+e.by+'. You can change it for '+left5(l)+' more.'}:{can:false,cls:'bad',lockable:true,msg:'Locked. Saved by '+e.by+'. Changes are allowed for 5 minutes after saving.'};}
     else normal={can:true,cls:'',msg:'The time is recorded automatically when you press Save.'};
@@ -489,7 +545,7 @@ function applyWindow(){
   if(pm.can)a.params.forEach(p=>{if(!p.win)return;const inp=ctl(p.id);if(!inp)return;const lab=inp.closest('.fld'),md=fieldMode(p),h=$('.hint',lab);
     inp.disabled=(md==='locked');lab.classList.toggle('locked',md==='locked');lab.classList.toggle('lead',md==='leader');if(md==='locked')anyLocked=true;
     if(h&&!lab.classList.contains('need'))h.textContent=md==='locked'?'Opens '+winText(p.win):md==='leader'?'Open for shift leader (optional)':'Open now until '+t12(p.win.find(w=>nowMin()>=w[0]&&nowMin()<w[1])[1])+' · '+winText(p.win);});
-  if(row){row.innerHTML=((!pm.can&&pm.lockable)||anyLocked)&&!adminEff()&&!leaderActive()?'<button type="button" class="btn" id="unlockBtn">Shift leader: unlock</button>':(leaderActive()?'<span class="chip warn">Unlocked by '+esc(S.unlock.name)+'</span>':'');const ub=$('#unlockBtn');if(ub)ub.onclick=unlockLeader;}
+  if(row){row.innerHTML=((!pm.can&&pm.lockable)||anyLocked)&&!adminEff()&&!leaderActive()?'<button type="button" class="btn" id="unlockBtn">Shift leader: unlock</button>':(unlockOn()?'<span class="chip warn">Unlocked by '+esc(S.unlock.name)+'</span>':'');const ub=$('#unlockBtn');if(ub)ub.onclick=unlockLeader;}
 }
 function evalCalc(expr,get){
   let ok=true;
@@ -577,7 +633,7 @@ async function saveEntry(){
     const n=num(raw);v[p.id]=n;if(n==null){if(!p.win)empty++;}else if(pState(p,n)!=='ok')alarms++;});
   const what=timed?(e0?'Save changes to this entry in '+a.name+'?':'Save a new entry in '+a.name+' now?'):a.name+' · '+hh(S.hour)+' reading on '+S.date+(e0?' (changes)':'');
   let who;
-  if(leaderActive()){
+  if(unlockOn()){
     const okc=await ask({title:'Do you want to save?',msg:what+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;
     who={name:S.unlock.name,id:S.unlock.id,leader:true};
   }else{
@@ -636,7 +692,7 @@ async function sendIssue(){
 /* ---------- control room ---------- */
 const TABS=[['overview','Overview'],['trends','Trends & export'],['maint','Maintenance'],['issues','Problems'],['setup','Setup']];
 function renderAdmin(){
-  if(!S.isAdmin){go('home');return;}
+  if(!adminEff()){go('home');return;}
   $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+'</button>').join('')+'</div><div id="tab"></div>';
   $$('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;S.setupEditing=false;$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));buildTab();});
   subAdmin();buildTab();
@@ -667,7 +723,7 @@ async function loadPM(){
 }
 function buildTab(){
   const t=$('#tab');if(!t)return;
-  if(S.tab==='overview')t.innerHTML='<div class="ctlrow" style="margin-bottom:12px"><label class="l">Date<input type="date" id="ovDate" value="'+S.ovDate+'" min="'+addDays(S.today,-6)+'" max="'+S.today+'"></label><button class="btn" id="ovToday">Today</button></div><div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
+  if(S.tab==='overview')t.innerHTML='<div class="ctlrow" style="margin-bottom:12px"><button class="btn" id="ovPrev" aria-label="Previous day" style="align-self:flex-end;min-width:52px;font-size:20px">&#9664;</button><label class="l">Date<input type="date" id="ovDate" value="'+S.ovDate+'" min="'+addDays(S.today,-6)+'" max="'+S.today+'"></label><button class="btn" id="ovNext" aria-label="Next day" style="align-self:flex-end;min-width:52px;font-size:20px">&#9654;</button><button class="btn" id="ovToday">Today</button></div><div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
   if(S.tab==='trends')t.innerHTML=trendShell();
   if(S.tab==='maint')t.innerHTML=maintShell();
   if(S.tab==='issues')t.innerHTML='<div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
@@ -683,8 +739,13 @@ function paintTab(){
 }
 function bindTab(){
   if(S.tab==='overview'){
-    $('#ovDate').onchange=e=>{if(e.target.value){S.ovDate=e.target.value;S.sel=null;paintTab();}};
-    $('#ovToday').onclick=()=>{S.ovDate=S.today;$('#ovDate').value=S.today;S.sel=null;paintTab();};
+    const ovSet=v=>{const lo=addDays(S.today,-6);if(v<lo)v=lo;if(v>S.today)v=S.today;S.ovDate=v;$('#ovDate').value=v;S.sel=null;ovBtns();paintTab();};
+    const ovBtns=()=>{$('#ovPrev').disabled=S.ovDate<=addDays(S.today,-6);$('#ovNext').disabled=S.ovDate>=S.today;};
+    $('#ovDate').onchange=e=>{if(e.target.value)ovSet(e.target.value);};
+    $('#ovToday').onclick=()=>ovSet(S.today);
+    $('#ovPrev').onclick=()=>ovSet(addDays(S.ovDate,-1));
+    $('#ovNext').onclick=()=>ovSet(addDays(S.ovDate,1));
+    ovBtns();
   }
   if(S.tab==='trends')bindTrend();
   if(S.tab==='maint')bindMaint();
@@ -917,8 +978,8 @@ function opRow(o){return '<div class="orow" data-id="'+esc(o.id)+'"><input type=
 function setupShell(){
   const c=S.cfg;
   return '<section class="card"><h2>Plant</h2><div class="ctlrow"><label class="l" style="flex:2 1 260px">Plant name<input type="text" id="sName" value="'+esc(c.plantName)+'"></label>'+
-   c.shifts.map((s,i)=>'<label class="l">Shift '+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'</div>'+
-   '</section><section class="card" id="opSec"><h2>Operators and passwords</h2><p class="muted small">Operators type their password to save a reading, and the app shows and records their name. Tick Leader for shift leaders: they can enter data after the time windows close and change saved entries. Each password must be different. Leave a password blank to keep it unchanged.</p>'+
+   c.shifts.map((s,i)=>'<label class="l">Shift '+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'<label class="l">Hourly entry window (minutes, 1 to 59)<input type="number" min="1" max="59" id="sEntry" value="'+(Number(c.entryMin)>=1&&Number(c.entryMin)<=59?Math.round(Number(c.entryMin)):20)+'"></label></div><p class="muted small" style="margin:8px 0 0">Operators can enter an hourly reading only during the first minutes of the hour. After that only a shift leader can enter it (unlock button). Lab, packaging and RO entries are not affected.</p>'+
+   '</section><section class="card" id="opSec"><h2>Operators and passwords</h2><p class="muted small">Operators type their password to save a reading, and the app shows and records their name. Tick Leader for shift leaders: they assign the place of each tablet (Change place button), can enter data after the time windows close, and can change saved entries. Each password must be different. Leave a password blank to keep it unchanged.</p>'+
    '<div id="opList">'+S.ops.map(opRow).join('')+'</div><div class="row" style="margin-top:8px"><button type="button" class="btn sm" id="opAdd">Add operator</button></div></section>'+
    c.areas.map(a=>'<section class="card" data-area="'+esc(a.id)+'"><h2>'+esc(a.name)+'</h2><p class="muted small">Limits that are blank are not checked. “Σ” marks a reading that is a total for the hour (packs, kg) and is added up into daily totals. No limits are set yet: type the normal min and max for each reading and the app will flag values outside them.</p>'+
     '<div class="prow h"><span>Reading</span><span>Group</span><span>Unit</span><span>Min</span><span>Max</span><span>Σ</span></div><div class="plist">'+a.params.map(paramRow).join('')+'</div>'+
@@ -939,7 +1000,7 @@ function bindSetup(){
   $('#sReset').onclick=async()=>{if(!await ask({title:'Restore the starter setup?',msg:'Readings, limits and units return to the starter list. Operators are not changed.',ok:'Yes, restore'}))return;try{await S.db.doc('config/main').delete();S.setupEditing=false;toast('Starter setup restored.');}catch(e){toast(dbErr(e),true);}};
 }
 async function saveSetup(){
-  const cfg={plantName:$('#sName').value.trim()||'Plant Logbook',crews:S.cfg.crews||['A-B','B-C'],shifts:S.cfg.shifts.map((s,i)=>({name:s.name,start:Math.max(0,Math.min(23,Number($('.sShift[data-i="'+i+'"]').value)||0))})),
+  const cfg={plantName:$('#sName').value.trim()||'Plant Logbook',crews:S.cfg.crews||['A-B','B-C'],entryMin:Math.max(1,Math.min(59,Math.round(Number($('#sEntry').value))||20)),shifts:S.cfg.shifts.map((s,i)=>({name:s.name,start:Math.max(0,Math.min(23,Number($('.sShift[data-i="'+i+'"]').value)||0))})),
     operators:[],areas:[]};
   $$('section[data-area]').forEach(sec=>{
     const base=area(sec.dataset.area),params=[];
@@ -989,7 +1050,7 @@ async function boot(){
     try{S.isAdmin=!!(await S.user.canEdit());}catch(e){}
     try{const w=await S.user.can('data.write');S.canWrite=(w!==false);}catch(e){}
   }
-  if(!S.db){renderTop();renderHome();return;}
+  if(!S.db){loadDev();renderTop();renderHome();return;}
   S.db.doc('config/main').onSnapshot(snap=>{
     let c=DEFAULT_CFG;
     if(snap.exists){const d=snap.data();if(d&&Array.isArray(d.areas)&&d.areas.length&&Array.isArray(d.shifts))c=migrateCfg(JSON.parse(JSON.stringify(Object.assign({},DEFAULT_CFG,d,{operators:d.operators||[]}))));}
@@ -999,11 +1060,9 @@ async function boot(){
   S.db.doc('config/operators').onSnapshot(snap=>{
     const d=snap.exists?snap.data():null;S.ops=d&&Array.isArray(d.list)?d.list:[];
     if(S.view==='admin'&&S.tab==='setup'&&!S.setupEditing)buildTab();
+    if(S.view==='home'&&(!S.dev||S.pickPlace)&&!($('#pcPw')&&$('#pcPw').value))renderHome();
   },e=>toast(dbErr(e),true));
-  const v=lsGet('plant.view')||'';
-  if(v==='admin'&&S.isAdmin)go('admin',null,'overview');
-  else if(v.indexOf('area:')===0&&area(v.slice(5)))go('area',v.slice(5));
-  else{renderTop();renderHome();}
+  loadDev();restoreView();
 }
 boot();
 })();

@@ -1,5 +1,5 @@
 /* Keeps the app files on the tablet so it opens without internet. Data is kept by Firestore itself. */
-const V='plant-v1';
+const V='plant-v2';
 const SHELL=['./','index.html','platform.js','firebase-config.js','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png','vendor/firebase-app-compat.js','vendor/firebase-auth-compat.js','vendor/firebase-firestore-compat.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()));});
