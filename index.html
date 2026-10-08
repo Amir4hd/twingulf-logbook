@@ -340,7 +340,7 @@ function go(view,areaId,tab){
 
 /* ---------- home ---------- */
 function renderHome(){
-  const cards=S.cfg.areas.map(a=>'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+'</b><span class="muted">'+a.params.length+' readings every hour</span></button>').join('');
+  const cards=S.cfg.areas.map(a=>'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+'</b><span class="muted">'+a.params.length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>').join('');
   $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Choose this tablet’s area</h1><p class="muted" style="margin:6px 0 0">The tablet remembers the area and opens straight to it next time.</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
    '<div class="areas">'+cards+(S.isAdmin?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
