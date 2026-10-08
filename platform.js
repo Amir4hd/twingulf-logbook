@@ -17,16 +17,19 @@
   // Offline writes are stored on the device and sent later; do not make the screen wait for the server.
   const w=p=>{const slow=new Promise(r=>setTimeout(r,1200));p.catch(writeErr);return Promise.race([p,slow]);};
   // Firestore refuses 'undefined' values (the Claude version silently dropped them), so remove them before saving.
-  const clean=v=>{if(v===undefined)return undefined;if(v===null||typeof v!=='object')return v;if(Array.isArray(v))return v.map(x=>{const c=clean(x);return c===undefined?null:c;});if(typeof v.toDate==='function'||v instanceof Date)return v;const o={};for(const k in v){const c=clean(v[k]);if(c!==undefined)o[k]=c;}return o;};
+  const clean=v=>{if(v===undefined)return undefined;if(v===null||typeof v!=='object')return v;if(Array.isArray(v)){if(v.some(Array.isArray))return {'$nested':JSON.stringify(v)};return v.map(x=>{const c=clean(x);return c===undefined?null:c;});}if(typeof v.toDate==='function'||v instanceof Date)return v;const o={};for(const k in v){const c=clean(v[k]);if(c!==undefined)o[k]=c;}return o;};
+  // Firestore cannot store lists inside lists, so those are saved as text and turned back into lists when read.
+  const unpack=v=>{if(v===null||typeof v!=='object')return v;if(Array.isArray(v))return v.map(unpack);if(typeof v.$nested==='string'&&Object.keys(v).length===1){try{return JSON.parse(v.$nested);}catch(e){return v;}}if(typeof v.toDate==='function'||v instanceof Date)return v;const o={};for(const k in v)o[k]=unpack(v[k]);return o;};
+  const wrapSnap=s=>{if(!s)return s;if(s.docs){const docs=s.docs.map(wrapSnap);return {docs:docs,size:s.size,empty:s.empty,forEach:f=>docs.forEach(f)};}return {id:s.id,exists:s.exists,ref:s.ref,data:()=>unpack(s.data())};};
   const wrapDoc=r=>({id:r.id,path:r.path,
-    get:()=>r.get(),
+    get:async()=>wrapSnap(await r.get()),
     set:d=>w(r.set(clean(d))),
     update:d=>w(r.set(clean(d),{merge:true})),
     delete:()=>w(r.delete()),
-    onSnapshot:(n,e)=>r.onSnapshot({includeMetadataChanges:false},n,e||(()=>{}))});
+    onSnapshot:(n,e)=>r.onSnapshot({includeMetadataChanges:false},x=>n(wrapSnap(x)),e||(()=>{}))});
   const wrapQ=c=>({
     where:(f,o,v)=>wrapQ(c.where(f,o,v)),orderBy:(f,d)=>wrapQ(c.orderBy(f,d)),limit:n=>wrapQ(c.limit(n)),
-    get:()=>c.get(),onSnapshot:(n,e)=>c.onSnapshot(n,e||(()=>{})),
+    get:async()=>wrapSnap(await c.get()),onSnapshot:(n,e)=>c.onSnapshot(x=>n(wrapSnap(x)),e||(()=>{})),
     doc:id=>wrapDoc(id?c.doc(id):c.doc()),
     add:async d=>{const r=c.doc();w(r.set(clean(d)));return wrapDoc(r);}});
   const db={doc:p=>wrapDoc(fs.doc(p)),collection:p=>wrapQ(fs.collection(p))};
