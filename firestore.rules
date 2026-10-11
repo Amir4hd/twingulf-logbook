@@ -19,5 +19,7 @@ service cloud.firestore {
     match /issues/{id}   { allow read, write: if signedIn(); allow delete: if isAdmin(); }
     match /notices/{id}  { allow read, write: if signedIn(); allow delete: if isAdmin(); }
     match /presence/{id} { allow read, write: if signedIn(); }
+    // One open tablet per account: each account's session record.
+    match /sessions/{id} { allow read, write: if signedIn(); }
   }
 }

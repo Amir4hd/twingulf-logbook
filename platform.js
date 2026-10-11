@@ -66,9 +66,14 @@
       location.href=location.pathname;};
     document.body.appendChild(b);
   }
-  auth.onAuthStateChanged(u=>{if(u)addSignOut(u);else{const o=document.getElementById('lgOut');if(o)o.remove();}});
   const user={
     canEdit:async()=>{const u=await signedIn();try{const s=await fs.doc('admins/'+u.uid).get();return s.exists;}catch(e){return false;}},
+    info:async()=>{const u=await signedIn();return {uid:u.uid,email:u.email||''};},
+    signOut:async()=>{
+      if(!navigator.onLine){alert('No internet. Signing out is blocked, because signing in again needs internet.');return;}
+      try{await auth.signOut();}catch(e){}
+      try{localStorage.removeItem('plant.view');localStorage.removeItem('plant.appr');}catch(e){}
+      location.href=location.pathname;},
     can:async()=>true,isOwner:async()=>false};
   const downloads={save:async x=>{const b=new Blob([x.data],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=x.filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}};
   window.addEventListener('plant-write-error',e=>{const t=document.getElementById('toast');const m=(e.detail&&e.detail.code==='permission-denied')?'This account is not allowed to save that. Ask the admin.':'A saved entry could not be sent to the server.';if(t){t.className='toast bad';t.textContent=m;t.hidden=false;setTimeout(()=>{t.hidden=true},8000);}else alert(m);});

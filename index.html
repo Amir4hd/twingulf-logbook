@@ -238,6 +238,9 @@ const fmtN=v=>v==null?'–':Number(v).toFixed(2).replace(/\.?0+$/,'');
 const hh=h=>pad(h)+':00';
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const _ss={};
+const ssGet=k=>{try{return sessionStorage.getItem(k)}catch(e){return _ss[k]||null}};
+const ssSet=(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){_ss[k]=v}};
 const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const REASONS=['Planned stop','Breakdown','Cleaning / changeover','Material shortage','Power cut','Quality hold','Other'];
 
@@ -339,7 +342,7 @@ function cellState(doc,date,h,a){
   return 'miss';
 }
 /* ---------- places: a shift leader assigns each tablet to a place ---------- */
-const PLACES=[['press','Press'],['lab','Laboratory'],['pack','Packaging'],['maint','Maintenance'],['all','All places']];
+const PLACES=[['press','Press'],['lab','Laboratory'],['pack','Packaging'],['maint','Maintenance'],['all','Shift leader']];
 const PRESS_TO_PACK={macaroni:'pack_mac',spaghetti:'pack_spa'};
 const PACK_FROM={pack_mac:'macaroni',pack_spa:'spaghetti'};
 const PLACE_OF={macaroni:'press',spaghetti:'press',boiler:'press',lab_mac:'lab',lab_spa:'lab',ro:'lab',pack_mac:'pack',pack_spa:'pack'};
@@ -348,33 +351,90 @@ const adminEff=()=>!!(S.dev&&S.dev.place==='admin'&&S.isAdmin);
 const unlockOn=()=>!!(S.unlock&&S.unlock.exp>Date.now());
 const leaderActive=()=>adminEff()||unlockOn();
 const canSee=a=>!!(S.dev&&a&&(adminEff()||S.dev.place==='all'||PLACE_OF[a.id]===S.dev.place));
-function saveDev(){if(S.dev)lsSet('plant.dev',JSON.stringify(S.dev));else{try{localStorage.removeItem('plant.dev')}catch(e){}}}
-function loadDev(){
-  let x=null;try{x=JSON.parse(lsGet('plant.dev')||'null');}catch(e){}
-  try{localStorage.removeItem('plant.sess');}catch(e){}
-  if(x&&x.place==='admin'&&!S.isAdmin)x=null;
-  if(x&&x.place!=='admin'&&!PLACES.some(p=>p[0]===x.place))x=null;
-  S.dev=x;
+/* ---------- accounts, gates (approval, one tablet per account) ---------- */
+const ROLE_OF_PREFIX={press:'press',lab:'lab',laboratory:'lab',pack:'pack',packing:'pack',packaging:'pack',leader:'all',shiftleader:'all',shift:'all',maint:'maint',maintenance:'maint'};
+const TEST_ACCTS=[['press@local.com','Press'],['lab@local.com','Laboratory'],['pack@local.com','Packaging'],['shiftleader@local.com','Shift leader'],['maint@local.com','Maintenance']];
+const roleOfEmail=em=>ROLE_OF_PREFIX[String(em||'').toLowerCase().split('@')[0].replace(/[^a-z]/g,'')]||null;
+const NEED_APPROVAL=pl=>pl==='press'||pl==='lab'||pl==='pack';
+const SID=()=>{let v=ssGet('plant.sid');if(!v){v='s'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);ssSet('plant.sid',v);}return v;};
+function nextShiftMs(){const st=S.cfg.shifts.map(x=>Number(x.start)).sort((a,b)=>a-b),n=new Date();let best=null;for(let d=0;d<2;d++)st.forEach(h=>{const t=new Date(n.getFullYear(),n.getMonth(),n.getDate()+d,h,0,0).getTime();if(t>n.getTime()&&(best===null||t<best))best=t;});return best||Date.now()+8*3600e3;}
+function approvalOk(){try{const a=JSON.parse(lsGet('plant.appr')||'null');return !!(a&&S.acct&&a.uid===S.acct.uid&&a.until>Date.now());}catch(e){return false;}}
+async function resolveAccount(){
+  S.acct=null;
+  if(S.user&&typeof S.user.info==='function'){try{const i=await S.user.info();S.acct={uid:i.uid,email:i.email||''};S.acct.role=S.isAdmin?'admin':roleOfEmail(S.acct.email);}catch(e){}}
+  else{const t=ssGet('plant.test');if(t){S.acct={uid:'test_'+t,email:t,test:true};S.acct.role=t==='admin'?(S.isAdmin?'admin':null):roleOfEmail(t);}}
 }
-function renderPlaceSetup(){
-  const leaders=S.ops.filter(o=>o.active!==false&&o.leader&&o.hash);
-  $('#main').innerHTML='<section class="card logbox"><div><h1 style="font-size:34px;text-transform:uppercase">Assign this tablet</h1><p class="muted" style="margin:6px 0 0">A shift leader chooses the place of this tablet and types the shift leader password. Operators then fill in the readings and type their own password when they save.</p></div>'+
-   (S.db?'':'<div class="empty">The database is not available in this view.</div>')+
-   '<label class="l">Place<select id="pcPlace"><option value="">Choose place…</option>'+PLACES.map(p=>'<option value="'+p[0]+'"'+(S.dev&&S.dev.place===p[0]?' selected':'')+'>'+esc(p[1])+'</option>').join('')+'</select></label>'+
-   (leaders.length?'<label class="l">Shift leader password<input type="password" id="pcPw" autocomplete="off"></label><div id="pcWho" class="who" aria-live="polite"></div>':'<p class="status warn">No shift leader password exists yet. The admin adds one in Control room, Setup, Operators (tick Leader).</p>')+
-   '<button type="button" class="btn pri big" id="pcGo" disabled>Assign place</button>'+(S.dev?'<button type="button" class="btn" id="pcCancel">Cancel</button>':'')+(S.isAdmin?'<button type="button" class="btn" id="pcAdmin">Continue as Admin</button>':'')+'</section>';
-  let op=null,seq=0;
-  const ready=()=>{$('#pcGo').disabled=!($('#pcPlace').value&&op);};
-  const apply=d=>{S.dev=Object.assign({at:new Date().toISOString()},d);S.pickPlace=false;S.unlock=null;S.dirty=false;saveDev();lsSet('plant.view','');unsub('notices');ensureNoticeSub();beat();go('home');};
-  $('#pcPlace').onchange=ready;
-  if(leaders.length){const p=$('#pcPw');p.oninput=async()=>{const my=++seq;op=null;ready();const w=$('#pcWho');w.textContent='';w.className='who';if(!p.value)return;const f=await findOperator(p.value);if(my!==seq)return;
-    if(f&&f.leader){op=f;w.textContent=f.name+' (shift leader)';w.className='who ok';}else if(f){w.textContent='Not a shift leader password';w.className='who bad';}else if(p.value.length>=4){w.textContent='Password not recognised';w.className='who bad';}ready();};}
-  const go1=()=>{if($('#pcGo').disabled)return;apply({place:$('#pcPlace').value,by:op.name,byId:op.id});};
-  $('#pcGo').onclick=go1;
-  $('#main').onkeydown=e=>{if(e.key==='Enter')go1();};
-  const cn=$('#pcCancel');if(cn)cn.onclick=()=>{S.pickPlace=false;renderHome();};
-  const ad=$('#pcAdmin');if(ad)ad.onclick=()=>apply({place:'admin',by:'Admin',byId:'admin'});
-  const f1=$('#pcPlace');f1.focus();
+async function acquireSession(force){
+  const ref=S.db.doc('sessions/'+S.acct.uid);
+  let d=null;try{const sn=await ref.get();d=sn.exists?sn.data():null;}catch(e){}
+  const fresh=d&&d.ts&&Date.now()-new Date(d.ts).getTime()<180000;
+  if(fresh&&d.sid!==SID()&&!force){S.sessInfo=d;return false;}
+  try{await ref.set({sid:SID(),place:S.acct.role,email:S.acct.email,ts:new Date().toISOString()});}catch(e){}
+  S.sessionOk=true;
+  resub('sess',()=>S.db.doc('sessions/'+S.acct.uid).onSnapshot(sn=>{const x=sn.exists?sn.data():null;if(S.sessionOk&&x&&x.sid&&x.sid!==SID())kicked();},e=>{}));
+  return true;
+}
+function kicked(){S.sessionOk=false;unsub('sess');unsub('notices');S.dev=null;S.gate='kicked';S.view='home';renderTop();renderHome();}
+async function evalGate(){
+  const a=S.acct;S.sessInfo=null;
+  const stop=g=>{S.gate=g;S.dev=null;S.view='home';renderTop();renderHome();};
+  if(!S.db)return stop('nodb');
+  if(!a)return stop((S.user&&S.user.info)?'norole':'pick');
+  if(!a.role)return stop('norole');
+  if(a.role!=='admin'&&!S.sessionOk){if(!await acquireSession(false))return stop('refused');}
+  if(NEED_APPROVAL(a.role)&&!approvalOk())return stop('approve');
+  S.gate=null;S.dev={place:a.role,at:new Date().toISOString()};S.unlock=null;S.dirty=false;
+  unsub('notices');ensureNoticeSub();beat();renderTop();restoreView();
+}
+async function doSignOut(){
+  try{if(S.db&&S.acct&&S.sessionOk)await S.db.doc('sessions/'+S.acct.uid).delete();}catch(e){}
+  S.sessionOk=false;unsub('sess');unsub('notices');lsSet('plant.appr','');lsSet('plant.view','');S.dev=null;S.unlock=null;
+  if(S.user&&S.user.signOut){await S.user.signOut();return;}
+  ssSet('plant.test','');S.acct=null;S.gate='pick';S.view='home';renderTop();renderHome();
+}
+async function askSignOut(){
+  if(adminEff()){if(!await ask({title:'Sign out?',msg:'This tablet will need the account email and password to sign in again.',ok:'Yes, sign out'}))return;}
+  else{const L=await ask({title:'Sign out',msg:'A shift leader password is needed to sign this tablet out. Signing in again needs the account email, its password and internet.',pw:true,leaderOnly:true,ok:'Sign out'});if(!L)return;}
+  doSignOut();
+}
+function renderGate(){
+  const g=S.gate,a=S.acct,leaders=S.ops.filter(o=>o.active!==false&&o.leader&&o.hash);
+  const card=(t,b)=>{$('#main').innerHTML='<section class="card logbox"><div><h1 style="font-size:34px;text-transform:uppercase">'+t+'</h1></div>'+b+'</section>';};
+  const out=()=>{const o=$('#gtOut');if(o)o.onclick=doSignOut;};
+  if(g==='nodb'||(!S.db&&!g)){card('Not connected','<div class="empty">The database is not available. Check the internet connection and reload.</div>');return;}
+  if(g==='pick'){
+    card('Preview sign-in','<p class="muted" style="margin:0">Test only. On the real tablets the account email decides the place. Choose which account to try:</p><div class="areas">'+(S.isAdmin?'<button class="acard" data-t="admin"><b>Admin</b><span>Everything</span></button>':'')+TEST_ACCTS.map(t=>'<button class="acard" data-t="'+t[0]+'"><b>'+esc(t[1])+'</b><span>'+esc(t[0])+'</span></button>').join('')+'</div>');
+    $$('.acard[data-t]').forEach(b=>b.onclick=async()=>{ssSet('plant.test',b.dataset.t);S.sessionOk=false;await resolveAccount();evalGate();});
+    return;
+  }
+  if(g==='norole'){
+    card('No place for this account','<p class="muted">'+(a?esc(a.email||'This account'):'This account')+' is not linked to a place. Use press@, lab@, pack@, shiftleader@ or maint@ accounts, or ask the admin.</p><button type="button" class="btn big" id="gtOut">Sign out</button>');out();return;
+  }
+  if(g==='refused'){
+    const t=S.sessInfo&&S.sessInfo.ts?fmt12(S.sessInfo.ts):'a moment ago';
+    card('Already signed in elsewhere','<p class="muted">'+esc(placeName(a.role))+' ('+esc(a.email)+') is already open on another tablet or browser tab (last seen '+esc(t)+'). Only one is allowed. Close the other one, or a shift leader can take it over here.</p><div class="row"><button type="button" class="btn pri big" id="gtRetry">Try again</button><button type="button" class="btn big" id="gtTake">Shift leader: take over</button><button type="button" class="btn" id="gtOut">Sign out</button></div>');
+    $('#gtRetry').onclick=()=>evalGate();
+    $('#gtTake').onclick=async()=>{const L=await ask({title:'Take over',msg:'The other tablet or tab will be signed out.',pw:true,leaderOnly:true,ok:'Take over'});if(!L)return;await acquireSession(true);evalGate();};
+    out();return;
+  }
+  if(g==='kicked'){
+    card('Signed out here','<p class="muted">This account was opened on another tablet or browser tab, so this one was stopped.</p><div class="row"><button type="button" class="btn pri big" id="gtRetry">Try again</button><button type="button" class="btn" id="gtOut">Sign out</button></div>');
+    $('#gtRetry').onclick=()=>evalGate();out();return;
+  }
+  if(g==='approve'){
+    const until=fmt12(nextShiftMs());
+    card('Shift leader approval','<p class="muted" style="margin:0">'+esc(placeName(a.role))+' tablet is signed in ('+esc(a.email)+'). A shift leader must type their password to start it. The approval lasts until '+esc(until)+', the end of this shift.</p>'+
+     (leaders.length?'<label class="l">Shift leader password<input type="password" id="pcPw" autocomplete="off"></label><div id="pcWho" class="who" aria-live="polite"></div>':'<p class="status warn">No shift leader password exists yet. The admin adds one in Control room, Setup, Operators (tick Leader).</p>')+
+     '<button type="button" class="btn pri big" id="pcGo" disabled>Approve and start</button><button type="button" class="btn" id="gtOut">Sign out</button>');
+    let op=null,seq=0;const ready=()=>{$('#pcGo').disabled=!op;};
+    const p=$('#pcPw');
+    if(p){p.oninput=async()=>{const my=++seq;op=null;ready();const w=$('#pcWho');w.textContent='';w.className='who';if(!p.value)return;const f=await findOperator(p.value);if(my!==seq)return;
+      if(f&&f.leader){op=f;w.textContent=f.name+' (shift leader)';w.className='who ok';}else if(f){w.textContent='Not a shift leader password';w.className='who bad';}else if(p.value.length>=4){w.textContent='Password not recognised';w.className='who bad';}ready();};p.focus();}
+    const go1=()=>{if($('#pcGo').disabled)return;lsSet('plant.appr',JSON.stringify({uid:a.uid,by:op.name,until:nextShiftMs()}));evalGate();};
+    $('#pcGo').onclick=go1;$('#main').onkeydown=e=>{if(e.key==='Enter')go1();};
+    out();return;
+  }
+  card('Signing in…','<p class="muted">Please wait.</p>');
 }
 function restoreView(){
   const v=lsGet('plant.view')||'';
@@ -393,10 +453,10 @@ function renderTop(){
    '<span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'No database')+'</span></span>'+
    '<span class="batt" id="batt" hidden></span>'+
    '<span class="clock" id="clock">'+ymd(t)+' '+pad(t.getHours())+':'+pad(t.getMinutes())+'</span>'+
-   (S.dev?'<span class="usr">'+esc(placeName(S.dev.place))+'</span>':'')+(S.dev&&S.view!=='home'&&S.view!=='mplace'?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+(S.dev?'<button class="bbtn" id="chgPlace">Change place</button>':'')+'</header>';
+   (S.dev?'<span class="usr">'+esc(placeName(S.dev.place))+'</span>':'')+(S.dev&&S.view!=='home'&&S.view!=='mplace'?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+(S.acct?'<button class="bbtn" id="signOut">Sign out</button>':'')+'</header>';
   const gh=$('#goHome');if(gh)gh.onclick=()=>go('home');
   paintBatt();
-  const cp=$('#chgPlace');if(cp)cp.onclick=()=>{S.pickPlace=true;S.dirty=false;go('home');};
+  const so=$('#signOut');if(so)so.onclick=askSignOut;
 }
 /* ---- battery and tablet presence ---- */
 function paintBatt(){
@@ -415,24 +475,24 @@ function readBatt(){
     readBatt();setInterval(readBatt,60000);
   }catch(e){}
 })();
-const devId=()=>{let v=lsGet('plant.devid');if(!v){v='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);lsSet('plant.devid',v);}return v;};
 async function beat(){
-  if(!S.db||!S.dev||S.dev.place==='admin')return;
-  try{await S.db.doc('presence/'+devId()).set({place:S.dev.place,ts:new Date().toISOString(),batt:S.batt?Math.round(S.batt.level*100):null});}catch(e){}
+  if(!S.db||!S.sessionOk||!S.acct)return;
+  try{await S.db.doc('sessions/'+S.acct.uid).set({sid:SID(),place:S.acct.role,email:S.acct.email,ts:new Date().toISOString(),batt:S.batt?Math.round(S.batt.level*100):null});}catch(e){}
 }
-setInterval(beat,90000);setTimeout(beat,4000);window.addEventListener('online',beat);
+setInterval(beat,60000);window.addEventListener('online',beat);
 async function peerStatus(){
   const out={me:navigator.onLine!==false&&S.online!==false,pack:null};
   if(!S.db)return out;
   try{
     const since=new Date(Date.now()-5*60000).toISOString();
-    const snap=await S.db.collection('presence').where('ts','>=',since).limit(50).get();
+    const snap=await S.db.collection('sessions').where('ts','>=',since).limit(50).get();
     out.pack=snap.docs.some(d=>{const x=d.data();return x&&(x.place==='pack'||x.place==='all');});
   }catch(e){out.pack=false;}
   return out;
 }
 setInterval(()=>{
   try{checkArrivals();}catch(e){}
+  if(S.dev&&S.acct&&NEED_APPROVAL(S.dev.place)&&!approvalOk()&&!S.dirty){S.dev=null;S.gate='approve';unsub('notices');S.view='home';renderTop();renderHome();return;}
   const t=new Date(),c=$('#clock');if(c)c.textContent=ymd(t)+' '+pad(t.getHours())+':'+pad(t.getMinutes());
   const d=pdate(t);
   if(d!==S.today){const od=S.today;S.today=d;if(S.ovDate===od)S.ovDate=d;if(S.view==='area'&&S.date===od&&!adminEff()){S.date=d;S.day=null;S.editKey=null;subDay();}}
@@ -451,10 +511,11 @@ window.addEventListener('offline',()=>{S.online=false;renderTop();});
 /* ---------- navigation ---------- */
 function go(view,areaId,tab){
   if(!S.dev)view='home';
-  if(view!=='home')S.pickPlace=false;
+  
   if(view==='admin'&&!adminEff())view='home';
+  if(view==='summary'&&!(adminEff()||S.dev.place==='all'))view='home';
   if(view==='area'&&!canSee(area(areaId)))view='home';
-  if(view==='home'&&S.dev&&S.dev.place==='maint'&&!S.pickPlace)view='mplace';
+  if(view==='home'&&S.dev&&S.dev.place==='maint')view='mplace';
   if(view==='mplace'&&!(S.dev&&S.dev.place==='maint'))view='home';
   if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done')S.tab='issues';
   unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');
@@ -474,14 +535,14 @@ function go(view,areaId,tab){
 
 /* ---------- home ---------- */
 function renderHome(){
-  if(!S.dev||S.pickPlace){renderPlaceSetup();return;}
+  if(!S.dev){renderGate();return;}
   const vis=S.cfg.areas.filter(canSee);
   const cards=vis.map(a=>'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>').join('');
-  const sub=adminEff()?'Admin: every area and the Control room.':'This tablet is assigned to: '+placeName(S.dev.place)+'. A shift leader can change it with the Change place button.';
+  const sub=adminEff()?'Admin: every area and the Control room.':'Signed in as: '+placeName(S.dev.place)+(S.acct&&S.acct.email?' ('+S.acct.email+')':'')+'.';
   $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
    (vis.length||adminEff()?'':'<div class="empty">No areas are set up for this place.</div>')+
-   '<div class="areas">'+cards+'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>'+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
+   '<div class="areas">'+cards+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
   $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else go('area',a);});
 }
 
@@ -556,7 +617,7 @@ function renderArea(){
   if($('#fDate'))$('#fDate').onchange=e=>{const v=e.target.value;if(!v)return;S.date=v;S.day=null;S.editKey=null;if(v===S.today&&ordH(S.hour)>ordH(nowH()))S.hour=nowH();S.dirty=false;subDay();refreshStrip();renderForm();refreshRecent();};
   if(a.timed&&adminEff())$('#newEntry').onclick=()=>{S.editKey=null;S.dirty=false;renderForm();window.scrollTo({top:0,behavior:'smooth'});};
   $('#isSend').onclick=sendIssue;
-  const nts=$('#ntSend');if(nts)nts.onclick=sendNotice;const ntc=$('#ntCancel');if(ntc)ntc.onclick=endNtEdit;
+  const nto=$('#ntOpen');if(nto)nto.onclick=()=>openNtModal(null);
   if(PACK_FROM[a.id])paintNotices();
   if(PRESS_TO_PACK[a.id])paintSent();
   subAreaIssues();subDay();refreshStrip();renderForm();refreshRecent();
@@ -587,6 +648,14 @@ function subDay(){
     refreshStrip();refreshRecent();
     if(!S.dirty)renderForm(true);else updateEntryState();
   },e=>toast(dbErr(e),true)));
+}
+function navHours(){
+  const a=area(S.areaId);if(!a||a.timed)return;
+  const hs=HRS(),i=hs.indexOf(S.hour),pv=$('#hPrev'),nx=$('#hNext');if(!pv||!nx)return;
+  const nxt=i>=0&&i<hs.length-1?hs[i+1]:null,fut=nxt!==null&&cellState(S.day,S.date,nxt,a)==='future';
+  pv.disabled=i<=0;nx.disabled=nxt===null||fut;
+  const mv=h=>{S.hour=h;S.dirty=false;refreshStrip();renderForm();};
+  pv.onclick=()=>mv(hs[i-1]);nx.onclick=()=>mv(nxt);
 }
 function refreshStrip(){
   const a=area(S.areaId),w=$('#whenLine');
@@ -769,7 +838,7 @@ function renderForm(fromSnap){
   const a=area(S.areaId),timed=!!a.timed;
   const e=S.day&&S.day.hours?(timed?(S.editKey?S.day.hours[S.editKey]:null):S.day.hours[String(S.hour)]):null;
   const groups=[];a.params.filter(p=>!smHidden(a,p)).forEach(p=>{let g=groups.find(x=>x.n===p.group);if(!g){g={n:p.group,ps:[]};groups.push(g);}g.ps.push(p);});
-  let html='<div id="winMsg" class="status"></div><div id="lockRow" class="row"></div><fieldset id="fset" class="plain">';
+  let html='<div id="winMsg" class="status"></div><div class="row" id="navRow">'+(timed?'':'<button type="button" class="btn big" id="hPrev" aria-label="Previous hour">◀ Previous hour</button><button type="button" class="btn big" id="hNext" aria-label="Next hour">Next hour ▶</button>')+'<span id="lockRow" style="display:contents"></span></div><fieldset id="fset" class="plain">';
   html+='<div class="status">Every reading must be filled before you can save.'+(a.noStatus?'':' If the line is stopped, choose Stopped and the readings can stay blank.')+'</div>';
   groups.forEach(g=>{
     html+='<fieldset class="grp"><legend>'+esc(g.n||'Readings')+'</legend><div class="fields">'+g.ps.map(p=>fieldHTML(p,fv(a,p,e))).join('')+'</div></fieldset>';
@@ -785,6 +854,7 @@ function renderForm(fromSnap){
    '<div class="row"><button class="btn pri big" type="submit" id="fSave">'+(timed?'Save entry':'Save '+hh(S.hour)+' reading')+'</button><span class="status" id="eState"></span></div>';
   f.innerHTML=html;
   S.dirty=false;
+  navHours();
   refreshCalcs();
   f.oninput=ev=>{
     S.dirty=true;
@@ -1021,7 +1091,7 @@ function paintNoticeUI(){
   const cut=Date.now()-24*3600e3;S.notices=S.notices.filter(n=>new Date(n.ts).getTime()>=cut);
   if(S.view==='area'){if(PACK_FROM[S.areaId])paintNotices();if(PRESS_TO_PACK[S.areaId])paintSent();}
   if(S.view==='admin'&&S.tab==='notices')paintTab();
-  if(S.view==='home'&&S.dev&&!S.pickPlace&&!($('#pcPw')&&$('#pcPw').value))renderHome();
+  if(S.view==='home'&&!S.dev&&!($('#pcPw')&&$('#pcPw').value))renderHome();
 }
 function checkArrivals(){
   if(S.dev&&S.dev.place==='admin'){paintNoticeUI();return;}
@@ -1037,9 +1107,7 @@ function checkArrivals(){
 function noticeBoxHTML(a){
   if(PRESS_TO_PACK[a.id]){
     const pk=(area(PRESS_TO_PACK[a.id])||{}).name||'packaging';
-    return '<section class="card" id="packBox" style="border-left:6px solid var(--warn)"><h3>Problem in press? Notify the packaging team</h3><div class="muted small" style="margin:2px 0 8px">It stays on the top of the '+esc(pk)+' page, and both pages are alerted again at the arrival time.</div>'+
-     '<div class="ctlrow"><label class="l">Stopped from<input type="time" id="ntFrom"></label><label class="l">Stopped to<input type="time" id="ntTo"></label><label class="l">Reason<select id="ntWhy">'+NT_REASONS.map(r=>'<option>'+esc(r)+'</option>').join('')+'</select></label><label class="l">Product arrives at packaging<input type="time" id="ntArr"></label></div>'+
-     '<div class="row" style="flex-wrap:wrap;margin-top:10px"><input type="text" id="ntTx" style="flex:1 1 260px" placeholder="More details (optional)"><button type="button" class="btn pri" id="ntSend">Notify packaging</button><button type="button" class="btn" id="ntCancel" hidden>Cancel edit</button></div></section>'+
+    return '<section class="card" id="packBox" style="border-left:6px solid var(--warn)"><div class="row" style="justify-content:space-between;flex-wrap:wrap"><div><h3 style="margin:0">Problem in press? Notify the packaging team</h3><div class="muted small" style="margin-top:2px">It stays on the top of the '+esc(pk)+' page, and both pages are alerted again at the arrival time.</div></div><button type="button" class="btn pri big" id="ntOpen">Notify packaging</button></div></section>'+
      '<div id="sentBox"></div>';
   }
   if(PACK_FROM[a.id])return '<div id="ntBox"></div>';
@@ -1065,17 +1133,22 @@ function paintSent(){
     return '<div class="ntsent'+(open?'':' done')+(due?' due':'')+'">Sent to packaging '+esc(ntWhen(n.ts))+' by '+esc(n.by)+' · '+esc(ntDetail(n))+(n.edited?' · edited':'')+(open?(due?' · arrival time reached':''):' · arrived '+esc(ntWhen(n.arrivedAt||n.ackAt))+((n.arrivedBy||n.ackBy)?' ('+esc(n.arrivedBy||n.ackBy)+')':''))+(left>0?' <button type="button" class="btn sm" data-ne="'+esc(n.id)+'">Edit ('+Math.ceil(left/60000)+' min left)</button>':'')+'</div>';}).join('');
   $$('button[data-ne]',el).forEach(b=>b.onclick=()=>startNtEdit(b.dataset.ne));
 }
-function startNtEdit(id){
-  const n=S.notices.find(x=>x.id===id);if(!n||ntEditLeft(n)<=0){toast('The edit time has passed.',true);paintSent();return;}
-  S.ntEdit=id;const d=new Date(n.arriveAt);
-  $('#ntFrom').value=n.stopFrom||'';$('#ntTo').value=n.stopTo||'';$('#ntWhy').value=n.reason||$('#ntWhy').value;$('#ntTx').value=n.details||'';
-  $('#ntArr').value=isNaN(d)?'':pad(d.getHours())+':'+pad(d.getMinutes());
-  $('#ntSend').textContent='Save changes';$('#ntCancel').hidden=false;$('#packBox').scrollIntoView({behavior:'smooth',block:'center'});
+function openNtModal(id){
+  const old=$('#ntDlg');if(old)old.remove();
+  const n=id?S.notices.find(x=>x.id===id):null;
+  if(id&&(!n||ntEditLeft(n)<=0)){toast('The edit time has passed.',true);paintSent();return;}
+  S.ntEdit=n?n.id:null;
+  const d=n?new Date(n.arriveAt):null,w=document.createElement('div');w.id='ntDlg';w.className='ovl';
+  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:560px"><h2>'+(n?'Edit the message to packaging':'Notify the packaging team')+'</h2><div class="ctlrow"><label class="l">Stopped from<input type="time" id="ntFrom" value="'+esc(n&&n.stopFrom||'')+'"></label><label class="l">Stopped to<input type="time" id="ntTo" value="'+esc(n&&n.stopTo||'')+'"></label></div>'+
+   '<label class="l">Reason<select id="ntWhy">'+NT_REASONS.map(r=>'<option'+(n&&n.reason===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></label>'+
+   '<label class="l">Product arrives at packaging<input type="time" id="ntArr" value="'+(d&&!isNaN(d)?pad(d.getHours())+':'+pad(d.getMinutes()):'')+'"></label>'+
+   '<label class="l">More details (optional)<input type="text" id="ntTx" value="'+esc(n&&n.details||'')+'"></label>'+
+   '<div class="row" style="margin-top:6px"><button type="button" class="btn big" id="ntCancel">Cancel</button><button type="button" class="btn pri big" id="ntSend">'+(n?'Save changes':'Notify packaging')+'</button></div></div>';
+  document.body.appendChild(w);
+  $('#ntCancel').onclick=endNtEdit;$('#ntSend').onclick=sendNotice;$('#ntFrom').focus();
 }
-function endNtEdit(){
-  S.ntEdit=null;const b=$('#ntSend');if(b)b.textContent='Notify packaging';const c=$('#ntCancel');if(c)c.hidden=true;
-  ['#ntFrom','#ntTo','#ntArr','#ntTx'].forEach(q=>{const e=$(q);if(e)e.value='';});
-}
+function endNtEdit(){S.ntEdit=null;const w=$('#ntDlg');if(w)w.remove();}
+function startNtEdit(id){openNtModal(id);}
 async function sendNotice(){
   const a=area(S.areaId),to=PRESS_TO_PACK[S.areaId];if(!to)return;
   const f=$('#ntFrom').value,t=$('#ntTo').value,ar=$('#ntArr').value,why=$('#ntWhy').value,dt=($('#ntTx').value||'').trim();
@@ -1096,7 +1169,7 @@ async function sendNotice(){
       endNtEdit();toast('Message updated.');
     }else{
       const doc={from:S.areaId,to:to,stopFrom:f,stopTo:t,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),by:who.name,ts:new Date().toISOString(),status:'open'};
-      await S.db.collection('notices').add(doc);$('#ntTx').value='';toast('Packaging team notified.');
+      await S.db.collection('notices').add(doc);endNtEdit();toast('Packaging team notified.');
     }
     if(warn.length)showBar('<span class="tx">NO CONNECTION: '+esc(warn.join(' and '))+'. Go to the packaging team and tell them about the stop yourself.</span>');
   }catch(e){toast(dbErr(e),true);}
@@ -1501,7 +1574,7 @@ async function boot(){
     try{S.isAdmin=!!(await S.user.canEdit());}catch(e){}
     try{const w=await S.user.can('data.write');S.canWrite=(w!==false);}catch(e){}
   }
-  if(!S.db){loadDev();renderTop();renderHome();return;}
+  if(!S.db){S.gate='nodb';renderTop();renderHome();return;}
   S.db.doc('config/main').onSnapshot(snap=>{
     let c=DEFAULT_CFG;
     if(snap.exists){const d=snap.data();if(d&&Array.isArray(d.areas)&&d.areas.length&&Array.isArray(d.shifts))c=migrateCfg(JSON.parse(JSON.stringify(Object.assign({},DEFAULT_CFG,d,{operators:d.operators||[]}))));}
@@ -1511,9 +1584,9 @@ async function boot(){
   S.db.doc('config/operators').onSnapshot(snap=>{
     const d=snap.exists?snap.data():null;S.ops=d&&Array.isArray(d.list)?d.list:[];
     if(S.view==='admin'&&S.tab==='setup'&&!S.setupEditing)buildTab();
-    if(S.view==='home'&&(!S.dev||S.pickPlace)&&!($('#pcPw')&&$('#pcPw').value))renderHome();
+    if(S.view==='home'&&!S.dev&&!($('#pcPw')&&$('#pcPw').value))renderHome();
   },e=>toast(dbErr(e),true));
-  loadDev();ensureNoticeSub();restoreView();
+  await resolveAccount();await evalGate();
 }
 boot();
 })();
