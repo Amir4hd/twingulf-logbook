@@ -7,13 +7,17 @@ service cloud.firestore {
     // The admin list is managed only in the Firebase console.
     match /admins/{id} { allow read: if signedIn(); allow write: if false; }
 
-    // Setup, maintenance tasks and history: everyone signed in can read, only admins can change.
-    match /config/{id}        { allow read: if signedIn(); allow write: if isAdmin(); }
-    match /maint_tasks/{id}   { allow read: if signedIn(); allow write: if isAdmin(); }
-    match /maint_history/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+    // Setup: everyone signed in can read, only admins can change.
+    match /config/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
 
-    // Readings and problem reports: tablet accounts can read and write.
-    match /logs/{id}   { allow read, write: if signedIn(); allow delete: if isAdmin(); }
-    match /issues/{id} { allow read, write: if signedIn(); allow delete: if isAdmin(); }
+    // Maintenance tasks and history: the maintenance tablet (any signed-in account) can add and update; only admins can delete.
+    match /maint_tasks/{id}   { allow read, create, update: if signedIn(); allow delete: if isAdmin(); }
+    match /maint_history/{id} { allow read, create, update: if signedIn(); allow delete: if isAdmin(); }
+
+    // Readings, regrinding, problem reports, press-to-packaging messages and tablet heartbeats: tablet accounts can read and write.
+    match /logs/{id}     { allow read, write: if signedIn(); allow delete: if isAdmin(); }
+    match /issues/{id}   { allow read, write: if signedIn(); allow delete: if isAdmin(); }
+    match /notices/{id}  { allow read, write: if signedIn(); allow delete: if isAdmin(); }
+    match /presence/{id} { allow read, write: if signedIn(); }
   }
 }
