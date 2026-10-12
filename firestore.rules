@@ -10,6 +10,10 @@ service cloud.firestore {
     // Setup: everyone signed in can read, only admins can change.
     match /config/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
 
+    // The shift leader tablet account may change the operators list (operators, passwords, active). Only the admin console assigns leaders in practice.
+    function isLeaderAcct() { return signedIn() && request.auth.token.email != null && request.auth.token.email.lower().matches('(shiftleader|leader|shift)@.*'); }
+    match /config/operators { allow write: if isLeaderAcct(); }
+
     // Maintenance tasks and history: the maintenance tablet (any signed-in account) can add and update; only admins can delete.
     match /maint_tasks/{id}   { allow read, create, update: if signedIn(); allow delete: if isAdmin(); }
     match /maint_history/{id} { allow read, create, update: if signedIn(); allow delete: if isAdmin(); }

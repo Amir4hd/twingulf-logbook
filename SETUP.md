@@ -51,3 +51,11 @@ Every screen has a small **Sign out** button at the bottom-left. It asks to conf
 - Operator passwords (inside the app) show who saved an entry. They are not strong security. The Firebase accounts are the real access control.
 - Firebase free plan limits: 1 GB storage, 50,000 reads and 20,000 writes per day. This factory should stay far below that.
 - The first sign-in on each tablet needs internet.
+
+## Part 5: Let the admin change tablet account passwords (one time, optional)
+The Control room > Setup > "Tablet account passwords" page needs a small server function. Without this step that page shows a warning and everything else works normally.
+1. Firebase console > Project settings (gear) > **Service accounts** > **Generate new private key** > Generate. A `.json` file downloads. Keep it secret; never put it in GitHub.
+2. Netlify > your site > **Site configuration > Environment variables > Add a variable**. Key: `FIREBASE_SERVICE_ACCOUNT`. Value: open the downloaded `.json` file with Notepad, select everything, copy, paste. Save.
+3. Netlify > **Deploys > Trigger deploy > Deploy site**.
+4. Open the app as admin, Control room > Setup > Tablet account passwords > Set new password.
+The new password needs at least 6 characters. A tablet already signed in stays signed in; the new password is used the next time it signs in.

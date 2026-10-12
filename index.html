@@ -159,6 +159,8 @@ svg.ch .lim{stroke:var(--warn);stroke-width:1.2;stroke-dasharray:5 4}
 .who.ok{color:var(--ok)}.who.bad{color:var(--bad)}
 .status.ok{background:var(--okbg);color:var(--ok)}.status.warn{background:var(--warnbg);color:var(--warn)}.status.bad{background:var(--badbg);color:var(--bad);font-weight:600}
 fieldset.plain{border:0;padding:0;margin:0;min-width:0;display:flex;flex-direction:column;gap:16px}
+.orow2{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.orow2 .nm{flex:1 1 160px;font-size:18px}
+.smenu{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .orow{display:grid;grid-template-columns:minmax(140px,2fr) minmax(140px,2fr) 70px 40px;gap:8px;align-items:center;margin-bottom:6px}
 .orow input[type=text],.orow input[type=password]{min-height:38px;padding:5px 8px}
 .vals{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 14px;margin-top:6px}
@@ -356,6 +358,11 @@ const ROLE_OF_PREFIX={press:'press',lab:'lab',laboratory:'lab',pack:'pack',packi
 const TEST_ACCTS=[['press@local.com','Press'],['lab@local.com','Laboratory'],['pack@local.com','Packaging'],['shiftleader@local.com','Shift leader'],['maint@local.com','Maintenance']];
 const roleOfEmail=em=>ROLE_OF_PREFIX[String(em||'').toLowerCase().split('@')[0].replace(/[^a-z]/g,'')]||null;
 const NEED_APPROVAL=pl=>pl==='press'||pl==='lab'||pl==='pack';
+const LOCKED_ROLE=NEED_APPROVAL;
+const DEV=()=>{let v=lsGet('plant.devid');if(!v){v='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);lsSet('plant.devid',v);}return v;};
+const liveMark=()=>{if(S.sessionOk)lsSet('plant.live',JSON.stringify({sid:SID(),ts:Date.now()}));};
+setInterval(liveMark,10000);
+window.addEventListener('pagehide',()=>{try{const l=JSON.parse(lsGet('plant.live')||'null');if(l&&l.sid===SID())lsSet('plant.live','');}catch(e){}});
 const SID=()=>{let v=ssGet('plant.sid');if(!v){v='s'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);ssSet('plant.sid',v);}return v;};
 function nextShiftMs(){const st=S.cfg.shifts.map(x=>Number(x.start)).sort((a,b)=>a-b),n=new Date();let best=null;for(let d=0;d<2;d++)st.forEach(h=>{const t=new Date(n.getFullYear(),n.getMonth(),n.getDate()+d,h,0,0).getTime();if(t>n.getTime()&&(best===null||t<best))best=t;});return best||Date.now()+8*3600e3;}
 function approvalOk(){try{const a=JSON.parse(lsGet('plant.appr')||'null');return !!(a&&S.acct&&a.uid===S.acct.uid&&a.until>Date.now());}catch(e){return false;}}
@@ -364,24 +371,32 @@ async function resolveAccount(){
   if(S.user&&typeof S.user.info==='function'){try{const i=await S.user.info();S.acct={uid:i.uid,email:i.email||''};S.acct.role=S.isAdmin?'admin':roleOfEmail(S.acct.email);}catch(e){}}
   else{const t=ssGet('plant.test');if(t){S.acct={uid:'test_'+t,email:t,test:true};S.acct.role=t==='admin'?(S.isAdmin?'admin':null):roleOfEmail(t);}}
 }
-async function acquireSession(force){
+async function acquireSession(){
   const ref=S.db.doc('sessions/'+S.acct.uid);
   let d=null;try{const sn=await ref.get();d=sn.exists?sn.data():null;}catch(e){}
   const fresh=d&&d.ts&&Date.now()-new Date(d.ts).getTime()<180000;
-  if(fresh&&d.sid!==SID()&&!force){S.sessInfo=d;return false;}
-  try{await ref.set({sid:SID(),place:S.acct.role,email:S.acct.email,ts:new Date().toISOString()});}catch(e){}
-  S.sessionOk=true;
+  if(fresh&&d.sid&&d.sid!==SID()){
+    let block=true;
+    if(d.dev&&d.dev===DEV()){ /* same tablet: only blocked while the other tab is really alive */
+      let lv=null;try{lv=JSON.parse(lsGet('plant.live')||'null');}catch(e){}
+      block=!!(lv&&lv.sid===d.sid&&Date.now()-lv.ts<150000);
+    }
+    if(block){S.sessInfo=d;return false;}
+  }
+  const iso=new Date().toISOString();
+  try{await ref.set({sid:SID(),dev:DEV(),place:S.acct.role,email:S.acct.email,ts:iso,sts:S.db.serverTime||iso,ready:false});}catch(e){}
+  S.sessionOk=true;liveMark();
   resub('sess',()=>S.db.doc('sessions/'+S.acct.uid).onSnapshot(sn=>{const x=sn.exists?sn.data():null;if(S.sessionOk&&x&&x.sid&&x.sid!==SID())kicked();},e=>{}));
   return true;
 }
 function kicked(){S.sessionOk=false;unsub('sess');unsub('notices');S.dev=null;S.gate='kicked';S.view='home';renderTop();renderHome();}
 async function evalGate(){
   const a=S.acct;S.sessInfo=null;
-  const stop=g=>{S.gate=g;S.dev=null;S.view='home';renderTop();renderHome();};
+  const stop=g=>{S.gate=g;S.dev=null;S.view='home';renderTop();renderHome();if(g==='approve')beat();};
   if(!S.db)return stop('nodb');
   if(!a)return stop((S.user&&S.user.info)?'norole':'pick');
   if(!a.role)return stop('norole');
-  if(a.role!=='admin'&&!S.sessionOk){if(!await acquireSession(false))return stop('refused');}
+  if(LOCKED_ROLE(a.role)&&!S.sessionOk){if(!await acquireSession())return stop('refused');}
   if(NEED_APPROVAL(a.role)&&!approvalOk())return stop('approve');
   S.gate=null;S.dev={place:a.role,at:new Date().toISOString()};S.unlock=null;S.dirty=false;
   unsub('notices');ensureNoticeSub();beat();renderTop();restoreView();
@@ -393,7 +408,7 @@ async function doSignOut(){
   ssSet('plant.test','');S.acct=null;S.gate='pick';S.view='home';renderTop();renderHome();
 }
 async function askSignOut(){
-  if(adminEff()){if(!await ask({title:'Sign out?',msg:'This tablet will need the account email and password to sign in again.',ok:'Yes, sign out'}))return;}
+  if(adminEff()||(S.dev&&S.dev.place==='maint')){if(!await ask({title:'Sign out?',msg:'This tablet will need the account email and password to sign in again.',ok:'Yes, sign out'}))return;}
   else{const L=await ask({title:'Sign out',msg:'A shift leader password is needed to sign this tablet out. Signing in again needs the account email, its password and internet.',pw:true,leaderOnly:true,ok:'Sign out'});if(!L)return;}
   doSignOut();
 }
@@ -412,10 +427,9 @@ function renderGate(){
   }
   if(g==='refused'){
     const t=S.sessInfo&&S.sessInfo.ts?fmt12(S.sessInfo.ts):'a moment ago';
-    card('Already signed in elsewhere','<p class="muted">'+esc(placeName(a.role))+' ('+esc(a.email)+') is already open on another tablet or browser tab (last seen '+esc(t)+'). Only one is allowed. Close the other one, or a shift leader can take it over here.</p><div class="row"><button type="button" class="btn pri big" id="gtRetry">Try again</button><button type="button" class="btn big" id="gtTake">Shift leader: take over</button><button type="button" class="btn" id="gtOut">Sign out</button></div>');
+    card('Another device is connected','<p class="muted">'+esc(placeName(a.role))+' ('+esc(a.email)+') is already signed in on another tablet or browser tab (last seen '+esc(t)+'). Only one is allowed for each of Press, Laboratory and Packaging.</p><p><b>Log out on the other device first, then try again here.</b></p><div class="row"><button type="button" class="btn pri big" id="gtRetry">Try again</button><button type="button" class="btn" id="gtOut">Sign out</button></div>');
     $('#gtRetry').onclick=()=>evalGate();
-    $('#gtTake').onclick=async()=>{const L=await ask({title:'Take over',msg:'The other tablet or tab will be signed out.',pw:true,leaderOnly:true,ok:'Take over'});if(!L)return;await acquireSession(true);evalGate();};
-    out();return;
+    const o=$('#gtOut');if(o)o.onclick=askSignOut;return;
   }
   if(g==='kicked'){
     card('Signed out here','<p class="muted">This account was opened on another tablet or browser tab, so this one was stopped.</p><div class="row"><button type="button" class="btn pri big" id="gtRetry">Try again</button><button type="button" class="btn" id="gtOut">Sign out</button></div>');
@@ -441,13 +455,14 @@ function restoreView(){
   if(!S.dev){go('home');return;}
   if(v==='admin'&&adminEff())go('admin',null,'overview');
   else if(v==='summary')go('summary');
+  else if(v==='ops'&&S.dev.place==='all')go('ops');
   else if(v.indexOf('area:')===0&&canSee(area(v.slice(5))))go('area',v.slice(5));
   else go('home');
 }
 
 /* ---------- top bar ---------- */
 function renderTop(){
-  const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':(S.view==='mplace'?'Maintenance':(S.view==='summary'?'Summary':'')));
+  const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':(S.view==='mplace'?'Maintenance':(S.view==='summary'?'Summary':(S.view==='ops'?'Operators':''))));
   const t=new Date();
   $('#top').innerHTML='<header class="bar"><span class="brand">'+esc(S.cfg.plantName||'Plant Logbook')+'</span>'+(where?'<span class="where">'+esc(where)+'</span>':'')+'<span class="sp"></span>'+
    '<span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'No database')+'</span></span>'+
@@ -476,18 +491,25 @@ function readBatt(){
   }catch(e){}
 })();
 async function beat(){
-  if(!S.db||!S.sessionOk||!S.acct)return;
-  try{await S.db.doc('sessions/'+S.acct.uid).set({sid:SID(),place:S.acct.role,email:S.acct.email,ts:new Date().toISOString(),batt:S.batt?Math.round(S.batt.level*100):null});}catch(e){}
+  if(!S.db||!S.acct||!S.acct.role||S.acct.role==='admin')return;
+  if(LOCKED_ROLE(S.acct.role)&&!S.sessionOk)return;
+  const iso=new Date().toISOString();
+  try{await S.db.doc('sessions/'+S.acct.uid).set({sid:SID(),dev:DEV(),place:S.acct.role,email:S.acct.email,ts:iso,sts:S.db.serverTime||iso,ready:!!S.dev,batt:S.batt?Math.round(S.batt.level*100):null});}catch(e){}
 }
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)beat();});
+window.addEventListener('online',()=>{beat();});
 setInterval(beat,60000);window.addEventListener('online',beat);
 async function peerStatus(){
-  const out={me:navigator.onLine!==false&&S.online!==false,pack:null};
+  const out={me:navigator.onLine!==false&&S.online!==false,pack:'unknown'};
   if(!S.db)return out;
   try{
-    const since=new Date(Date.now()-5*60000).toISOString();
-    const snap=await S.db.collection('sessions').where('ts','>=',since).limit(50).get();
-    out.pack=snap.docs.some(d=>{const x=d.data();return x&&(x.place==='pack'||x.place==='all');});
-  }catch(e){out.pack=false;}
+    const snap=await Promise.race([S.db.collection('sessions').limit(50).get({source:'server'}),new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),6000))]);
+    const rows=snap.docs.map(d=>d.data()).filter(x=>x&&(x.sts||x.ts));
+    const T=x=>new Date(x.sts||x.ts).getTime();
+    const now=rows.reduce((m,x)=>Math.max(m,T(x)),0); /* newest heartbeat = server time, so tablet clocks do not matter */
+    const packs=rows.filter(x=>(x.place==='pack'||x.place==='all')&&now-T(x)<=4*60000);
+    out.pack=packs.some(x=>x.ready!==false)?'online':(packs.length?'waiting':'offline');
+  }catch(e){out.pack='unknown';}
   return out;
 }
 setInterval(()=>{
@@ -514,6 +536,7 @@ function go(view,areaId,tab){
   
   if(view==='admin'&&!adminEff())view='home';
   if(view==='summary'&&!(adminEff()||S.dev.place==='all'))view='home';
+  if(view==='ops'&&S.dev.place!=='all')view='home';
   if(view==='area'&&!canSee(area(areaId)))view='home';
   if(view==='home'&&S.dev&&S.dev.place==='maint')view='mplace';
   if(view==='mplace'&&!(S.dev&&S.dev.place==='maint'))view='home';
@@ -525,12 +548,14 @@ function go(view,areaId,tab){
   if(view==='admin'){lsSet('plant.view','admin');}
   if(view==='mplace'){lsSet('plant.view','mplace');}
   if(view==='summary'){lsSet('plant.view','summary');S.sumDay='today';}
+  if(view==='ops'){lsSet('plant.view','ops');S.setupEditing=false;}
   renderTop();
   if(view==='home')renderHome();
   if(view==='area')renderArea();
   if(view==='admin')renderAdmin();
   if(view==='mplace')renderMplace();
   if(view==='summary')renderSummary();
+  if(view==='ops')renderOps();
 }
 
 /* ---------- home ---------- */
@@ -542,8 +567,8 @@ function renderHome(){
   $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
    (vis.length||adminEff()?'':'<div class="empty">No areas are set up for this place.</div>')+
-   '<div class="areas">'+cards+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
-  $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else go('area',a);});
+   '<div class="areas">'+cards+(S.dev.place==='all'?'<button class="acard sum" data-a="__ops"><b>Operators and passwords</b><span>Add, remove or change operator passwords</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
+  $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else if(a==='__ops')go('ops');else go('area',a);});
 }
 
 /* ---------- summary room ---------- */
@@ -1160,9 +1185,11 @@ async function sendNotice(){
   if(S.ntEdit&&(!editing||ntEditLeft(editing)<=0)){toast('The edit time has passed. Send a new message instead.',true);endNtEdit();paintSent();return;}
   const st=await peerStatus(),warn=[];
   if(!st.me)warn.push('THIS tablet has no connection');
-  if(!st.pack)warn.push('the PACKAGING tablet looks offline');
+  if(st.pack==='offline')warn.push('the PACKAGING tablet looks offline');
+  else if(st.pack==='waiting')warn.push('the PACKAGING tablet is signed in but waiting for a shift leader approval, so nobody will see the message');
+  else if(st.pack==='unknown')warn.push('the PACKAGING tablet could not be checked (no connection to the server)');
   const base=a.name+' stopped '+f+'–'+t+' ('+why+(dt?': '+dt:'')+'). Arrives at packaging '+fmt12(d)+(d.getDate()!==now.getDate()?' (tomorrow)':'')+'.';
-  const who=await ask({title:editing?'Save the changes?':'Notify the packaging team?',msg:(warn.length?'WARNING: '+warn.join(' and ')+'. The message may not reach them. After sending, go and tell them in person.  ':'')+base,pw:true,ok:editing?'Yes, save changes':'Yes, notify'});if(!who)return;
+  const who=await ask({title:editing?'Save the changes?':'Notify the packaging team?',msg:(warn.length?'WARNING: '+warn.join(' and ')+'. The message may not reach them. After sending, go and tell them in person.  ':'Packaging tablet is online.  ')+base,pw:true,ok:editing?'Yes, save changes':'Yes, notify'});if(!who)return;
   try{
     if(editing){
       await S.db.doc('notices/'+editing.id).update({stopFrom:f,stopTo:t,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),edited:true,editedBy:who.name,editedAt:new Date().toISOString()});
@@ -1497,58 +1524,149 @@ function paramRow(p){
    '<input type="text" class="s-unit" value="'+esc(p.unit)+'" aria-label="Unit"><input type="number" step="any" class="s-min" value="'+(p.min==null?'':p.min)+'" aria-label="Minimum"><input type="number" step="any" class="s-max" value="'+(p.max==null?'':p.max)+'" aria-label="Maximum">'+
    '<label class="small" style="display:flex;gap:4px;align-items:center" title="Hourly total, summed into daily totals"><input type="checkbox" class="s-tot" style="width:20px;height:20px"'+(p.total?' checked':'')+'>Σ</label><button type="button" class="btn sm bad s-del" aria-label="Remove reading">✕</button></div>';
 }
-function opRow(o){return '<div class="orow" data-id="'+esc(o.id)+'"><input type="text" class="o-name" value="'+esc(o.name)+'" placeholder="Operator name" aria-label="Operator name"><input type="password" class="o-pw" autocomplete="new-password" placeholder="'+(o.hash?'unchanged':'new password')+'" aria-label="Password"><label class="small" style="display:flex;gap:4px;align-items:center" title="Shift leaders can enter data after the time windows and change saved entries"><input type="checkbox" class="o-lead" style="width:20px;height:20px"'+(o.leader?' checked':'')+'>Leader</label><label class="small" style="display:flex;gap:4px;align-items:center"><input type="checkbox" class="o-act" style="width:20px;height:20px"'+(o.active===false?'':' checked')+'>Active</label><button type="button" class="btn sm bad o-del" aria-label="Remove operator">✕</button></div>';}
 function setupShell(){
-  const c=S.cfg;
-  return '<section class="card"><h2>Plant</h2><div class="ctlrow"><label class="l" style="flex:2 1 260px">Plant name<input type="text" id="sName" value="'+esc(c.plantName)+'"></label>'+
-   c.shifts.map((s,i)=>'<label class="l">'+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'<label class="l">Hourly entry window (minutes, 1 to 59)<input type="number" min="1" max="59" id="sEntry" value="'+(Number(c.entryMin)>=1&&Number(c.entryMin)<=59?Math.round(Number(c.entryMin)):20)+'"></label><label class="l">Press can edit a sent packaging message for (minutes)<input type="number" min="1" max="60" id="sNtEdit" value="'+(Number(c.noticeEditMin)>=1?Math.round(Number(c.noticeEditMin)):5)+'"></label></div><p class="muted small" style="margin:8px 0 0">Operators can enter an hourly reading only during the first minutes of the hour. After that only a shift leader can enter it (unlock button). Lab, packaging and RO entries are not affected.</p>'+
-   '</section><section class="card" id="opSec"><h2>Operators and passwords</h2><p class="muted small">Operators type their password to save a reading, and the app shows and records their name. Tick Leader for shift leaders: they assign the place of each tablet (Change place button), can enter data after the time windows close, and can change saved entries. Each password must be different. Leave a password blank to keep it unchanged.</p>'+
-   '<div id="opList">'+S.ops.map(opRow).join('')+'</div><div class="row" style="margin-top:8px"><button type="button" class="btn sm" id="opAdd">Add operator</button></div></section>'+
-   c.areas.map(a=>'<section class="card" data-area="'+esc(a.id)+'"><h2>'+esc(a.name)+'</h2><p class="muted small">Limits that are blank are not checked. “Σ” marks a reading that is a total for the hour (packs, kg) and is added up into daily totals. No limits are set yet: type the normal min and max for each reading and the app will flag values outside them.</p>'+
+  const c=S.cfg,sec=S.setupSec||'plant';
+  const secs=[['plant','Plant'],['ops','Operators and passwords'],['acct','Tablet account passwords']].concat(c.areas.map(a=>[a.id,a.name]));
+  const menu='<div class="smenu" role="tablist" aria-label="Setup sections">'+secs.map(x=>'<button type="button" class="btn sm'+(x[0]===sec?' pri':'')+'" data-s="'+esc(x[0])+'" aria-selected="'+(x[0]===sec)+'">'+esc(x[1])+'</button>').join('')+'</div>';
+  if(sec==='ops')return menu+'<div id="opHost"></div>';
+  if(sec==='acct')return menu+'<div id="acctHost"></div>';
+  const a=c.areas.find(x=>x.id===sec);
+  if(a)return menu+'<section class="card" data-area="'+esc(a.id)+'"><h2>'+esc(a.name)+'</h2><p class="muted small">Limits that are blank are not checked. “Σ” marks a reading that is a total for the hour (packs, kg) and is added up into daily totals. Type the normal min and max for each reading and the app will flag values outside them.</p>'+
     '<div class="prow h"><span>Reading</span><span>Group</span><span>Unit</span><span>Min</span><span>Max</span><span>Σ</span></div><div class="plist">'+a.params.map(paramRow).join('')+'</div>'+
     '<div class="row" style="margin-top:8px"><button type="button" class="btn sm s-add">Add reading</button></div>'+
-    '<label class="l" style="margin-top:12px">Equipment in this area (one per line, used for problem reports and maintenance)<textarea class="s-eq">'+esc(a.equipment.join('\n'))+'</textarea></label></section>').join('')+
-   '<div class="row"><button class="btn pri big" id="sSave">Save setup</button><button class="btn" id="sReset">Restore starter setup</button></div>';
+    '<label class="l" style="margin-top:12px">Equipment in this area (one per line, used for problem reports and maintenance)<textarea class="s-eq">'+esc(a.equipment.join('\n'))+'</textarea></label></section>'+
+    '<div class="row"><button class="btn pri big" id="sSave">Save '+esc(a.name)+'</button></div>';
+  return menu+'<section class="card"><h2>Plant</h2><div class="ctlrow"><label class="l" style="flex:2 1 260px">Plant name<input type="text" id="sName" value="'+esc(c.plantName)+'"></label>'+
+   c.shifts.map((s,i)=>'<label class="l">'+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'<label class="l">Hourly entry window (minutes, 1 to 59)<input type="number" min="1" max="59" id="sEntry" value="'+(Number(c.entryMin)>=1&&Number(c.entryMin)<=59?Math.round(Number(c.entryMin)):20)+'"></label><label class="l">Press can edit a sent packaging message for (minutes)<input type="number" min="1" max="60" id="sNtEdit" value="'+(Number(c.noticeEditMin)>=1?Math.round(Number(c.noticeEditMin)):5)+'"></label></div><p class="muted small" style="margin:8px 0 0">Operators can enter an hourly reading only during the first minutes of the hour. After that only a shift leader can enter it (unlock button). Lab, packaging and RO entries are not affected.</p></section>'+
+   '<div class="row"><button class="btn pri big" id="sSave">Save plant</button><button class="btn" id="sReset">Restore starter setup</button></div>';
 }
-function bindSetup(){
-  const t=$('#tab');
+function bindSetup(rootSel,lim){
+  const t=$(rootSel||'#tab');
   t.oninput=()=>{S.setupEditing=true;};
-  t.onclick=e=>{
-    const od=e.target.closest('.o-del');if(od){od.closest('.orow').remove();S.setupEditing=true;return;}
-    if(e.target.closest('#opAdd')){$('#opList').insertAdjacentHTML('beforeend',opRow({id:'o_'+Date.now().toString(36)+Math.floor(Math.random()*99),name:'',hash:'',active:true,leader:false}));$('#opList').lastElementChild.querySelector('input').focus();S.setupEditing=true;return;}
+  t.onclick=async e=>{
+    const sm=e.target.closest('.smenu button');
+    if(sm){if(sm.dataset.s===(S.setupSec||'plant'))return;if(S.setupEditing&&!await ask({title:'Leave this section?',msg:'Changes in this section are not saved yet and will be lost.',ok:'Yes, leave'}))return;S.setupSec=sm.dataset.s;S.setupEditing=false;buildTab();return;}
     const del=e.target.closest('.s-del');if(del){del.closest('.prow').remove();S.setupEditing=true;return;}
     const add=e.target.closest('.s-add');if(add){const l=add.closest('section').querySelector('.plist');l.insertAdjacentHTML('beforeend',paramRow({id:'p_'+Date.now().toString(36)+Math.floor(Math.random()*99),label:'',unit:'',group:'',min:null,max:null,total:false}));l.lastElementChild.querySelector('input').focus();S.setupEditing=true;}
   };
-  $('#sSave').onclick=saveSetup;
-  $('#sReset').onclick=async()=>{if(!await ask({title:'Restore the starter setup?',msg:'Readings, limits and units return to the starter list. Operators are not changed.',ok:'Yes, restore'}))return;try{await S.db.doc('config/main').delete();S.setupEditing=false;toast('Starter setup restored.');}catch(e){toast(dbErr(e),true);}};
+  const sv=$('#sSave');if(sv)sv.onclick=()=>{const sec=S.setupSec||'plant';if(sec==='plant')savePlant();else saveArea(sec);};
+  if((S.setupSec||'plant')==='ops'&&$('#opHost'))opsPanel($('#opHost'),true);
+  if((S.setupSec||'plant')==='acct'&&$('#acctHost'))acctPanel($('#acctHost'));
+  const rs=$('#sReset');
+  if(rs)rs.onclick=async()=>{if(!await ask({title:'Restore the starter setup?',msg:'Readings, limits and units return to the starter list. Operators are not changed.',ok:'Yes, restore'}))return;try{await S.db.doc('config/main').delete();S.setupEditing=false;toast('Starter setup restored.');}catch(e){toast(dbErr(e),true);}};
 }
-async function saveSetup(){
-  const cfg={plantName:$('#sName').value.trim()||'Plant Logbook',noticeEditMin:Math.max(1,Math.min(60,Math.round(Number($('#sNtEdit').value))||5)),entryMin:Math.max(1,Math.min(59,Math.round(Number($('#sEntry').value))||20)),shifts:S.cfg.shifts.map((s,i)=>({name:s.name,start:Math.max(0,Math.min(23,Number($('.sShift[data-i="'+i+'"]').value)||0))})),
-    operators:[],areas:[]};
-  $$('section[data-area]').forEach(sec=>{
-    const base=area(sec.dataset.area),params=[];
+async function writeCfg(mut,what){
+  const cfg=JSON.parse(JSON.stringify(S.cfg));cfg.operators=[];
+  if(mut(cfg)===false)return;
+  if(!await ask({title:'Do you want to save?',msg:'Save '+what+'.',ok:'Yes, save'}))return;
+  try{await S.db.doc('config/main').set(cfg);S.setupEditing=false;toast('Saved. Tablets update automatically.');}catch(e){toast(dbErr(e),true);}
+}
+function savePlant(){
+  writeCfg(cfg=>{
+    cfg.plantName=$('#sName').value.trim()||'Plant Logbook';
+    cfg.noticeEditMin=Math.max(1,Math.min(60,Math.round(Number($('#sNtEdit').value))||5));
+    cfg.entryMin=Math.max(1,Math.min(59,Math.round(Number($('#sEntry').value))||20));
+    cfg.shifts=S.cfg.shifts.map((s,i)=>({name:s.name,start:Math.max(0,Math.min(23,Number($('.sShift[data-i="'+i+'"]').value)||0))}));
+  },'the plant settings');
+}
+function saveArea(id){
+  const sec=$('section[data-area]');if(!sec)return;
+  writeCfg(cfg=>{
+    const a=cfg.areas.find(x=>x.id===id);if(!a)return false;
+    const params=[];
     $$('.prow',sec).forEach(r=>{if(r.classList.contains('h'))return;const label=$('.s-label',r).value.trim();if(!label)return;
       params.push({id:r.dataset.id,label,group:$('.s-group',r).value.trim(),unit:$('.s-unit',r).value.trim(),min:num($('.s-min',r).value),max:num($('.s-max',r).value),total:$('.s-tot',r).checked,kind:r.dataset.kind||'num',calc:r.dataset.calc||'',options:JSON.parse(r.dataset.opts||'[]'),win:JSON.parse(r.dataset.win||'null')||undefined,opt:r.dataset.opt==='1'||undefined,sm:r.dataset.sm==='1'||undefined});});
-    cfg.areas.push({id:base.id,name:base.name,every:base.every||'hour',timed:!!base.timed,noStatus:!!base.noStatus,noStatus:!!base.noStatus,equipment:$('.s-eq',sec).value.split('\n').map(s=>s.trim()).filter(Boolean),params});
+    a.params=params;a.equipment=$('.s-eq',sec).value.split('\n').map(x=>x.trim()).filter(Boolean);
+  },'this area');
+}
+/* tablet account passwords (Firebase sign-in accounts), changed by the admin through a small server function */
+const ACCT_LIST=[['press@local.com','Press'],['lab@local.com','Laboratory'],['pack@local.com','Packaging'],['shiftleader@local.com','Shift leader'],['maint@local.com','Maintenance']];
+function acctPanel(host){
+  const can=!!(S.user&&typeof S.user.setAccountPassword==='function');
+  host.innerHTML='<section class="card"><h2>Tablet account passwords</h2><p class="muted small">These are the passwords used to sign a tablet in (the email and password on the sign-in screen). Passwords are never shown, only replaced. A tablet that is already signed in stays signed in; the new password is needed the next time it signs in. At least 6 characters.</p>'+(can?'':'<p class="status warn">Preview only: changing these works in the real tablet app after the one-time server setup.</p>')+
+   ACCT_LIST.map(a=>'<div class="orow2"><b class="nm">'+esc(a[1])+'</b><span class="muted">'+esc(a[0])+'</span><button type="button" class="btn sm" data-em="'+esc(a[0])+'"'+(can?'':' disabled')+'>Set new password</button></div>').join('')+'</section>';
+  host.onclick=async e=>{
+    const b=e.target.closest('[data-em]');if(!b||!can)return;const em=b.dataset.em;
+    const r=await opDlg({title:'New password: '+em,msg:'Type the new sign-in password twice.',fields:[{id:'p1',label:'New password (at least 6 characters)'},{id:'p2',label:'Repeat new password'}],ok:'Set password',validate:async v=>{if(v.p1.length<6)return 'At least 6 characters.';if(v.p1!==v.p2)return 'The two passwords are not the same.';return null;}});
+    if(!r)return;
+    try{await S.user.setAccountPassword(em,r.vals.p1);toast('Password changed for '+em+'.');}catch(err){toast(String(err&&err.message||err),true);}
+  };
+}
+/* operators and passwords: same panel for the shift leader (limited) and the admin (full, can assign leaders) */
+function opDlg(o){
+  return new Promise(resolve=>{
+    const old=$('#dlg');if(old)old.remove();
+    const adm=adminEff();
+    const w=document.createElement('div');w.id='dlg';w.className='ovl';
+    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true"><h2>'+esc(o.title)+'</h2><p>'+esc(o.msg||'')+'</p><div style="display:grid;gap:10px">'+(o.fields||[]).map(f=>'<label class="l">'+esc(f.label)+'<input type="'+(f.type||'password')+'" id="od_'+f.id+'" autocomplete="off" value="'+esc(f.value||'')+'"></label>').join('')+
+     (adm?'':'<label class="l">Shift leader password (approval)<input type="password" id="od_lead" autocomplete="off"></label><div id="od_who" class="who" aria-live="polite"></div>')+'<div id="od_err" class="status bad" hidden></div></div>'+
+     '<div class="row" style="margin-top:6px"><button type="button" class="btn big" id="od_no">Cancel</button><button type="button" class="btn pri big" id="od_yes" disabled>'+esc(o.ok||'Save')+'</button></div></div>';
+    document.body.appendChild(w);
+    let lead=adm?{name:'Admin'}:null,seq=0;
+    const done=v=>{w.remove();resolve(v);};
+    const vals=()=>{const v={};(o.fields||[]).forEach(f=>{v[f.id]=$('#od_'+f.id).value;});return v;};
+    const ready=()=>{const v=vals();$('#od_yes').disabled=!(lead&&(o.fields||[]).every(f=>(f.type==='text'?v[f.id].trim():v[f.id])));};
+    w.oninput=async e=>{
+      $('#od_err').hidden=true;
+      if(e.target.id==='od_lead'){const my=++seq,p=e.target.value;lead=null;ready();const who=$('#od_who');who.textContent='';who.className='who';if(!p)return;const f=await findOperator(p);if(my!==seq)return;
+        if(f&&f.leader){lead=f;who.textContent=f.name+' (shift leader)';who.className='who ok';}else if(f){who.textContent='Not a shift leader password';who.className='who bad';}else if(p.length>=4){who.textContent='Password not recognised';who.className='who bad';}}
+      ready();
+    };
+    $('#od_no').onclick=()=>done(null);
+    $('#od_yes').onclick=async()=>{const v=vals();const msg=o.validate?await o.validate(v):null;if(msg){const err=$('#od_err');err.textContent=msg;err.hidden=false;return;}done({vals:v,leader:lead});};
+    const first=(o.fields&&o.fields[0])?$('#od_'+o.fields[0].id):$('#od_lead');if(first)first.focus();else ready();
+    ready();
   });
-  const rows=$$('#opList .orow').map(r=>({id:r.dataset.id,name:$('.o-name',r).value.trim(),plain:$('.o-pw',r).value,active:$('.o-act',r).checked,leader:$('.o-lead',r).checked})).filter(r=>r.name||r.plain);
-  const list=[];
-  for(const r of rows){
-    const old=S.ops.find(o=>o.id===r.id);
-    if(!r.name){toast('Every operator needs a name.',true);return;}
-    if(!old&&!r.plain){toast('Set a password for '+r.name+'.',true);return;}
-    if(r.plain&&r.plain.length<4){toast('Passwords need at least 4 characters ('+r.name+').',true);return;}
-    list.push(r.plain?{id:r.id,name:r.name,active:r.active,leader:r.leader,salt:'',hash:'',plain:r.plain}:{id:r.id,name:r.name,active:r.active,leader:r.leader,salt:old.salt,hash:old.hash});
-  }
-  for(const o of list){if(!o.plain)continue;
-    for(const q of list){if(q===o)continue;if((q.plain&&q.plain===o.plain)||(!q.plain&&await hashPw(q.salt,o.plain)===q.hash)){toast('The password for '+o.name+' is already used by '+q.name+'. Passwords must be different.',true);return;}}
-    o.salt=newSalt();o.hash=await hashPw(o.salt,o.plain);}
-  if(!await ask({title:'Do you want to save?',msg:'Save the plant setup and '+list.length+' operator'+(list.length===1?'':'s')+'.',ok:'Yes, save'}))return;
-  try{
-    await S.db.doc('config/main').set(cfg);
-    await S.db.doc('config/operators').set({list:list.map(o=>({id:o.id,name:o.name,active:o.active,leader:!!o.leader,salt:o.salt,hash:o.hash}))});
-    S.setupEditing=false;toast('Setup saved. Tablets update automatically.');
-  }catch(e){toast(dbErr(e),true);}
+}
+async function opsWrite(mut){
+  const list=S.ops.map(o=>({id:o.id,name:o.name,active:o.active!==false,leader:!!o.leader,salt:o.salt,hash:o.hash}));
+  mut(list);
+  try{await S.db.doc('config/operators').set({list});return true;}catch(e){toast(dbErr(e),true);return false;}
+}
+const pwUsed=async(pw,exceptId)=>{for(const q of S.ops){if(q.id===exceptId)continue;if(q.hash&&await hashPw(q.salt,pw)===q.hash)return q;}return null;};
+function opsPanel(host,adm){
+  const rows=S.ops.map(o=>{
+    const chips=(o.leader?'<span class="chip warn">Shift leader</span>':'')+(o.active===false?'<span class="chip bad">Inactive</span>':'<span class="chip ok">Active</span>');
+    if(!adm&&o.leader)return '<div class="orow2" data-id="'+esc(o.id)+'"><b class="nm">'+esc(o.name)+'</b>'+chips+'<span class="muted small">Only the admin can change a shift leader</span></div>';
+    return '<div class="orow2" data-id="'+esc(o.id)+'"><b class="nm">'+esc(o.name)+'</b>'+chips+(adm?'<button type="button" class="btn sm" data-act="ren">Rename</button>':'')+'<button type="button" class="btn sm" data-act="pw">Change password</button>'+(adm?'<button type="button" class="btn sm" data-act="lead">'+(o.leader?'Remove leader':'Make shift leader')+'</button>':'')+'<button type="button" class="btn sm" data-act="act">'+(o.active===false?'Make active':'Make inactive')+'</button><button type="button" class="btn sm bad" data-act="del">Remove</button></div>';
+  }).join('');
+  host.innerHTML='<section class="card"><h2>Operators and passwords</h2><p class="muted small">'+(adm?'Every change saves straight away. You are the admin, so no shift leader approval is needed. You can also make an operator a shift leader.':'Every change needs a shift leader password. Changing a password asks for the old password first. Shift leaders can only be changed by the admin.')+'</p><div id="opPage">'+(rows||'<div class="empty">No operators yet.</div>')+'</div><div class="row" style="margin-top:10px"><button type="button" class="btn pri" id="opAdd">Add operator</button></div></section>';
+  const pwRules=async(v,id,oldOk)=>{if(v.p1.length<4)return 'Passwords need at least 4 characters.';if(v.p1!==v.p2)return 'The two passwords are not the same.';const u=await pwUsed(v.p1,id);if(u)return 'This password is already used by '+u.name+'. Choose another.';return null;};
+  $('#opAdd').onclick=async()=>{
+    const r=await opDlg({title:'Add operator',msg:adm?'Type the new operator name and password.':'Type the new operator name and password, then a shift leader approves.',fields:[{id:'name',label:'Operator name',type:'text'},{id:'p1',label:'Password (at least 4 characters)'},{id:'p2',label:'Repeat password'}],ok:'Add operator',validate:v=>pwRules(v,null)});
+    if(!r)return;const v=r.vals,salt=newSalt(),hash=await hashPw(salt,v.p1);
+    if(await opsWrite(l=>l.push({id:'o_'+Date.now().toString(36)+Math.floor(Math.random()*99),name:v.name.trim(),active:true,leader:false,salt,hash})))toast(v.name.trim()+' added.');
+  };
+  $('#opPage').onclick=async e=>{
+    const b=e.target.closest('[data-act]');if(!b)return;const id=b.closest('.orow2').dataset.id,o=S.ops.find(x=>x.id===id);if(!o||(!adm&&o.leader))return;
+    const act=b.dataset.act;
+    if(act==='pw'){
+      const fields=adm?[{id:'p1',label:'New password (at least 4 characters)'},{id:'p2',label:'Repeat new password'}]:[{id:'old',label:'Old password'},{id:'p1',label:'New password (at least 4 characters)'},{id:'p2',label:'Repeat new password'}];
+      const r=await opDlg({title:'Change password: '+o.name,msg:adm?'Type the new password twice.':'Type the old password, the new password twice, then a shift leader approves.',fields,ok:'Change password',
+        validate:async v=>{if(!adm){if(await hashPw(o.salt,v.old)!==o.hash)return 'The old password is not correct.';if(v.p1===v.old)return 'The new password must be different from the old one.';}return pwRules(v,id);}});
+      if(!r)return;const salt=newSalt(),hash=await hashPw(salt,r.vals.p1);
+      if(await opsWrite(l=>{const x=l.find(y=>y.id===id);x.salt=salt;x.hash=hash;}))toast('Password changed for '+o.name+'.');
+    }else if(act==='ren'){
+      const r=await opDlg({title:'Rename operator',fields:[{id:'name',label:'Name',type:'text',value:o.name}],ok:'Save name'});
+      if(!r)return;if(await opsWrite(l=>{l.find(y=>y.id===id).name=r.vals.name.trim();}))toast('Name changed.');
+    }else if(act==='lead'){
+      const to=!o.leader;
+      const r=await opDlg({title:(to?'Make shift leader: ':'Remove leader status: ')+o.name,msg:to?'This person will be able to approve tablets, unlock screens and change saved entries.':'This person will become a normal operator.',fields:[],ok:to?'Make shift leader':'Remove leader'});
+      if(!r)return;if(await opsWrite(l=>{l.find(y=>y.id===id).leader=to;}))toast(o.name+(to?' is now a shift leader.':' is now a normal operator.'));
+    }else if(act==='act'){
+      const nowOn=o.active!==false;
+      const r=await opDlg({title:(nowOn?'Make inactive: ':'Make active: ')+o.name,msg:nowOn?'This person will no longer be able to save readings.':'This person will be able to save readings again.',fields:[],ok:nowOn?'Make inactive':'Make active'});
+      if(!r)return;if(await opsWrite(l=>{l.find(y=>y.id===id).active=!nowOn;}))toast(o.name+(nowOn?' is now inactive.':' is now active.'));
+    }else if(act==='del'){
+      const r=await opDlg({title:'Remove '+o.name+'?',msg:'The name stays on readings already saved, but this person can no longer sign anything.',fields:[],ok:'Yes, remove'});
+      if(!r)return;if(await opsWrite(l=>{l.splice(l.findIndex(y=>y.id===id),1);}))toast(o.name+' removed.');
+    }
+  };
+}
+function renderOps(){
+  if(!(S.dev&&S.dev.place==='all')){go('home');return;}
+  $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Operators and passwords</h1></div><div id="opHost"></div>';
+  opsPanel($('#opHost'),false);
 }
 
 /* ---------- config sync ---------- */
@@ -1584,6 +1702,7 @@ async function boot(){
   S.db.doc('config/operators').onSnapshot(snap=>{
     const d=snap.exists?snap.data():null;S.ops=d&&Array.isArray(d.list)?d.list:[];
     if(S.view==='admin'&&S.tab==='setup'&&!S.setupEditing)buildTab();
+    if(S.view==='ops'&&!$('#dlg'))renderOps();
     if(S.view==='home'&&!S.dev&&!($('#pcPw')&&$('#pcPw').value))renderHome();
   },e=>toast(dbErr(e),true));
   await resolveAccount();await evalGate();
