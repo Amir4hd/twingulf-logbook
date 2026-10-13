@@ -539,6 +539,7 @@ setInterval(()=>{
     refreshRecent();paintAreaIssues();
   }
   if(S.view==='admin'&&(S.tab==='overview'||S.tab==='devices'))paintTab();
+  if(S.view==='admin')paintDevBadge();
 },10000);
 window.addEventListener('online',()=>{S.online=true;renderTop();});
 window.addEventListener('offline',()=>{S.online=false;renderTop();});
@@ -1057,9 +1058,9 @@ const TABS=[['overview','Overview'],['trends','Trends & export'],['maint','Maint
 const MTABS=[['issues','Requests'],['maint','Preventive'],['done','Recent maintenance done']];
 function renderAdmin(){
   if(!adminEff()){go('home');return;}
-  $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+'</button>').join('')+'</div><div id="tab"></div>';
+  $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='devices'?' <span class="chip ok" id="devBadge" hidden></span>':'')+'</button>').join('')+'</div><div id="tab"></div>';
   $$('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;S.setupEditing=false;$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));buildTab();});
-  subAdmin();buildTab();
+  subAdmin();buildTab();paintDevBadge();
 }
 function renderMplace(){
   if(!(S.dev&&S.dev.place==='maint')&&!adminEff()){go('home');return;}
@@ -1122,6 +1123,14 @@ function ensureNoticeSub(){
 }
 
 /* ---- devices online (admin) ---- */
+function devOnlineCount(){
+  const T=x=>new Date(x.sts||x.ts).getTime(),seen={};
+  (S.devs||[]).filter(x=>x&&(x.sts||x.ts)).forEach(x=>{const k=x.email+'|'+x.dev;if(!seen[k]||T(x)>T(seen[k]))seen[k]=x;});
+  const all=Object.keys(seen).map(k=>seen[k]);
+  const ref=all.reduce((m,x)=>Math.max(m,T(x)),0)+(Date.now()-(S.devsAt||Date.now()));
+  return all.filter(x=>ref-T(x)<=180000&&x.ready!==false).length;
+}
+function paintDevBadge(){const b=$('#devBadge');if(!b)return;const n=devOnlineCount();b.hidden=!n;b.textContent=n;b.title=n+' device'+(n===1?'':'s')+' online';}
 function paintDevices(){
   const el=$('#devBody');if(!el)return;
   const T=x=>new Date(x.sts||x.ts).getTime();
@@ -1135,7 +1144,7 @@ function paintDevices(){
   const chip=k=>k==='on'?'<span class="chip ok">Online</span>':k==='wait'?'<span class="chip warn">At sign-in screen</span>':'<span class="chip">Offline</span>';
   const order=['press','lab','pack','all','maint','admin'];
   const nOn=rows.filter(x=>st(x)==='on').length;
-  let h='<section class="card"><h2>Devices online <span class="chip '+(nOn?'ok':'')+'">'+nOn+' online now</span></h2><p class="muted small" style="margin:4px 0 0">Updates by itself. A device counts as online when it has reported in during the last 3 minutes.</p></section>';
+  let h='<section class="card"><div class="row" style="align-items:center;gap:14px"><div style="font-size:44px;line-height:1;font-weight:800;color:var(--ok)">'+nOn+'</div><div><h2 style="margin:0">Devices online now</h2><div class="muted small">'+(nOn===1?'1 device':nOn+' devices')+' connected and signed in</div></div></div><p class="muted small" style="margin:4px 0 0">Updates by itself. A device counts as online when it has reported in during the last 3 minutes.</p></section>';
   h+='<div class="split" style="margin-top:16px">'+order.map(pl=>{
     const list=rows.filter(x=>x.place===pl).sort((a,b)=>T(b)-T(a));
     const on=list.some(x=>st(x)==='on'),wt=list.some(x=>st(x)==='wait');
@@ -1279,7 +1288,7 @@ function subAdmin(){
     if(sig!==S.pmSig){S.pmSig=sig;loadPM();}
     if(S.tab==='maint'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
   resub('devs',()=>S.db.collection('sessions').limit(60).onSnapshot(snap=>{
-    S.devs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.devsAt=Date.now();if(S.tab==='devices')paintTab();},e=>{}));
+    S.devs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.devsAt=Date.now();paintDevBadge();if(S.tab==='devices')paintTab();},e=>{}));
   resub('hist',()=>S.db.collection('maint_history').orderBy('at','desc').limit(60).onSnapshot(snap=>{
     S.hist=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.tab==='maint'||S.tab==='done')paintTab();},e=>toast(dbErr(e),true)));
 }
