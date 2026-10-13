@@ -14,9 +14,10 @@ service cloud.firestore {
     function isLeaderAcct() { return signedIn() && request.auth.token.email != null && request.auth.token.email.lower().matches('(shiftleader|leader|shift)@.*'); }
     match /config/operators { allow write: if isLeaderAcct(); }
 
-    // Maintenance tasks and history: the maintenance tablet (any signed-in account) can add and update; only admins can delete.
-    match /maint_tasks/{id}   { allow read, create, update: if signedIn(); allow delete: if isAdmin(); }
-    match /maint_history/{id} { allow read, create, update: if signedIn(); allow delete: if isAdmin(); }
+    // Maintenance tasks and history: any signed-in account can add and update; the admin and the maintenance account can delete.
+    function isMaintAcct() { return signedIn() && request.auth.token.email != null && request.auth.token.email.lower().matches('(maint|maintenance)@.*'); }
+    match /maint_tasks/{id}   { allow read, create, update: if signedIn(); allow delete: if isAdmin() || isMaintAcct(); }
+    match /maint_history/{id} { allow read, create, update: if signedIn(); allow delete: if isAdmin() || isMaintAcct(); }
 
     // Readings, regrinding, problem reports, press-to-packaging messages and tablet heartbeats: tablet accounts can read and write.
     match /logs/{id}     { allow read, write: if signedIn(); allow delete: if isAdmin(); }

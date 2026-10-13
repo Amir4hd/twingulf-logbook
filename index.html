@@ -1216,7 +1216,7 @@ function subAdmin(){
     if(sig!==S.pmSig){S.pmSig=sig;loadPM();}
     if(S.tab==='maint'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
   resub('hist',()=>S.db.collection('maint_history').orderBy('at','desc').limit(60).onSnapshot(snap=>{
-    S.hist=snap.docs.map(d=>d.data());if(S.tab==='maint'||S.tab==='done')paintTab();},e=>toast(dbErr(e),true)));
+    S.hist=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.tab==='maint'||S.tab==='done')paintTab();},e=>toast(dbErr(e),true)));
 }
 function paintBadge(){const n=S.issues.filter(i=>i.status==='open').length;try{document.title=(n&&(S.view==='mplace'||S.view==='admin')?'('+n+') ':'')+(S.cfg.plantName||'Plant Logbook');}catch(e){}const b=$('#issBadge');if(!b)return;b.hidden=!n;b.textContent=n;}
 async function loadPM(){
@@ -1478,23 +1478,30 @@ async function saveTask(){
     S.editTask=null;resetTaskForm();toast('Task saved.');
   }catch(e){toast(dbErr(e),true);}
 }
-function doneHTML(){
-  return '<section class="card"><h2>Recent maintenance done</h2>'+(S.hist.length?'<div class="tscroll"><table><thead><tr><th>When</th><th>Task</th><th>Area</th><th>Done by</th></tr></thead><tbody>'+S.hist.map(h=>{const a=area(h.area);return '<tr><td class="mono small">'+esc(h.date)+' '+pad(h.hour||0)+':00</td><td><b>'+esc(h.name)+'</b></td><td class="muted">'+esc(a?a.name:(h.area||''))+'</td><td>'+esc(h.by)+'</td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Nothing recorded yet.</div>')+'</section>';
+const canMaintEdit=()=>adminEff()||!!(S.dev&&S.dev.place==='maint');
+async function histDel(id){
+  const h=S.hist.find(x=>x.id===id);if(!h)return;
+  const who=await ask({title:'Delete this record?',msg:h.name+' · '+h.date+' '+pad(h.hour||0)+':00 · done by '+(h.by||'')+'. This only removes the line from the list. The task keeps its current counters (use Undo on the task to restore them).',pw:!adminEff(),ok:'Yes, delete'});if(!who)return;
+  try{await S.db.doc('maint_history/'+id).delete();toast('Record deleted.');}catch(e){toast(dbErr(e),true);}
 }
-function paintDone(){const el=$('#doneBody');if(el)el.innerHTML=doneHTML();}
+function doneHTML(){
+  return '<section class="card"><h2>Recent maintenance done</h2>'+(S.hist.length?'<div class="tscroll"><table><thead><tr><th>When</th><th>Task</th><th>Area</th><th>Done by</th>'+(canMaintEdit()?'<th></th>':'')+'</tr></thead><tbody>'+S.hist.map(h=>{const a=area(h.area);return '<tr><td class="mono small">'+esc(h.date)+' '+pad(h.hour||0)+':00</td><td><b>'+esc(h.name)+'</b></td><td class="muted">'+esc(a?a.name:(h.area||''))+'</td><td>'+esc(h.by)+'</td>'+(canMaintEdit()&&h.id?'<td><button class="btn sm bad" data-hid="'+esc(h.id)+'">Delete</button></td>':(canMaintEdit()?'<td></td>':''))+'</tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Nothing recorded yet.</div>')+'</section>';
+}
+function paintDone(){const el=$('#doneBody');if(el){el.innerHTML=doneHTML();$$('button[data-hid]',el).forEach(b=>b.onclick=()=>histDel(b.dataset.hid));}}
 function paintMaint(){
   const el=$('#mtBody');if(!el)return;
   const all=S.tasks.map(t=>Object.assign({t},pmState(t),{cat:catOf(t)})).sort((a,b)=>b.r-a.r);
   const row=x=>{
     const t=x.t,a=area(t.area),pc=Math.min(100,Math.round(x.r*100));
     const parts=[];if(t.intervalHours>0){parts.push(x.rem>=0?'<b>'+x.rem+' h remaining</b>':'<b>'+Math.abs(x.rem)+' h overdue</b>');parts.push('used '+x.hrs+' / '+t.intervalHours+' h');}if(x.m&&x.m.kind==='meter'){parts.push(x.noMeter?'no hour-meter reading yet':'meter now '+x.cur+' h');if(t.intervalHours>0&&x.b0!=null)parts.push('service due at meter '+Math.round((x.b0+t.intervalHours)*10)/10+' h (last service at '+x.b0+' h)');}if(t.intervalDays>0)parts.push(x.days+' / '+t.intervalDays+' days');
-    return '<tr><td><b>'+esc(t.name)+'</b><div class="muted small">'+esc(a?a.name:t.area)+' · '+esc(t.equipment)+(x.m?' · hours from '+esc(x.m.name):'')+'</div></td><td style="min-width:170px"><div class="bartrack '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'')+'"><div style="width:'+pc+'%"></div></div><div class="small muted">'+parts.join(' · ')+'</div></td><td class="small">'+esc(t.lastDone)+' '+pad(t.lastHour||0)+':00<div class="muted">'+esc(t.doneBy||'')+'</div>'+(x.m&&x.m.kind==='meter'?'<div>at meter <b class="mono">'+(t.baseHm!=null?esc(String(t.baseHm)):'?')+' h</b> <button class="btn sm" data-act="hm" data-id="'+esc(t.id)+'">Edit hour</button></div>':'')+'</td><td><span class="chip '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'ok')+'">'+(x.status==='overdue'?'Overdue':x.status==='soon'?'Due soon':'OK')+'</span></td>'+
-     '<td style="white-space:nowrap"><button class="btn sm pri" data-act="done" data-id="'+esc(t.id)+'">Mark done</button> <button class="btn sm" data-act="edit" data-id="'+esc(t.id)+'">Edit</button>'+(adminEff()?' <button class="btn sm bad" data-act="del" data-id="'+esc(t.id)+'">Delete</button>':'')+'</td></tr>';};
+    return '<tr><td><b>'+esc(t.name)+'</b><div class="muted small">'+esc(a?a.name:t.area)+' · '+esc(t.equipment)+(x.m?' · hours from '+esc(x.m.name):'')+'</div></td><td style="min-width:170px"><div class="bartrack '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'')+'"><div style="width:'+pc+'%"></div></div><div class="small muted">'+parts.join(' · ')+'</div></td><td class="small">'+esc(t.lastDone)+' '+pad(t.lastHour||0)+':00<div class="muted">'+esc(t.doneBy||'')+'</div>'+(x.m&&x.m.kind==='meter'?'<div>at meter <b class="mono">'+(t.baseHm!=null?esc(String(t.baseHm)):'?')+' h</b> <button class="btn sm" data-act="hm" data-id="'+esc(t.id)+'">Edit hour</button></div>':'')+(t.prev?'<div><button class="btn sm" data-act="undo" data-id="'+esc(t.id)+'">Undo mark done</button></div>':'')+'</td><td><span class="chip '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'ok')+'">'+(x.status==='overdue'?'Overdue':x.status==='soon'?'Due soon':'OK')+'</span></td>'+
+     '<td style="white-space:nowrap"><button class="btn sm pri" data-act="done" data-id="'+esc(t.id)+'">Mark done</button> <button class="btn sm" data-act="edit" data-id="'+esc(t.id)+'">Edit</button>'+(canMaintEdit()?' <button class="btn sm bad" data-act="del" data-id="'+esc(t.id)+'">Delete</button>':'')+'</td></tr>';};
   const groups=CATS.concat([{id:'other',name:'Other'}]).map(c=>({c,rows:all.filter(x=>x.cat===c.id)})).filter(g=>g.c.id!=='other'||g.rows.length);
   const sect=g=>{const due=g.rows.filter(x=>x.status!=='ok').length;return '<section class="card"><h2>'+esc(g.c.name)+' <span class="chip '+(due?'bad':'ok')+'" style="font-size:12px;vertical-align:middle">'+(g.rows.length?(due?due+' due':'all OK'):'no tasks')+'</span>'+meterChip(g.c)+'</h2>'+(g.rows.length?'<div class="tscroll"><table><thead><tr><th>Task</th><th>Progress</th><th>Last done</th><th>Status</th><th></th></tr></thead><tbody>'+g.rows.map(row).join('')+'</tbody></table></div>':'<div class="empty">No preventive maintenance tasks yet.</div>')+'</section>';};
   el.innerHTML=(S.mTrunc?'<div class="status">Running hours are counted from the latest 1000 daily records; older history is not included.</div>':'')+groups.map(sect).join('')+
    (S.view==='admin'?doneHTML():'');
   $$('button[data-act]',el).forEach(b=>b.onclick=()=>taskAct(b));
+  $$('button[data-hid]',el).forEach(b=>b.onclick=()=>histDel(b.dataset.hid));
 }
 let delArm=null;
 async function taskAct(b){
@@ -1505,9 +1512,15 @@ async function taskAct(b){
       const who=await ask({title:'Mark as done?',msg:t.name+' will restart its counters now.'+(isM?' Check the hour meter reading at this service:':''),field:isM?{label:'Hour meter at this service (h)',value:st.cur}:null,pw:!adminEff(),ok:'Yes, mark done'});if(!who)return;
       const by=adminEff()?'Admin':who.name;
       let nb=st.cur!=null?st.cur:null;if(isM&&who.field!==''&&who.field!=null&&isFinite(Number(who.field)))nb=Number(who.field);
-      await S.db.doc('maint_tasks/'+id).update({lastDone:S.today,lastHour:nowH(),doneBy:by,baseHm:nb});
-      await S.db.collection('maint_history').add({taskId:id,name:t.name,area:t.area,date:S.today,hour:nowH(),by:by,at:new Date().toISOString()});
-      toast('Marked done.');
+      const hr=await S.db.collection('maint_history').add({taskId:id,name:t.name,area:t.area,date:S.today,hour:nowH(),by:by,at:new Date().toISOString()});
+      await S.db.doc('maint_tasks/'+id).update({lastDone:S.today,lastHour:nowH(),doneBy:by,baseHm:nb,prev:{lastDone:t.lastDone||S.today,lastHour:t.lastHour==null?null:t.lastHour,doneBy:t.doneBy||'',baseHm:t.baseHm==null?null:t.baseHm},histId:hr&&hr.id?hr.id:null});
+      toast('Marked done. You can undo it from the task row.');
+    }else if(b.dataset.act==='undo'){
+      if(!t.prev)return;
+      const who=await ask({title:'Undo the last Mark done?',msg:t.name+' goes back to: last done '+t.prev.lastDone+(t.prev.baseHm!=null?', meter '+t.prev.baseHm+' h':'')+'. The record in Recent maintenance done is removed.',pw:!adminEff(),ok:'Yes, undo'});if(!who)return;
+      await S.db.doc('maint_tasks/'+id).update({lastDone:t.prev.lastDone,lastHour:t.prev.lastHour,doneBy:t.prev.doneBy,baseHm:t.prev.baseHm,prev:null,histId:null});
+      if(t.histId){try{await S.db.doc('maint_history/'+t.histId).delete();}catch(e){}}
+      toast('Mark done undone.');
     }else if(b.dataset.act==='hm'){
       const who=await ask({title:'Hour meter at last service',msg:t.name+': the meter reading when this was last done.',field:{label:'Hour meter at last service (h)',value:t.baseHm},pw:!adminEff(),ok:'Save hour'});if(!who)return;
       const v=who.field,n=Number(v);if(v===''||v==null||!isFinite(n)||n<0){toast('Type the hour meter reading as a number.',true);return;}
@@ -1515,7 +1528,7 @@ async function taskAct(b){
     }else if(b.dataset.act==='edit'){
       S.editTask=id;$('#mtForm').open=true;$('#mtSum').textContent='Edit task';$('#mtName').value=t.name;$('#mtCat').value=catOf(t);$('#mtArea').value=t.area;fillMtEq(t.equipment);$('#mtH').value=t.intervalHours||'';$('#mtBase').value=t.baseHm!=null?t.baseHm:'';$('#mtD').value=t.intervalDays||'';$('#mtMach').value=t.machine||'';$('#mtCancel').hidden=false;window.scrollTo({top:0,behavior:'smooth'});
     }else if(b.dataset.act==='del'){
-      if(!await ask({title:'Delete this task?',msg:t.name,ok:'Yes, delete'}))return;
+      if(!await ask({title:'Delete this task?',msg:t.name+'. The task and its counters are removed. Records already in Recent maintenance done stay.',pw:!adminEff(),ok:'Yes, delete'}))return;
       await S.db.doc('maint_tasks/'+id).delete();toast('Task deleted.');
     }
   }catch(e){toast(dbErr(e),true);}
