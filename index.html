@@ -360,10 +360,12 @@ const roleOfEmail=em=>ROLE_OF_PREFIX[String(em||'').toLowerCase().split('@')[0].
 const NEED_APPROVAL=pl=>pl==='press'||pl==='lab'||pl==='pack';
 const LOCKED_ROLE=NEED_APPROVAL;
 const DEV=()=>{let v=lsGet('plant.devid');if(!v){v='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);lsSet('plant.devid',v);}return v;};
-const liveMark=()=>{if(S.sessionOk)lsSet('plant.live',JSON.stringify({sid:SID(),ts:Date.now()}));};
-setInterval(liveMark,10000);
-window.addEventListener('pagehide',()=>{try{const l=JSON.parse(lsGet('plant.live')||'null');if(l&&l.sid===SID())lsSet('plant.live','');}catch(e){}});
 const SID=()=>{let v=ssGet('plant.sid');if(!v){v='s'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);ssSet('plant.sid',v);}return v;};
+const tabsRead=()=>{try{return JSON.parse(lsGet('plant.tabs')||'{}')||{};}catch(e){return {};}};
+const tabsTouch=()=>{try{const m=tabsRead(),now=Date.now();Object.keys(m).forEach(k=>{if(!m[k]||now-m[k].t>300000)delete m[k];});m[SID()]={t:now,x:!!window.__plantExtra};lsSet('plant.tabs',JSON.stringify(m));}catch(e){}};
+const liveMark=tabsTouch;
+tabsTouch();setInterval(tabsTouch,10000);
+window.addEventListener('pagehide',()=>{try{const m=tabsRead();delete m[SID()];lsSet('plant.tabs',JSON.stringify(m));}catch(e){}});
 function nextShiftMs(){const st=S.cfg.shifts.map(x=>Number(x.start)).sort((a,b)=>a-b),n=new Date();let best=null;for(let d=0;d<2;d++)st.forEach(h=>{const t=new Date(n.getFullYear(),n.getMonth(),n.getDate()+d,h,0,0).getTime();if(t>n.getTime()&&(best===null||t<best))best=t;});return best||Date.now()+8*3600e3;}
 function approvalOk(){try{const a=JSON.parse(lsGet('plant.appr')||'null');return !!(a&&S.acct&&a.uid===S.acct.uid&&a.until>Date.now());}catch(e){return false;}}
 async function resolveAccount(){
@@ -378,14 +380,14 @@ async function acquireSession(){
   if(fresh&&d.sid&&d.sid!==SID()){
     let block=true;
     if(d.dev&&d.dev===DEV()){ /* same tablet: only blocked while the other tab is really alive */
-      let lv=null;try{lv=JSON.parse(lsGet('plant.live')||'null');}catch(e){}
-      block=!!(lv&&lv.sid===d.sid&&Date.now()-lv.ts<150000);
+      const lv=tabsRead()[d.sid];
+      block=!!(lv&&Date.now()-lv.t<150000);
     }
     if(block){S.sessInfo=d;return false;}
   }
   const iso=new Date().toISOString();
   try{await ref.set({sid:SID(),dev:DEV(),place:S.acct.role,email:S.acct.email,ts:iso,sts:S.db.serverTime||iso,ready:false});}catch(e){}
-  S.sessionOk=true;liveMark();
+  S.sessionOk=true;tabsTouch();
   resub('sess',()=>S.db.doc('sessions/'+S.acct.uid).onSnapshot(sn=>{const x=sn.exists?sn.data():null;if(S.sessionOk&&x&&x.sid&&x.sid!==SID())kicked();},e=>{}));
   return true;
 }
@@ -709,13 +711,14 @@ function ask(o){
     const noOps=S.ops.filter(x=>x.active!==false).length===0;
     const blocked=!!(o.leaderOnly&&noOps);
     const w=document.createElement('div');w.id='dlg';w.className='ovl';
-    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dT"><h2 id="dT">'+esc(o.title||'Do you want to save?')+'</h2><p>'+esc(o.msg||'')+'</p>'+
+    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dT"><h2 id="dT">'+esc(o.title||'Do you want to save?')+'</h2><p>'+esc(o.msg||'')+'</p>'+(o.field?'<label class="l">'+esc(o.field.label)+'<input type="number" step="any" id="dField" value="'+esc(o.field.value==null?'':o.field.value)+'"></label>':'')+
       (blocked?'<p class="status bad">No shift leader accounts exist yet. The admin adds them in Setup, Operators and passwords.</p>':'')+(o.pw&&!blocked?(noOps?'<p class="status warn">No operator passwords exist yet (Setup, Operators). Type your name to continue.</p><label class="l">Your name<input type="text" id="dName" autocomplete="off"></label>':'<label class="l">Operator password<input type="password" id="dPw" autocomplete="off"></label><div id="dWho" class="who" aria-live="polite"></div>'):'')+
       '<div class="row" style="margin-top:6px"><button type="button" class="btn big" id="dNo">Cancel</button><button type="button" class="btn pri big" id="dYes"'+(o.pw?' disabled':'')+'>'+esc(o.ok||'Yes, save')+'</button></div>'+(o.pw&&adminEff()?'<button type="button" class="btn" id="dAdmin">Continue as Admin (no password)</button>':'')+'</div>';
     document.body.appendChild(w);
     let op=null;
     const done=v=>{w.remove();document.removeEventListener('keydown',onKey);resolve(v);};
-    const yes=()=>done(o.pw?{name:noOps?$('#dName').value.trim():op.name,id:op?op.id:null,leader:!!(op&&op.leader)}:{});
+    const fv=()=>o.field?{field:$('#dField').value}:{};
+    const yes=()=>done(Object.assign(o.pw?{name:noOps?$('#dName').value.trim():op.name,id:op?op.id:null,leader:!!(op&&op.leader)}:{},fv()));
     const onKey=e=>{if(e.key==='Escape')done(null);if(e.key==='Enter'&&!$('#dYes').disabled){e.preventDefault();yes();}};
     document.addEventListener('keydown',onKey);
     $('#dNo').onclick=()=>done(null);$('#dYes').onclick=yes;
@@ -1423,24 +1426,25 @@ function meterReads(m){
 function curMeter(id){const m=machine(id);if(!m||m.kind!=='meter')return null;const r=meterReads(m);return r.length?r[r.length-1].v:null;}
 function pmState(t){
   const m=machine(t.machine),days=daysBetween(t.lastDone||S.today,S.today);
-  let hrs=0,cur=null,noMeter=false;
+  let hrs=0,cur=null,noMeter=false,base0=null;
   if(m&&m.kind==='meter'){
     const rs=meterReads(m);cur=rs.length?rs[rs.length-1].v:null;noMeter=cur==null;
     let b0=t.baseHm!=null?num(t.baseHm):null;
     if(b0==null){const bt=(t.lastDone||S.today)+pad(t.lastHour==null?0:ordH(t.lastHour))+'00',r0=rs.find(x=>x.t>=bt);b0=r0?r0.v:null;}
-    hrs=(cur!=null&&b0!=null)?Math.max(0,Math.round((cur-b0)*10)/10):0;
+    hrs=(cur!=null&&b0!=null)?Math.max(0,Math.round((cur-b0)*10)/10):0;base0=b0;
   }else{
     const base=(t.lastDone||S.today)+pad(t.lastHour==null?0:ordH(t.lastHour)),logs=allLogs(),ar=m?m.area:t.area;
     Object.keys(logs).forEach(id=>{const d=logs[id];if(d.area!==ar)return;const seen={};entries(d).forEach(x=>{const kk=d.date+pad(ordH(x.h));if(kk>=base&&x.e.run===true&&!seen[kk]){seen[kk]=1;hrs++;}});});
   }
   const rh=t.intervalHours>0?hrs/t.intervalHours:0,rd=t.intervalDays>0?days/t.intervalDays:0,r=Math.max(rh,rd);
-  return {hrs,days,r,cur,noMeter,m,status:r>=1?'overdue':r>=0.9?'soon':'ok'};
+  const rem=t.intervalHours>0?Math.round((t.intervalHours-hrs)*10)/10:null;
+  return {hrs,days,r,cur,noMeter,m,rem,b0:base0,status:r>=1?'overdue':r>=0.9?'soon':'ok'};
 }
 function maintShell(){
   const a=S.cfg.areas;
   return '<details class="d" id="mtForm"><summary id="mtSum">Add maintenance task</summary><div style="display:grid;gap:12px;margin-top:12px"><div class="ctlrow"><label class="l" style="flex:2 1 260px">Task<input type="text" id="mtName" placeholder="e.g. Vacuum pump oil change"></label>'+
    '<label class="l">Category<select id="mtCat">'+CATS.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'<option value="other">Other</option></select></label><label class="l">Area<select id="mtArea">'+a.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('')+'</select></label><label class="l">Equipment<select id="mtEq"></select></label><label class="l">Count running hours of<select id="mtMach"><option value="">The area above (line running hours)</option>'+MACHINES.map(x=>'<option value="'+x.id+'">'+esc(x.name)+(x.kind==='meter'?' (hour meter)':'')+'</option>').join('')+'</select></label>'+
-   '<label class="l">Every (running hours)<input type="number" id="mtH" min="0" placeholder="0 = not by hours"></label><label class="l">Every (days)<input type="number" id="mtD" min="0" placeholder="0 = not by days"></label></div>'+
+   '<label class="l">Every (running hours)<input type="number" id="mtH" min="0" placeholder="0 = not by hours"></label><label class="l" title="Only for machines with an hour meter. The hour meter reading at the last service. Leave blank to start counting from the latest meter reading.">Hour meter at last service (h)<input type="number" step="any" id="mtBase" min="0" placeholder="blank = start counting now"></label><label class="l">Every (days)<input type="number" id="mtD" min="0" placeholder="0 = not by days"></label></div>'+
    '<div class="row"><button class="btn pri" id="mtSave">Save task</button><button class="btn" id="mtCancel" hidden>Cancel edit</button></div></div></details><div id="mtBody" style="display:flex;flex-direction:column;gap:16px"></div>';
 }
 function fillMtEq(sel){const ar=area($('#mtArea').value);$('#mtEq').innerHTML=ar.equipment.concat(['General']).map(e=>'<option'+(e===sel?' selected':'')+'>'+esc(e)+'</option>').join('');}
@@ -1451,16 +1455,19 @@ function bindMaint(){
   $('#mtMach').onchange=()=>{const m=machine($('#mtMach').value);if(m){$('#mtArea').value=m.area;fillMtEq(m.eq);}};
   $('#mtSave').onclick=saveTask;$('#mtCancel').onclick=()=>{S.editTask=null;resetTaskForm();};
 }
-function resetTaskForm(){$('#mtName').value='';$('#mtH').value='';$('#mtD').value='';$('#mtMach').value='';$('#mtCat').onchange();$('#mtSum').textContent='Add maintenance task';$('#mtCancel').hidden=true;$('#mtForm').open=false;}
+function resetTaskForm(){$('#mtName').value='';$('#mtH').value='';$('#mtBase').value='';$('#mtD').value='';$('#mtMach').value='';$('#mtCat').onchange();$('#mtSum').textContent='Add maintenance task';$('#mtCancel').hidden=true;$('#mtForm').open=false;}
 async function saveTask(){
   const name=$('#mtName').value.trim(),h=Number($('#mtH').value)||0,d=Number($('#mtD').value)||0;
   if(!name){toast('Name the task first.',true);return;}
   if(!h&&!d){toast('Set an interval in running hours, days, or both.',true);return;}
   const data={name,cat:$('#mtCat').value,area:$('#mtArea').value,equipment:$('#mtEq').value,machine:$('#mtMach').value,intervalHours:h,intervalDays:d};
+  const bv=$('#mtBase').value.trim(),bn=bv===''?null:Number(bv);
+  if(bn!=null&&(!isFinite(bn)||bn<0)){toast('The hour meter at last service must be a number.',true);return;}
+  if(bn!=null&&!(machine(data.machine)&&machine(data.machine).kind==='meter')){toast('Hour meter at last service only applies to machines with an hour meter.',true);return;}
   if(!await ask({title:'Do you want to save?',msg:'Maintenance task: '+name,pw:!adminEff(),ok:'Yes, save'}))return;
   try{
-    if(S.editTask){const old=S.tasks.find(x=>x.id===S.editTask);if(!old||(old.machine||'')!==data.machine)data.baseHm=curMeter(data.machine);await S.db.doc('maint_tasks/'+S.editTask).update(data);}
-    else await S.db.collection('maint_tasks').add(Object.assign(data,{baseHm:curMeter(data.machine),lastDone:S.today,lastHour:nowH(),doneBy:'Start of tracking'}));
+    if(S.editTask){const old=S.tasks.find(x=>x.id===S.editTask);if(bn!=null)data.baseHm=bn;else if(!old||(old.machine||'')!==data.machine)data.baseHm=curMeter(data.machine);await S.db.doc('maint_tasks/'+S.editTask).update(data);}
+    else await S.db.collection('maint_tasks').add(Object.assign(data,{baseHm:bn!=null?bn:curMeter(data.machine),lastDone:S.today,lastHour:nowH(),doneBy:'Start of tracking'}));
     S.editTask=null;resetTaskForm();toast('Task saved.');
   }catch(e){toast(dbErr(e),true);}
 }
@@ -1473,8 +1480,8 @@ function paintMaint(){
   const all=S.tasks.map(t=>Object.assign({t},pmState(t),{cat:catOf(t)})).sort((a,b)=>b.r-a.r);
   const row=x=>{
     const t=x.t,a=area(t.area),pc=Math.min(100,Math.round(x.r*100));
-    const parts=[];if(t.intervalHours>0)parts.push(x.hrs+' / '+t.intervalHours+' h');if(x.m&&x.m.kind==='meter')parts.push(x.noMeter?'no hour-meter reading yet':'meter '+x.cur+' h');if(t.intervalDays>0)parts.push(x.days+' / '+t.intervalDays+' days');
-    return '<tr><td><b>'+esc(t.name)+'</b><div class="muted small">'+esc(a?a.name:t.area)+' · '+esc(t.equipment)+(x.m?' · hours from '+esc(x.m.name):'')+'</div></td><td style="min-width:170px"><div class="bartrack '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'')+'"><div style="width:'+pc+'%"></div></div><div class="mono small muted">'+parts.join(' · ')+'</div></td><td class="small">'+esc(t.lastDone)+' '+pad(t.lastHour||0)+':00<div class="muted">'+esc(t.doneBy||'')+'</div></td><td><span class="chip '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'ok')+'">'+(x.status==='overdue'?'Overdue':x.status==='soon'?'Due soon':'OK')+'</span></td>'+
+    const parts=[];if(t.intervalHours>0){parts.push(x.rem>=0?'<b>'+x.rem+' h remaining</b>':'<b>'+Math.abs(x.rem)+' h overdue</b>');parts.push('used '+x.hrs+' / '+t.intervalHours+' h');}if(x.m&&x.m.kind==='meter'){parts.push(x.noMeter?'no hour-meter reading yet':'meter now '+x.cur+' h');if(t.intervalHours>0&&x.b0!=null)parts.push('service due at meter '+Math.round((x.b0+t.intervalHours)*10)/10+' h (last service at '+x.b0+' h)');}if(t.intervalDays>0)parts.push(x.days+' / '+t.intervalDays+' days');
+    return '<tr><td><b>'+esc(t.name)+'</b><div class="muted small">'+esc(a?a.name:t.area)+' · '+esc(t.equipment)+(x.m?' · hours from '+esc(x.m.name):'')+'</div></td><td style="min-width:170px"><div class="bartrack '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'')+'"><div style="width:'+pc+'%"></div></div><div class="small muted">'+parts.join(' · ')+'</div></td><td class="small">'+esc(t.lastDone)+' '+pad(t.lastHour||0)+':00<div class="muted">'+esc(t.doneBy||'')+'</div></td><td><span class="chip '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'ok')+'">'+(x.status==='overdue'?'Overdue':x.status==='soon'?'Due soon':'OK')+'</span></td>'+
      '<td style="white-space:nowrap"><button class="btn sm pri" data-act="done" data-id="'+esc(t.id)+'">Mark done</button> <button class="btn sm" data-act="edit" data-id="'+esc(t.id)+'">Edit</button>'+(adminEff()?' <button class="btn sm bad" data-act="del" data-id="'+esc(t.id)+'">Delete</button>':'')+'</td></tr>';};
   const groups=CATS.concat([{id:'other',name:'Other'}]).map(c=>({c,rows:all.filter(x=>x.cat===c.id)})).filter(g=>g.c.id!=='other'||g.rows.length);
   const sect=g=>{const due=g.rows.filter(x=>x.status!=='ok').length;return '<section class="card"><h2>'+esc(g.c.name)+' <span class="chip '+(due?'bad':'ok')+'" style="font-size:12px;vertical-align:middle">'+(g.rows.length?(due?due+' due':'all OK'):'no tasks')+'</span></h2>'+(g.rows.length?'<div class="tscroll"><table><thead><tr><th>Task</th><th>Progress</th><th>Last done</th><th>Status</th><th></th></tr></thead><tbody>'+g.rows.map(row).join('')+'</tbody></table></div>':'<div class="empty">No preventive maintenance tasks yet.</div>')+'</section>';};
@@ -1487,14 +1494,15 @@ async function taskAct(b){
   const id=b.dataset.id,t=S.tasks.find(x=>x.id===id);if(!t)return;
   try{
     if(b.dataset.act==='done'){
-      const who=await ask({title:'Mark as done?',msg:t.name+' will restart its counters now.',pw:!adminEff(),ok:'Yes, mark done'});if(!who)return;
+      const st=pmState(t),isM=!!(st.m&&st.m.kind==='meter');
+      const who=await ask({title:'Mark as done?',msg:t.name+' will restart its counters now.'+(isM?' Check the hour meter reading at this service:':''),field:isM?{label:'Hour meter at this service (h)',value:st.cur}:null,pw:!adminEff(),ok:'Yes, mark done'});if(!who)return;
       const by=adminEff()?'Admin':who.name;
-      const st=pmState(t);
-      await S.db.doc('maint_tasks/'+id).update({lastDone:S.today,lastHour:nowH(),doneBy:by,baseHm:st.cur!=null?st.cur:null});
+      let nb=st.cur!=null?st.cur:null;if(isM&&who.field!==''&&who.field!=null&&isFinite(Number(who.field)))nb=Number(who.field);
+      await S.db.doc('maint_tasks/'+id).update({lastDone:S.today,lastHour:nowH(),doneBy:by,baseHm:nb});
       await S.db.collection('maint_history').add({taskId:id,name:t.name,area:t.area,date:S.today,hour:nowH(),by:by,at:new Date().toISOString()});
       toast('Marked done.');
     }else if(b.dataset.act==='edit'){
-      S.editTask=id;$('#mtForm').open=true;$('#mtSum').textContent='Edit task';$('#mtName').value=t.name;$('#mtCat').value=catOf(t);$('#mtArea').value=t.area;fillMtEq(t.equipment);$('#mtH').value=t.intervalHours||'';$('#mtD').value=t.intervalDays||'';$('#mtMach').value=t.machine||'';$('#mtCancel').hidden=false;window.scrollTo({top:0,behavior:'smooth'});
+      S.editTask=id;$('#mtForm').open=true;$('#mtSum').textContent='Edit task';$('#mtName').value=t.name;$('#mtCat').value=catOf(t);$('#mtArea').value=t.area;fillMtEq(t.equipment);$('#mtH').value=t.intervalHours||'';$('#mtBase').value=t.baseHm!=null?t.baseHm:'';$('#mtD').value=t.intervalDays||'';$('#mtMach').value=t.machine||'';$('#mtCancel').hidden=false;window.scrollTo({top:0,behavior:'smooth'});
     }else if(b.dataset.act==='del'){
       if(!await ask({title:'Delete this task?',msg:t.name,ok:'Yes, delete'}))return;
       await S.db.doc('maint_tasks/'+id).delete();toast('Task deleted.');

@@ -9,10 +9,19 @@
   document.head.appendChild(css);
   function fail(msg){document.body.appendChild(el('<div id="lg"><form><h1>Setup needed</h1><p>'+msg+'</p></form></div>'));}
   if(!cfg.apiKey||/PASTE/.test(cfg.apiKey)||!window.firebase){window.claude={use:async()=>null};document.addEventListener('DOMContentLoaded',()=>fail('Open firebase-config.js and paste the Firebase settings (see SETUP.md).'));return;}
-  firebase.initializeApp(cfg);
-  const auth=firebase.auth(),fs=firebase.firestore();
-  try{fs.settings({cacheSizeBytes:firebase.firestore.CACHE_SIZE_UNLIMITED});}catch(e){}
-  fs.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+  /* One browser keeps a single signed-in account for all its tabs. To let tab 1 be Press, tab 2 Laboratory and tab 3 Packaging,
+     a tab that finds another normal tab already open signs in on its own (separate login, no offline storage). */
+  const mySid=(()=>{let v=null;try{v=sessionStorage.getItem('plant.sid');}catch(e){}if(!v){v='s'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);try{sessionStorage.setItem('plant.sid',v);}catch(e){}}return v;})();
+  let extra=false;
+  try{const m=JSON.parse(localStorage.getItem('plant.tabs')||'{}')||{},now=Date.now();extra=Object.keys(m).some(k=>k!==mySid&&m[k]&&!m[k].x&&now-m[k].t<150000);}catch(e){}
+  window.__plantExtra=extra;
+  try{const m=JSON.parse(localStorage.getItem('plant.tabs')||'{}')||{};m[mySid]={t:Date.now(),x:extra};localStorage.setItem('plant.tabs',JSON.stringify(m));}catch(e){}
+  const fbApp=extra?firebase.initializeApp(cfg,'tab_'+mySid):firebase.initializeApp(cfg);
+  const auth=fbApp.auth(),fs=fbApp.firestore();
+  if(!extra){
+    try{fs.settings({cacheSizeBytes:firebase.firestore.CACHE_SIZE_UNLIMITED});}catch(e){}
+    fs.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+  }
   const writeErr=e=>{try{window.dispatchEvent(new CustomEvent('plant-write-error',{detail:e}));}catch(_){}};
   // Offline writes are stored on the device and sent later; do not make the screen wait for the server.
   const w=p=>{const slow=new Promise(r=>setTimeout(r,1200));p.catch(writeErr);return Promise.race([p,slow]);};
