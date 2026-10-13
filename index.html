@@ -381,6 +381,7 @@ async function resolveAccount(){
   if(S.user&&typeof S.user.info==='function'){try{const i=await S.user.info();S.acct={uid:i.uid,email:i.email||''};S.acct.role=S.isAdmin?'admin':roleOfEmail(S.acct.email);}catch(e){}}
   else{const t=ssGet('plant.test');if(t){S.acct={uid:'test_'+t,email:t,test:true};S.acct.role=t==='admin'?(S.isAdmin?'admin':null):roleOfEmail(t);}}
 }
+const sessPath=()=>'sessions/'+S.acct.uid+(LOCKED_ROLE(S.acct.role||'')?'':'_'+DEV()); /* press/lab/pack: one record per account; others: one per device */
 async function acquireSession(){
   const ref=S.db.doc('sessions/'+S.acct.uid);
   let d=null;try{const sn=await ref.get();d=sn.exists?sn.data():null;}catch(e){}
@@ -412,7 +413,7 @@ async function evalGate(){
   unsub('notices');ensureNoticeSub();beat();renderTop();restoreView();
 }
 async function doSignOut(){
-  try{if(S.db&&S.acct&&(S.sessionOk||!LOCKED_ROLE(S.acct.role||'')))await S.db.doc('sessions/'+S.acct.uid).delete();}catch(e){}
+  try{if(S.db&&S.acct&&(S.sessionOk||!LOCKED_ROLE(S.acct.role||'')))await S.db.doc(sessPath()).delete();}catch(e){}
   S.sessionOk=false;unsub('sess');unsub('notices');lsSet('plant.appr','');lsSet('plant.view','');S.dev=null;S.unlock=null;
   if(S.user&&S.user.signOut){await S.user.signOut();return;}
   ssSet('plant.test','');S.acct=null;S.gate='pick';S.view='home';renderTop();renderHome();
@@ -506,7 +507,7 @@ async function beat(){
   if(!S.db||!S.acct||!S.acct.role)return;
   if(LOCKED_ROLE(S.acct.role)&&!S.sessionOk)return;
   const iso=new Date().toISOString();
-  try{await S.db.doc('sessions/'+S.acct.uid).set({sid:SID(),dev:DEV(),place:S.acct.role,email:S.acct.email,ts:iso,sts:S.db.serverTime||iso,ready:!!S.dev,batt:S.batt?Math.round(S.batt.level*100):null});}catch(e){}
+  try{await S.db.doc(sessPath()).set({sid:SID(),dev:DEV(),place:S.acct.role,email:S.acct.email,ts:iso,sts:S.db.serverTime||iso,ready:!!S.dev,batt:S.batt?Math.round(S.batt.level*100):null});}catch(e){}
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)beat();});
 window.addEventListener('online',()=>{beat();});
@@ -1123,9 +1124,11 @@ function ensureNoticeSub(){
 /* ---- devices online (admin) ---- */
 function paintDevices(){
   const el=$('#devBody');if(!el)return;
-  const rows=(S.devs||[]).filter(x=>x&&(x.sts||x.ts));
   const T=x=>new Date(x.sts||x.ts).getTime();
-  const ref=rows.reduce((m,x)=>Math.max(m,T(x)),0)+(Date.now()-(S.devsAt||Date.now())); /* server time, so tablet clocks do not matter */
+  const seen={};(S.devs||[]).filter(x=>x&&(x.sts||x.ts)).forEach(x=>{const k=x.email+'|'+x.dev;if(!seen[k]||T(x)>T(seen[k]))seen[k]=x;}); /* one row per device */
+  const all=Object.keys(seen).map(k=>seen[k]);
+  const ref=all.reduce((m,x)=>Math.max(m,T(x)),0)+(Date.now()-(S.devsAt||Date.now())); /* server time, so tablet clocks do not matter */
+  const rows=all.filter(x=>ref-T(x)<7*86400000);
   const age=x=>Math.max(0,ref-T(x));
   const st=x=>age(x)>180000?'off':(x.ready===false?'wait':'on');
   const rel=ms=>ms<90000?'just now':ms<3600000?Math.round(ms/60000)+' min ago':ms<86400000?Math.round(ms/3600000)+' h ago':Math.round(ms/86400000)+' d ago';
@@ -1137,7 +1140,7 @@ function paintDevices(){
     const list=rows.filter(x=>x.place===pl).sort((a,b)=>T(b)-T(a));
     const on=list.some(x=>st(x)==='on'),wt=list.some(x=>st(x)==='wait');
     const top=on?'on':wt?'wait':'off';
-    return '<section class="card"><h2>'+esc(pl==='all'?'Shift leader':placeName(pl))+' '+chip(top)+'</h2>'+(list.length?list.map(x=>{
+    return '<section class="card"><h2>'+esc(pl==='all'?'Shift leader':placeName(pl))+' '+chip(top)+(list.filter(x=>st(x)==='on').length>1?' <span class="chip acc">'+list.filter(x=>st(x)==='on').length+' devices online</span>':'')+'</h2>'+(list.length?list.map(x=>{
       const k=st(x),me=x.sid===SID();
       return '<div class="row" style="justify-content:space-between;gap:8px;margin-top:8px;opacity:'+(k==='off'?.65:1)+'"><div><b>'+esc(x.email||'')+'</b>'+(me?' <span class="chip acc">this device</span>':'')+'<div class="muted small">Device '+esc(String(x.dev||'').slice(-4))+' · last seen '+esc(rel(age(x)))+(x.batt!=null?' · battery '+esc(x.batt)+'%':'')+'</div></div>'+chip(k)+'</div>';
     }).join(''):'<p class="muted small" style="margin:8px 0 0">No device has signed in here yet.</p>')+'</section>';
