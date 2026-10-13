@@ -1420,10 +1420,16 @@ function catOf(t){
 }
 function meterReads(m){
   const out=[],logs=allLogs();
-  Object.keys(logs).forEach(id=>{const d=logs[id];if(d.area!==m.area)return;entries(d).forEach(x=>{const v=x.e&&x.e.v?num(x.e.v[m.param]):null;if(v!=null)out.push({t:d.date+pad(ordH(x.h))+pad(x.min%60),v:v});});});
+  Object.keys(logs).forEach(id=>{const d=logs[id];if(d.area!==m.area)return;entries(d).forEach(x=>{const v=x.e&&x.e.v?num(x.e.v[m.param]):null;if(v!=null)out.push({t:d.date+pad(ordH(x.h))+pad(x.min%60),v:v,date:d.date,h:x.h,mi:x.min%60});});});
   out.sort((p,q)=>p.t<q.t?-1:p.t>q.t?1:0);return out;
 }
 function curMeter(id){const m=machine(id);if(!m||m.kind!=='meter')return null;const r=meterReads(m);return r.length?r[r.length-1].v:null;}
+const meterLast=id=>{const m=machine(id);if(!m||m.kind!=='meter')return null;const r=meterReads(m);return r.length?r[r.length-1]:null;};
+function meterChip(c){
+  const m=c.mach?machine(c.mach):null;if(!m)return '';
+  const r=meterLast(c.mach);
+  return ' <span class="chip" style="font-size:13px;vertical-align:middle;background:var(--panel2);border:1px solid var(--line);color:var(--ink)">'+(c.id==='ro'?'Operation hours':'Hour meter')+': '+(r?'<b class="mono">'+r.v+' h</b> <span class="muted">· '+esc(r.date)+' '+pad(r.h)+':'+pad(r.mi)+'</span>':'no reading yet')+'</span>';
+}
 function pmState(t){
   const m=machine(t.machine),days=daysBetween(t.lastDone||S.today,S.today);
   let hrs=0,cur=null,noMeter=false,base0=null;
@@ -1444,15 +1450,16 @@ function maintShell(){
   const a=S.cfg.areas;
   return '<details class="d" id="mtForm"><summary id="mtSum">Add maintenance task</summary><div style="display:grid;gap:12px;margin-top:12px"><div class="ctlrow"><label class="l" style="flex:2 1 260px">Task<input type="text" id="mtName" placeholder="e.g. Vacuum pump oil change"></label>'+
    '<label class="l">Category<select id="mtCat">'+CATS.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'<option value="other">Other</option></select></label><label class="l">Area<select id="mtArea">'+a.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('')+'</select></label><label class="l">Equipment<select id="mtEq"></select></label><label class="l">Count running hours of<select id="mtMach"><option value="">The area above (line running hours)</option>'+MACHINES.map(x=>'<option value="'+x.id+'">'+esc(x.name)+(x.kind==='meter'?' (hour meter)':'')+'</option>').join('')+'</select></label>'+
-   '<label class="l">Every (running hours)<input type="number" id="mtH" min="0" placeholder="0 = not by hours"></label><label class="l" title="Only for machines with an hour meter. The hour meter reading at the last service. Leave blank to start counting from the latest meter reading.">Hour meter at last service (h)<input type="number" step="any" id="mtBase" min="0" placeholder="blank = start counting now"></label><label class="l">Every (days)<input type="number" id="mtD" min="0" placeholder="0 = not by days"></label></div>'+
+   '<label class="l">Every (running hours)<input type="number" id="mtH" min="0" placeholder="0 = not by hours"></label><label class="l" title="Only for machines with an hour meter. The hour meter reading at the last service. Leave blank to start counting from the latest meter reading.">Hour meter at last service (h)<input type="number" step="any" id="mtBase" min="0" placeholder="current meter reading"></label><label class="l">Every (days)<input type="number" id="mtD" min="0" placeholder="0 = not by days"></label></div>'+
    '<div class="row"><button class="btn pri" id="mtSave">Save task</button><button class="btn" id="mtCancel" hidden>Cancel edit</button></div></div></details><div id="mtBody" style="display:flex;flex-direction:column;gap:16px"></div>';
 }
 function fillMtEq(sel){const ar=area($('#mtArea').value);$('#mtEq').innerHTML=ar.equipment.concat(['General']).map(e=>'<option'+(e===sel?' selected':'')+'>'+esc(e)+'</option>').join('');}
 function bindMaint(){
   fillMtEq();$('#mtArea').onchange=()=>fillMtEq();
-  $('#mtCat').onchange=()=>{const c=CATS.find(x=>x.id===$('#mtCat').value);if(c){$('#mtArea').value=c.area;fillMtEq(c.eq);$('#mtMach').value=c.mach;}};
+  const fillBase=()=>{if(S.editTask)return;const cm=curMeter($('#mtMach').value);$('#mtBase').value=cm==null?'':cm;};
+  $('#mtCat').onchange=()=>{const c=CATS.find(x=>x.id===$('#mtCat').value);if(c){$('#mtArea').value=c.area;fillMtEq(c.eq);$('#mtMach').value=c.mach;}fillBase();};
   $('#mtCat').onchange();
-  $('#mtMach').onchange=()=>{const m=machine($('#mtMach').value);if(m){$('#mtArea').value=m.area;fillMtEq(m.eq);}};
+  $('#mtMach').onchange=()=>{const m=machine($('#mtMach').value);if(m){$('#mtArea').value=m.area;fillMtEq(m.eq);}fillBase();};
   $('#mtSave').onclick=saveTask;$('#mtCancel').onclick=()=>{S.editTask=null;resetTaskForm();};
 }
 function resetTaskForm(){$('#mtName').value='';$('#mtH').value='';$('#mtBase').value='';$('#mtD').value='';$('#mtMach').value='';$('#mtCat').onchange();$('#mtSum').textContent='Add maintenance task';$('#mtCancel').hidden=true;$('#mtForm').open=false;}
@@ -1481,10 +1488,10 @@ function paintMaint(){
   const row=x=>{
     const t=x.t,a=area(t.area),pc=Math.min(100,Math.round(x.r*100));
     const parts=[];if(t.intervalHours>0){parts.push(x.rem>=0?'<b>'+x.rem+' h remaining</b>':'<b>'+Math.abs(x.rem)+' h overdue</b>');parts.push('used '+x.hrs+' / '+t.intervalHours+' h');}if(x.m&&x.m.kind==='meter'){parts.push(x.noMeter?'no hour-meter reading yet':'meter now '+x.cur+' h');if(t.intervalHours>0&&x.b0!=null)parts.push('service due at meter '+Math.round((x.b0+t.intervalHours)*10)/10+' h (last service at '+x.b0+' h)');}if(t.intervalDays>0)parts.push(x.days+' / '+t.intervalDays+' days');
-    return '<tr><td><b>'+esc(t.name)+'</b><div class="muted small">'+esc(a?a.name:t.area)+' · '+esc(t.equipment)+(x.m?' · hours from '+esc(x.m.name):'')+'</div></td><td style="min-width:170px"><div class="bartrack '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'')+'"><div style="width:'+pc+'%"></div></div><div class="small muted">'+parts.join(' · ')+'</div></td><td class="small">'+esc(t.lastDone)+' '+pad(t.lastHour||0)+':00<div class="muted">'+esc(t.doneBy||'')+'</div></td><td><span class="chip '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'ok')+'">'+(x.status==='overdue'?'Overdue':x.status==='soon'?'Due soon':'OK')+'</span></td>'+
+    return '<tr><td><b>'+esc(t.name)+'</b><div class="muted small">'+esc(a?a.name:t.area)+' · '+esc(t.equipment)+(x.m?' · hours from '+esc(x.m.name):'')+'</div></td><td style="min-width:170px"><div class="bartrack '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'')+'"><div style="width:'+pc+'%"></div></div><div class="small muted">'+parts.join(' · ')+'</div></td><td class="small">'+esc(t.lastDone)+' '+pad(t.lastHour||0)+':00<div class="muted">'+esc(t.doneBy||'')+'</div>'+(x.m&&x.m.kind==='meter'?'<div>at meter <b class="mono">'+(t.baseHm!=null?esc(String(t.baseHm)):'?')+' h</b> <button class="btn sm" data-act="hm" data-id="'+esc(t.id)+'">Edit hour</button></div>':'')+'</td><td><span class="chip '+(x.status==='overdue'?'bad':x.status==='soon'?'warn':'ok')+'">'+(x.status==='overdue'?'Overdue':x.status==='soon'?'Due soon':'OK')+'</span></td>'+
      '<td style="white-space:nowrap"><button class="btn sm pri" data-act="done" data-id="'+esc(t.id)+'">Mark done</button> <button class="btn sm" data-act="edit" data-id="'+esc(t.id)+'">Edit</button>'+(adminEff()?' <button class="btn sm bad" data-act="del" data-id="'+esc(t.id)+'">Delete</button>':'')+'</td></tr>';};
   const groups=CATS.concat([{id:'other',name:'Other'}]).map(c=>({c,rows:all.filter(x=>x.cat===c.id)})).filter(g=>g.c.id!=='other'||g.rows.length);
-  const sect=g=>{const due=g.rows.filter(x=>x.status!=='ok').length;return '<section class="card"><h2>'+esc(g.c.name)+' <span class="chip '+(due?'bad':'ok')+'" style="font-size:12px;vertical-align:middle">'+(g.rows.length?(due?due+' due':'all OK'):'no tasks')+'</span></h2>'+(g.rows.length?'<div class="tscroll"><table><thead><tr><th>Task</th><th>Progress</th><th>Last done</th><th>Status</th><th></th></tr></thead><tbody>'+g.rows.map(row).join('')+'</tbody></table></div>':'<div class="empty">No preventive maintenance tasks yet.</div>')+'</section>';};
+  const sect=g=>{const due=g.rows.filter(x=>x.status!=='ok').length;return '<section class="card"><h2>'+esc(g.c.name)+' <span class="chip '+(due?'bad':'ok')+'" style="font-size:12px;vertical-align:middle">'+(g.rows.length?(due?due+' due':'all OK'):'no tasks')+'</span>'+meterChip(g.c)+'</h2>'+(g.rows.length?'<div class="tscroll"><table><thead><tr><th>Task</th><th>Progress</th><th>Last done</th><th>Status</th><th></th></tr></thead><tbody>'+g.rows.map(row).join('')+'</tbody></table></div>':'<div class="empty">No preventive maintenance tasks yet.</div>')+'</section>';};
   el.innerHTML=(S.mTrunc?'<div class="status">Running hours are counted from the latest 1000 daily records; older history is not included.</div>':'')+groups.map(sect).join('')+
    (S.view==='admin'?doneHTML():'');
   $$('button[data-act]',el).forEach(b=>b.onclick=()=>taskAct(b));
@@ -1501,6 +1508,10 @@ async function taskAct(b){
       await S.db.doc('maint_tasks/'+id).update({lastDone:S.today,lastHour:nowH(),doneBy:by,baseHm:nb});
       await S.db.collection('maint_history').add({taskId:id,name:t.name,area:t.area,date:S.today,hour:nowH(),by:by,at:new Date().toISOString()});
       toast('Marked done.');
+    }else if(b.dataset.act==='hm'){
+      const who=await ask({title:'Hour meter at last service',msg:t.name+': the meter reading when this was last done.',field:{label:'Hour meter at last service (h)',value:t.baseHm},pw:!adminEff(),ok:'Save hour'});if(!who)return;
+      const v=who.field,n=Number(v);if(v===''||v==null||!isFinite(n)||n<0){toast('Type the hour meter reading as a number.',true);return;}
+      await S.db.doc('maint_tasks/'+id).update({baseHm:n});toast('Hour saved.');
     }else if(b.dataset.act==='edit'){
       S.editTask=id;$('#mtForm').open=true;$('#mtSum').textContent='Edit task';$('#mtName').value=t.name;$('#mtCat').value=catOf(t);$('#mtArea').value=t.area;fillMtEq(t.equipment);$('#mtH').value=t.intervalHours||'';$('#mtBase').value=t.baseHm!=null?t.baseHm:'';$('#mtD').value=t.intervalDays||'';$('#mtMach').value=t.machine||'';$('#mtCancel').hidden=false;window.scrollTo({top:0,behavior:'smooth'});
     }else if(b.dataset.act==='del'){
