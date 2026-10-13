@@ -412,7 +412,7 @@ async function evalGate(){
   unsub('notices');ensureNoticeSub();beat();renderTop();restoreView();
 }
 async function doSignOut(){
-  try{if(S.db&&S.acct&&S.sessionOk)await S.db.doc('sessions/'+S.acct.uid).delete();}catch(e){}
+  try{if(S.db&&S.acct&&(S.sessionOk||!LOCKED_ROLE(S.acct.role||'')))await S.db.doc('sessions/'+S.acct.uid).delete();}catch(e){}
   S.sessionOk=false;unsub('sess');unsub('notices');lsSet('plant.appr','');lsSet('plant.view','');S.dev=null;S.unlock=null;
   if(S.user&&S.user.signOut){await S.user.signOut();return;}
   ssSet('plant.test','');S.acct=null;S.gate='pick';S.view='home';renderTop();renderHome();
@@ -503,7 +503,7 @@ function readBatt(){
   }catch(e){}
 })();
 async function beat(){
-  if(!S.db||!S.acct||!S.acct.role||S.acct.role==='admin')return;
+  if(!S.db||!S.acct||!S.acct.role)return;
   if(LOCKED_ROLE(S.acct.role)&&!S.sessionOk)return;
   const iso=new Date().toISOString();
   try{await S.db.doc('sessions/'+S.acct.uid).set({sid:SID(),dev:DEV(),place:S.acct.role,email:S.acct.email,ts:iso,sts:S.db.serverTime||iso,ready:!!S.dev,batt:S.batt?Math.round(S.batt.level*100):null});}catch(e){}
@@ -537,7 +537,7 @@ setInterval(()=>{
     else{S.lastHour=nowH();refreshStrip();applyWindow();}
     refreshRecent();paintAreaIssues();
   }
-  if(S.view==='admin'&&S.tab==='overview')paintTab();
+  if(S.view==='admin'&&(S.tab==='overview'||S.tab==='devices'))paintTab();
 },10000);
 window.addEventListener('online',()=>{S.online=true;renderTop();});
 window.addEventListener('offline',()=>{S.online=false;renderTop();});
@@ -553,7 +553,7 @@ function go(view,areaId,tab){
   if(view==='home'&&S.dev&&S.dev.place==='maint')view='mplace';
   if(view==='mplace'&&!(S.dev&&S.dev.place==='maint')&&!adminEff())view='home';
   if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done')S.tab='issues';
-  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');
+  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
   if(tab)S.tab=tab;
   if(view==='area'){S.date=S.today;S.hour=nowH();S.lastHour=nowH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;lsSet('plant.view','area:'+areaId);}
@@ -1052,7 +1052,7 @@ async function sendIssue(){
   }catch(e){toast(dbErr(e),true);}
 }
 /* ---------- control room ---------- */
-const TABS=[['overview','Overview'],['trends','Trends & export'],['maint','Maintenance'],['issues','Requests'],['notices','Messages'],['setup','Setup']];
+const TABS=[['overview','Overview'],['trends','Trends & export'],['maint','Maintenance'],['issues','Requests'],['notices','Messages'],['devices','Devices'],['setup','Setup']];
 const MTABS=[['issues','Requests'],['maint','Preventive'],['done','Recent maintenance done']];
 function renderAdmin(){
   if(!adminEff()){go('home');return;}
@@ -1118,6 +1118,31 @@ function ensureNoticeSub(){
       if(fresh.length&&p==='all')showBar('<span class="tx">From press'+(fresh.length>1?' ('+fresh.length+' new)':'')+': '+ntLine(fresh[0])+' <span style="font-weight:400">(by '+esc(fresh[0].by)+')</span></span>');}
     S.notices=vis;paintNoticeUI();
   },e=>toast(dbErr(e),true)));
+}
+
+/* ---- devices online (admin) ---- */
+function paintDevices(){
+  const el=$('#devBody');if(!el)return;
+  const rows=(S.devs||[]).filter(x=>x&&(x.sts||x.ts));
+  const T=x=>new Date(x.sts||x.ts).getTime();
+  const ref=rows.reduce((m,x)=>Math.max(m,T(x)),0)+(Date.now()-(S.devsAt||Date.now())); /* server time, so tablet clocks do not matter */
+  const age=x=>Math.max(0,ref-T(x));
+  const st=x=>age(x)>180000?'off':(x.ready===false?'wait':'on');
+  const rel=ms=>ms<90000?'just now':ms<3600000?Math.round(ms/60000)+' min ago':ms<86400000?Math.round(ms/3600000)+' h ago':Math.round(ms/86400000)+' d ago';
+  const chip=k=>k==='on'?'<span class="chip ok">Online</span>':k==='wait'?'<span class="chip warn">At sign-in screen</span>':'<span class="chip">Offline</span>';
+  const order=['press','lab','pack','all','maint','admin'];
+  const nOn=rows.filter(x=>st(x)==='on').length;
+  let h='<section class="card"><h2>Devices online <span class="chip '+(nOn?'ok':'')+'">'+nOn+' online now</span></h2><p class="muted small" style="margin:4px 0 0">Updates by itself. A device counts as online when it has reported in during the last 3 minutes.</p></section>';
+  h+='<div class="split" style="margin-top:16px">'+order.map(pl=>{
+    const list=rows.filter(x=>x.place===pl).sort((a,b)=>T(b)-T(a));
+    const on=list.some(x=>st(x)==='on'),wt=list.some(x=>st(x)==='wait');
+    const top=on?'on':wt?'wait':'off';
+    return '<section class="card"><h2>'+esc(pl==='all'?'Shift leader':placeName(pl))+' '+chip(top)+'</h2>'+(list.length?list.map(x=>{
+      const k=st(x),me=x.sid===SID();
+      return '<div class="row" style="justify-content:space-between;gap:8px;margin-top:8px;opacity:'+(k==='off'?.65:1)+'"><div><b>'+esc(x.email||'')+'</b>'+(me?' <span class="chip acc">this device</span>':'')+'<div class="muted small">Device '+esc(String(x.dev||'').slice(-4))+' · last seen '+esc(rel(age(x)))+(x.batt!=null?' · battery '+esc(x.batt)+'%':'')+'</div></div>'+chip(k)+'</div>';
+    }).join(''):'<p class="muted small" style="margin:8px 0 0">No device has signed in here yet.</p>')+'</section>';
+  }).join('')+'</div>';
+  el.innerHTML=h;
 }
 function paintNtTab(){
   const el=$('#ntBody');if(!el)return;
@@ -1250,6 +1275,8 @@ function subAdmin(){
     const sig=S.tasks.map(t=>t.id+t.lastDone+t.lastHour).join('|');
     if(sig!==S.pmSig){S.pmSig=sig;loadPM();}
     if(S.tab==='maint'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
+  resub('devs',()=>S.db.collection('sessions').limit(60).onSnapshot(snap=>{
+    S.devs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.devsAt=Date.now();if(S.tab==='devices')paintTab();},e=>{}));
   resub('hist',()=>S.db.collection('maint_history').orderBy('at','desc').limit(60).onSnapshot(snap=>{
     S.hist=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.tab==='maint'||S.tab==='done')paintTab();},e=>toast(dbErr(e),true)));
 }
@@ -1270,6 +1297,7 @@ function buildTab(){
   if(S.tab==='maint')t.innerHTML=maintShell();
   if(S.tab==='done')t.innerHTML='<div id="doneBody"></div>';
   if(S.tab==='notices')t.innerHTML='<div id="ntBody"></div>';
+  if(S.tab==='devices')t.innerHTML='<div id="devBody"></div>';
   if(S.tab==='issues')t.innerHTML='<div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
   if(S.tab==='setup')t.innerHTML=setupShell();
   bindTab();paintTab();paintBadge();
@@ -1282,6 +1310,7 @@ function paintTab(){
   if(S.tab==='issues')paintIssues();
   if(S.tab==='done')paintDone();
   if(S.tab==='notices')paintNtTab();
+  if(S.tab==='devices')paintDevices();
 }
 function bindTab(){
   if(S.tab==='overview'){
