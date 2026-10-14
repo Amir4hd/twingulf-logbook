@@ -19,6 +19,10 @@ service cloud.firestore {
     match /maint_tasks/{id}   { allow read, create, update: if signedIn(); allow delete: if isAdmin() || isMaintAcct(); }
     match /maint_history/{id} { allow read, create, update: if signedIn(); allow delete: if isAdmin() || isMaintAcct(); }
 
+    // Spare parts: any signed-in account can read, add and change stock. Only the admin can delete a part. The movement log can be added to but never changed or deleted.
+    match /parts/{id}       { allow read, create, update: if signedIn(); allow delete: if isAdmin(); }
+    match /part_moves/{id}  { allow read, create: if signedIn(); }
+
     // Readings, regrinding, problem reports, press-to-packaging messages and tablet heartbeats: tablet accounts can read and write.
     match /logs/{id}     { allow read, write: if signedIn(); allow delete: if isAdmin(); }
     match /issues/{id}   { allow read, write: if signedIn(); allow delete: if isAdmin(); }

@@ -155,7 +155,7 @@ svg.ch .pt{fill:var(--accent)} svg.ch .pt.x{fill:var(--bad)}
 svg.ch .lim{stroke:var(--warn);stroke-width:1.2;stroke-dasharray:5 4}
 .empty{padding:22px;border:2px dashed var(--line);border-radius:8px;color:var(--mut);text-align:center}
 .ovl{position:fixed;inset:0;background:rgba(10,16,13,.6);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
-.dlg{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:12px}
+.dlg{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 32px);overflow-y:auto}.dlg.wide{max-width:660px}.dlg .g2{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}.dlg .g2>.full{grid-column:1/-1}@media(max-width:560px){.dlg .g2{grid-template-columns:1fr}}
 .dlg h2{font-size:28px}.dlg p{margin:0}
 .who{min-height:28px;font:600 20px var(--f-d);letter-spacing:.04em;text-transform:uppercase}
 .who.ok{color:var(--ok)}.who.bad{color:var(--bad)}
@@ -554,8 +554,8 @@ function go(view,areaId,tab){
   if(view==='area'&&!canSee(area(areaId)))view='home';
   if(view==='home'&&S.dev&&S.dev.place==='maint')view='mplace';
   if(view==='mplace'&&!(S.dev&&S.dev.place==='maint')&&!adminEff())view='home';
-  if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done')S.tab='issues';
-  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');
+  if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done'&&S.tab!=='parts')S.tab='issues';
+  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
   if(tab)S.tab=tab;
   if(view==='area'){S.date=S.today;S.hour=nowH();S.lastHour=nowH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;lsSet('plant.view','area:'+areaId);}
@@ -1054,21 +1054,21 @@ async function sendIssue(){
   }catch(e){toast(dbErr(e),true);}
 }
 /* ---------- control room ---------- */
-const TABS=[['overview','Overview'],['trends','Trends & export'],['maint','Maintenance'],['issues','Requests'],['notices','Messages'],['devices','Devices'],['setup','Setup']];
-const MTABS=[['issues','Requests'],['maint','Preventive'],['done','Recent maintenance done']];
+const TABS=[['overview','Overview'],['trends','Trends & export'],['maint','Maintenance'],['parts','Spare parts'],['issues','Requests'],['notices','Messages'],['devices','Devices'],['setup','Setup']];
+const MTABS=[['issues','Requests'],['maint','Preventive'],['parts','Spare parts'],['done','Recent maintenance done']];
 function renderAdmin(){
   if(!adminEff()){go('home');return;}
-  $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='devices'?' <span class="chip ok" id="devBadge" hidden></span>':'')+'</button>').join('')+'</div><div id="tab"></div>';
+  $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='devices'?' <span class="chip ok" id="devBadge" hidden></span>':'')+'</button>').join('')+'</div><div id="tab"></div>';
   $$('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;S.setupEditing=false;$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));buildTab();});
-  subAdmin();buildTab();paintDevBadge();
+  subAdmin();buildTab();paintDevBadge();paintLowBadge();
 }
 function renderMplace(){
   if(!(S.dev&&S.dev.place==='maint')&&!adminEff()){go('home');return;}
-  $('#main').innerHTML='<div class="tabs" role="tablist">'+MTABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="sndBtn" type="button" style="align-self:center"></button></div><div id="tab"></div>';
+  $('#main').innerHTML='<div class="tabs" role="tablist">'+MTABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="sndBtn" type="button" style="align-self:center"></button></div><div id="tab"></div>';
   $$('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));buildTab();});
   const sb=$('#sndBtn');const paintSnd=()=>{sb.textContent=soundOn()?'Sound: on':'Sound: off';};paintSnd();
   sb.onclick=()=>{lsSet('plant.sound',soundOn()?'0':'1');paintSnd();if(soundOn())beep();};
-  S.seen=null;subAdmin();buildTab();
+  S.seen=null;subAdmin();buildTab();paintLowBadge();
 }
 /* ---- new request alert ---- */
 const soundOn=()=>lsGet('plant.sound')!=='0';
@@ -1289,6 +1289,10 @@ function subAdmin(){
     if(S.tab==='maint'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
   resub('devs',()=>S.db.collection('sessions').limit(60).onSnapshot(snap=>{
     S.devs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.devsAt=Date.now();paintDevBadge();if(S.tab==='devices')paintTab();},e=>{}));
+  resub('parts',()=>S.db.collection('parts').limit(1500).onSnapshot(snap=>{
+    S.parts=snap.docs.map(d=>Object.assign({id:d.id},d.data()));paintLowBadge();if(S.tab==='parts')paintTab();},e=>toast(dbErr(e),true)));
+  resub('moves',()=>S.db.collection('part_moves').orderBy('at','desc').limit(200).onSnapshot(snap=>{
+    S.moves=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.tab==='parts')paintTab();},e=>toast(dbErr(e),true)));
   resub('hist',()=>S.db.collection('maint_history').orderBy('at','desc').limit(60).onSnapshot(snap=>{
     S.hist=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.tab==='maint'||S.tab==='done')paintTab();},e=>toast(dbErr(e),true)));
 }
@@ -1308,6 +1312,7 @@ function buildTab(){
   if(S.tab==='trends')t.innerHTML=trendShell();
   if(S.tab==='maint')t.innerHTML=maintShell();
   if(S.tab==='done')t.innerHTML='<div id="doneBody"></div>';
+  if(S.tab==='parts')t.innerHTML=partsShell();
   if(S.tab==='notices')t.innerHTML='<div id="ntBody"></div>';
   if(S.tab==='devices')t.innerHTML='<div id="devBody"></div>';
   if(S.tab==='issues')t.innerHTML='<div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
@@ -1321,6 +1326,7 @@ function paintTab(){
   if(S.tab==='maint')paintMaint();
   if(S.tab==='issues')paintIssues();
   if(S.tab==='done')paintDone();
+  if(S.tab==='parts')paintParts();
   if(S.tab==='notices')paintNtTab();
   if(S.tab==='devices')paintDevices();
 }
@@ -1336,6 +1342,7 @@ function bindTab(){
   }
   if(S.tab==='trends')bindTrend();
   if(S.tab==='maint')bindMaint();
+  if(S.tab==='parts')bindParts();
   if(S.tab==='setup')bindSetup();
 }
 
@@ -1562,7 +1569,7 @@ async function histDel(id){
   try{await S.db.doc('maint_history/'+id).delete();toast('Record deleted.');}catch(e){toast(dbErr(e),true);}
 }
 function doneHTML(){
-  return '<section class="card"><h2>Recent maintenance done</h2>'+(S.hist.length?'<div class="tscroll"><table><thead><tr><th>When</th><th>Task</th><th>Area</th><th>Done by</th>'+(canMaintEdit()?'<th></th>':'')+'</tr></thead><tbody>'+S.hist.map(h=>{const a=area(h.area);return '<tr><td class="mono small">'+esc(h.date)+' '+pad(h.hour||0)+':00</td><td><b>'+esc(h.name)+'</b></td><td class="muted">'+esc(a?a.name:(h.area||''))+'</td><td>'+esc(h.by)+'</td>'+(canMaintEdit()&&h.id?'<td><button class="btn sm bad ico" data-hid="'+esc(h.id)+'" title="Delete" aria-label="Delete">'+TRASH+'</button></td>':(canMaintEdit()?'<td></td>':''))+'</tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Nothing recorded yet.</div>')+'</section>';
+  return '<section class="card"><h2>Recent maintenance done</h2>'+(S.hist.length?'<div class="tscroll"><table><thead><tr><th>When</th><th>Task</th><th>Area</th><th>Done by</th>'+(canMaintEdit()?'<th></th>':'')+'</tr></thead><tbody>'+S.hist.map(h=>{const a=area(h.area);return '<tr><td class="mono small">'+esc(h.date)+' '+pad(h.hour||0)+':00</td><td><b>'+esc(h.name)+'</b>'+(h.parts&&h.parts.length?'<div class="muted small">Parts: '+h.parts.map(u=>esc(u.name)+' ×'+fmtQ(u.qty)).join(', ')+'</div>':'')+'</td><td class="muted">'+esc(a?a.name:(h.area||''))+'</td><td>'+esc(h.by)+'</td>'+(canMaintEdit()&&h.id?'<td><button class="btn sm bad ico" data-hid="'+esc(h.id)+'" title="Delete" aria-label="Delete">'+TRASH+'</button></td>':(canMaintEdit()?'<td></td>':''))+'</tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Nothing recorded yet.</div>')+'</section>';
 }
 function paintDone(){const el=$('#doneBody');if(el){el.innerHTML=doneHTML();$$('button[data-hid]',el).forEach(b=>b.onclick=()=>histDel(b.dataset.hid));}}
 function paintMaint(){
@@ -1592,10 +1599,13 @@ async function taskAct(b){
       const hr=await S.db.collection('maint_history').add({taskId:id,name:t.name,area:t.area,date:S.today,hour:nowH(),by:by,at:new Date().toISOString()});
       await S.db.doc('maint_tasks/'+id).update({lastDone:S.today,lastHour:nowH(),doneBy:by,baseHm:nb,prev:{lastDone:t.lastDone||S.today,lastHour:t.lastHour==null?null:t.lastHour,doneBy:t.doneBy||'',baseHm:t.baseHm==null?null:t.baseHm},histId:hr&&hr.id?hr.id:null});
       toast('Marked done. You can undo it from the task row.');
+      if(S.parts.length){const used=await partsUsedDlg(t.name);if(used&&used.length){const got=await takePartsForTask(used,t,by,hr&&hr.id?hr.id:null);if(got.length)toast('Marked done. Parts taken from stock: '+got.map(g=>g.name+' ×'+fmtQ(g.qty)).join(', ')+'.');}}
     }else if(b.dataset.act==='undo'){
       if(!t.prev)return;
       const who=await ask({title:'Undo the last Mark done?',msg:t.name+' goes back to: last done '+t.prev.lastDone+(t.prev.baseHm!=null?', meter '+t.prev.baseHm+' h':'')+'. The record in Recent maintenance done is removed.',pw:!adminEff(),ok:'Yes, undo'});if(!who)return;
       await S.db.doc('maint_tasks/'+id).update({lastDone:t.prev.lastDone,lastHour:t.prev.lastHour,doneBy:t.prev.doneBy,baseHm:t.prev.baseHm,prev:null,histId:null});
+      const hh=t.histId?S.hist.find(x=>x.id===t.histId):null;
+      if(hh&&hh.parts&&hh.parts.length){for(const u of hh.parts){try{await moveStock(u.id,u.qty,{type:'in',note:'Returned: mark done undone ('+t.name+')',by:who.name||'Admin'});}catch(e){}}toast('Mark done undone. Spare parts were put back in stock.');}
       if(t.histId){try{await S.db.doc('maint_history/'+t.histId).delete();}catch(e){}}
       toast('Mark done undone.');
     }else if(b.dataset.act==='hm'){
@@ -1609,6 +1619,273 @@ async function taskAct(b){
       await S.db.doc('maint_tasks/'+id).delete();toast('Task deleted.');
     }
   }catch(e){toast(dbErr(e),true);}
+}
+
+/* ---- spare parts stock ---- */
+const PART_FOR=[['pp','Pasta Plant'],['mp','Macaroni Plant'],['bo','Boiler'],['ro','RO'],['general','General / workshop']];
+const TASK_AREA={macaroni:'mp',spaghetti:'pp',boiler:'bo',chiller:'bo',aircomp:'pp',ro:'ro'};
+/* UC = short unique code: one letter each for type, area and category, then a number, for example SPE-001 (spare part, pasta plant, electrical). The long item code (SP-PP-EL) is kept as the group code. */
+const CAT_CODE={'Electrical':'EL','Mechanical':'ME','Pneumatic':'PN','Seals':'SL','PVC pipe':'PVC','Tools':'TO','RO parts':'RO','Bearings':'BRG','Lubricants':'LU','Valves & fittings':'MC','Consumable':'CO','Other':'GN'};
+const AREA_CODE={pp:'PP',mp:'MP',bo:'BO',ro:'RO',general:'PP'};
+const ucPrefix=(use,cat)=>cat==='Consumable'?'CO-'+(AREA_CODE[use]||'PP'):'SP-'+(AREA_CODE[use]||'PP')+'-'+(CAT_CODE[cat]||'GN');
+const AREA_L={pp:'P',mp:'M',bo:'B',ro:'R',general:'P'},CAT_L={'Electrical':'E','Mechanical':'M','Pneumatic':'P','Seals':'S','PVC pipe':'V','Tools':'T','RO parts':'R','Bearings':'B','Lubricants':'L','Valves & fittings':'C','Other':'X'};
+const ucLetters=(use,cat)=>cat==='Consumable'?'C'+(AREA_L[use]||'P'):'S'+(AREA_L[use]||'P')+(CAT_L[cat]||'X');
+function nextUC(prefix,taken){let mx=0;const pre=prefix+'-';S.parts.forEach(p=>{const u=String(p.uc||'');if(u.startsWith(pre)&&/^\d+$/.test(u.slice(pre.length)))mx=Math.max(mx,+u.slice(pre.length));});if(taken&&taken[prefix]>mx)mx=taken[prefix];const n=mx+1;if(taken)taken[prefix]=n;return pre+String(n).padStart(3,'0');}
+const forName=id=>(PART_FOR.find(x=>x[0]===id)||['',id||'General / workshop'])[1];
+const PART_CATS=['Mechanical','Electrical','Pneumatic','Seals','PVC pipe','Tools','RO parts','Bearings','Lubricants','Valves & fittings','Consumable','Other'];
+const pname=p=>p.name+(p.spec?' · '+p.spec:'');
+const fmtQ=n=>String(Math.round((Number(n)||0)*1000)/1000);
+const partState=p=>{const q=Number(p.qty)||0,m=Number(p.min)||0;return q<=0?'out':(m>0&&q<=m?'low':'ok');};
+const stChip=p=>{const s=partState(p);return '<span class="chip '+(s==='out'?'bad':s==='low'?'warn':'ok')+'">'+(s==='out'?'Out of stock':s==='low'?'Low':'OK')+'</span>';};
+const money=n=>(Math.round((Number(n)||0)*100)/100).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+S.parts=[];S.moves=[];S.pf={view:'stock',q:'',use:'',cat:'',low:false,n:100};S.imp=null;
+function paintLowBadge(){const n=S.parts.filter(p=>partState(p)!=='ok'&&!((Number(p.min)||0)===0&&(Number(p.qty)||0)>0)).length,b=$('#lowBadge');if(!b)return;b.hidden=!n;b.textContent=n;b.title=n+' part'+(n===1?'':'s')+' low or out of stock';}
+/* a form dialog that also identifies who is acting (operator password, or Admin) */
+function stockDlg(o){
+  return new Promise(resolve=>{
+    const old=$('#dlg');if(old)old.remove();
+    const adm=adminEff(),noOps=S.ops.filter(x=>x.active!==false).length===0;
+    const w=document.createElement('div');w.id='dlg';w.className='ovl';
+    const fld=f=>{const id='sd_'+f.id,v=f.value==null?'':f.value;
+      if(f.type==='select')return '<label class="l">'+esc(f.label)+'<select id="'+id+'">'+f.options.map(x=>'<option value="'+esc(x[0])+'"'+(String(x[0])===String(v)?' selected':'')+'>'+esc(x[1])+'</option>').join('')+'</select></label>';
+      return '<label class="l">'+esc(f.label)+'<input type="'+(f.type||'text')+'"'+(f.type==='number'?' step="any" inputmode="decimal" min="0"':'')+' id="'+id+'" autocomplete="off" value="'+esc(v)+'"'+(f.ph?' placeholder="'+esc(f.ph)+'"':'')+'></label>';};
+    const wide=(o.fields||[]).length>5;
+    w.innerHTML='<div class="dlg'+(wide?' wide':'')+'" role="dialog" aria-modal="true"><h2>'+esc(o.title)+'</h2>'+(o.msg?'<p>'+esc(o.msg)+'</p>':'')+'<div class="'+(wide?'g2':'')+'" style="display:grid;gap:10px">'+(o.fields||[]).map((f,i)=>wide&&i===0?fld(f).replace('<label class="l">','<label class="l full">'):fld(f)).join('')+
+      (adm?'':(noOps?'<label class="l full">Your name<input type="text" id="sd_name" autocomplete="off"></label>':'<label class="l full">Operator password<input type="password" id="sd_pw" autocomplete="off"></label><div id="sd_who" class="who full" aria-live="polite"></div>'))+
+      '<div id="sd_err" class="status bad full" hidden></div></div><div class="row" style="margin-top:6px"><button type="button" class="btn big" id="sd_no">Cancel</button><button type="button" class="btn pri big" id="sd_yes" disabled>'+esc(o.ok||'Save')+'</button></div></div>';
+    document.body.appendChild(w);
+    let op=null,seq=0;
+    const done=v=>{w.remove();document.removeEventListener('keydown',onKey);resolve(v);};
+    const vals=()=>{const v={};(o.fields||[]).forEach(f=>{v[f.id]=$('#sd_'+f.id).value;});return v;};
+    const who=()=>adm?'Admin':(noOps?($('#sd_name').value.trim()||null):(op&&op.name));
+    const ready=()=>{const v=vals();$('#sd_yes').disabled=!(who()&&(o.fields||[]).every(f=>!f.req||String(v[f.id]).trim()!==''));};
+    const onKey=e=>{if(e.key==='Escape')done(null);};
+    document.addEventListener('keydown',onKey);
+    w.oninput=async e=>{$('#sd_err').hidden=true;
+      if(e.target.id==='sd_pw'){const my=++seq,p=e.target.value;op=null;ready();const wh=$('#sd_who');wh.textContent='';wh.className='who';if(!p)return;const f=await findOperator(p);if(my!==seq)return;
+        if(f){op=f;wh.textContent='Signed in as '+f.name;wh.className='who ok';}else if(p.length>=4){wh.textContent='Password not recognised';wh.className='who bad';}}
+      ready();};
+    w.onchange=ready;
+    $('#sd_no').onclick=()=>done(null);
+    $('#sd_yes').onclick=async()=>{const v=vals();const msg=o.validate?await o.validate(v):null;if(msg){const er=$('#sd_err');er.textContent=msg;er.hidden=false;return;}done({vals:v,by:who()});};
+    const first=(o.fields&&o.fields[0])?$('#sd_'+o.fields[0].id):($('#sd_pw')||$('#sd_name'));if(first)first.focus();
+    ready();
+  });
+}
+/* change the stock of one part and record the movement */
+async function moveStock(id,delta,m){
+  const ref=S.db.doc('parts/'+id);const sn=await ref.get();
+  if(!sn.exists)throw new Error('That part no longer exists.');
+  const p=sn.data(),cur=Number(p.qty)||0,nq=Math.round((cur+delta)*1000)/1000;
+  if(nq<0)throw new Error('Only '+fmtQ(cur)+' '+(p.unit||'')+' of '+p.name+' in stock.');
+  await ref.update({qty:nq});
+  await S.db.collection('part_moves').add({part:id,name:pname(p),uc:p.uc||'',code:p.code||'',unit:p.unit||'',type:m.type,qty:Math.round(delta*1000)/1000,bal:nq,use:m.use||'',note:m.note||'',by:m.by||'',at:new Date().toISOString(),taskId:m.taskId||''});
+  return nq;
+}
+function partsShell(){
+  const f=S.pf;
+  return '<div class="ctlrow" style="margin-bottom:10px;gap:8px;align-items:center" id="pvBar"></div>'+
+   '<div class="ctlrow" id="pfBar" style="margin-bottom:12px"><label class="l" style="flex:2 1 220px">Search<input type="search" id="pfQ" placeholder="UC, name, size, shelf, supplier" value="'+esc(f.q)+'"></label>'+
+   '<label class="l">Used for<select id="pfUse"><option value="">All areas</option>'+PART_FOR.map(x=>'<option value="'+esc(x[0])+'"'+(f.use===x[0]?' selected':'')+'>'+esc(x[1])+'</option>').join('')+'</select></label>'+
+   '<label class="l">Category<select id="pfCat"><option value="">All categories</option>'+PART_CATS.map(x=>'<option'+(f.cat===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label>'+
+   '<label class="l" style="flex:0 0 auto;justify-content:flex-end"><span><input type="checkbox" id="pfLow"'+(f.low?' checked':'')+'> Low or out only</span></label>'+
+   '<button class="btn pri" id="pfAdd" style="align-self:flex-end">+ Add part</button></div><div id="pBody" style="display:flex;flex-direction:column;gap:14px"></div>';
+}
+function bindParts(){
+  const f=S.pf;
+  $('#pfQ').oninput=e=>{f.q=e.target.value;f.n=100;paintParts();};
+  $('#pfUse').onchange=e=>{f.use=e.target.value;f.n=100;paintParts();};
+  $('#pfCat').onchange=e=>{f.cat=e.target.value;f.n=100;paintParts();};
+  $('#pfLow').onchange=e=>{f.low=e.target.checked;f.n=100;paintParts();};
+  $('#pfAdd').onclick=()=>partEdit(null);
+  $('#pBody').onclick=e=>{if(e.target.closest('#pMore')){f.n+=100;paintParts();return;}const b=e.target.closest('button[data-pact]');if(!b)return;partAct(b.dataset.pact,b.dataset.pid);};
+}
+const partMatch=p=>{const f=S.pf,q=f.q.trim().toLowerCase();
+  if(f.use&&p.use!==f.use)return false;
+  if(f.cat&&p.cat!==f.cat)return false;
+  if(f.low&&partState(p)==='ok')return false;
+  if(q&&!([p.uc,p.grp,p.name,p.spec,p.code,p.loc,p.supplier,p.cat,forName(p.use)].join(' ').toLowerCase().includes(q)))return false;return true;};
+const orderList=()=>S.parts.filter(p=>(Number(p.min)||0)>0&&(Number(p.qty)||0)<=Number(p.min)).map(p=>Object.assign({},p,{need:Math.max(1,Math.ceil(Number(p.min)*2-(Number(p.qty)||0)))})).sort((a,b)=>String(a.supplier||'~').localeCompare(String(b.supplier||'~'))||String(a.name).localeCompare(String(b.name)));
+function paintParts(){
+  const el=$('#pBody');if(!el)return;
+  const f=S.pf,adm=adminEff(),ol=orderList();
+  const vb=$('#pvBar');
+  if(vb){vb.innerHTML=[['stock','Stock'],['order','To order'+(ol.length?' ('+ol.length+')':'')],['moves','Movements'],['import','Import list']].map(v=>'<button class="btn sm'+(f.view===v[0]?' pri':'')+'" data-v="'+v[0]+'">'+esc(v[1])+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="pCsv">Download stock list</button>';
+    $$('button[data-v]',vb).forEach(b=>b.onclick=()=>{f.view=b.dataset.v;paintParts();});$('#pCsv').onclick=()=>partsCsv('stock');}
+  const pf=$('#pfBar');if(pf)pf.hidden=(f.view==='import'||f.view==='order');
+  if(f.view==='stock')el.innerHTML=stockHTML(adm);
+  else if(f.view==='order')el.innerHTML=orderHTML(ol);
+  else if(f.view==='moves')el.innerHTML=movesHTML();
+  else{el.innerHTML=importHTML();bindImport();}
+  const oc=$('#pOrdCsv');if(oc)oc.onclick=()=>partsCsv('order');
+}
+function stockHTML(adm){
+  const all=S.parts,list=all.filter(partMatch).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  const low=all.filter(p=>partState(p)==='low').length,out=all.filter(p=>partState(p)==='out').length,val=all.reduce((s,p)=>s+(Number(p.qty)||0)*(Number(p.price)||0),0);
+  const strip='<div class="row small"><span class="chip acc">'+all.length+' part'+(all.length===1?'':'s')+'</span>'+(low?'<span class="chip warn">'+low+' low</span>':'')+(out?'<span class="chip bad">'+out+' out of stock</span>':'')+(adm&&val>0?'<span class="chip">Stock value '+money(val)+'</span>':'')+'</div>';
+  if(!all.length)return '<section class="card"><h2>Spare parts</h2><p class="muted">No parts yet. Use <b>+ Add part</b>, or <b>Import list</b> to paste your parts list from Excel.</p></section>';
+  return '<section class="card">'+strip+(list.length?'<div class="muted small" style="margin-top:8px">Showing '+Math.min(list.length,S.pf.n)+' of '+list.length+'</div><div class="tscroll" style="margin-top:6px"><table><thead><tr><th>Part</th><th>In stock</th><th>Min</th>'+(adm?'<th>Value</th>':'')+'<th></th></tr></thead><tbody>'+list.slice(0,S.pf.n).map(p=>{
+    const q=Number(p.qty)||0;
+    return '<tr><td>'+(p.uc?'<span class="chip acc mono" style="margin-right:6px">'+esc(p.uc)+'</span>':'')+'<b>'+esc(p.name)+'</b>'+(p.spec?' <span class="mono small" style="background:var(--accentbg);padding:1px 6px;border-radius:5px">'+esc(p.spec)+'</span>':'')+'<div class="muted small">'+[p.loc?'Shelf '+p.loc:'',p.cat,p.use&&p.use!=='general'?forName(p.use):'',p.grp,p.code?'Order code '+p.code:'',p.supplier].filter(Boolean).map(esc).join(' · ')+'</div></td>'+
+     '<td><b class="mono" style="font-size:18px">'+fmtQ(q)+'</b> <span class="muted small">'+esc(p.unit||'')+'</span><div>'+stChip(p)+'</div></td><td class="mono">'+(Number(p.min)?fmtQ(p.min):'–')+'</td>'+(adm?'<td class="mono small">'+(p.price?money(q*Number(p.price)):'–')+'</td>':'')+
+     '<td style="white-space:nowrap"><button class="btn sm" data-pact="out" data-pid="'+esc(p.id)+'">Take out</button> <button class="btn sm pri" data-pact="in" data-pid="'+esc(p.id)+'">Receive</button> <button class="btn sm" data-pact="edit" data-pid="'+esc(p.id)+'">Edit</button>'+(adm?' <button class="btn sm" data-pact="del" data-pid="'+esc(p.id)+'" title="Delete" aria-label="Delete">'+TRASH+'</button>':'')+'</td></tr>';}).join('')+'</tbody></table></div>'+(list.length>S.pf.n?'<div class="row" style="margin-top:10px"><button class="btn" id="pMore">Show 100 more</button></div>':''):'<p class="muted" style="margin-top:10px">No parts match the search.</p>')+'</section>';
+}
+function orderHTML(ol){
+  if(!ol.length)return '<section class="card"><h2>To order</h2><p class="muted">Nothing to order. Parts appear here when stock falls to the minimum or below.</p></section>';
+  return '<section class="card"><h2>To order <span class="chip warn">'+ol.length+'</span></h2><p class="muted small" style="margin:4px 0 10px">Suggested quantity brings each part back to twice its minimum.</p><div class="tscroll"><table><thead><tr><th>Supplier</th><th>Part</th><th>In stock</th><th>Min</th><th>Order</th></tr></thead><tbody>'+ol.map(p=>'<tr><td>'+esc(p.supplier||'–')+'</td><td><b>'+esc(p.name)+'</b>'+(p.spec?' <span class="mono small">'+esc(p.spec)+'</span>':'')+'<div class="muted small">'+esc([p.uc,p.code,p.cat].filter(Boolean).join(' · '))+'</div></td><td class="mono">'+fmtQ(p.qty)+' '+esc(p.unit||'')+'</td><td class="mono">'+fmtQ(p.min)+'</td><td><b class="mono">'+p.need+'</b> <span class="muted small">'+esc(p.unit||'')+'</span></td></tr>').join('')+'</tbody></table></div><div class="row" style="margin-top:12px"><button class="btn pri" id="pOrdCsv">Download order list</button></div></section>';
+}
+function movesHTML(){
+  const q=S.pf.q.trim().toLowerCase();
+  const list=S.moves.filter(m=>(!S.pf.use||m.use===S.pf.use)&&(!q||[m.name,m.code,m.by,m.note].join(' ').toLowerCase().includes(q)));
+  if(!list.length)return '<section class="card"><h2>Movements</h2><p class="muted">No stock movements yet.</p></section>';
+  const T={out:['Taken out','bad'],in:['Received','ok'],adj:['Count fix','warn']};
+  return '<section class="card"><h2>Movements <span class="muted small" style="font-weight:400">latest '+S.moves.length+'</span></h2><div class="tscroll"><table><thead><tr><th>When</th><th>Part</th><th></th><th>Qty</th><th>Balance</th><th>For / note</th><th>By</th></tr></thead><tbody>'+list.map(m=>{const t=T[m.type]||['','']; const d=new Date(m.at);
+    return '<tr><td class="mono small">'+esc(ymd(d))+' '+pad(d.getHours())+':'+pad(d.getMinutes())+'</td><td><b>'+esc(m.name)+'</b><div class="muted small mono">'+esc(m.uc||m.code||'')+'</div></td><td><span class="chip '+t[1]+'">'+t[0]+'</span></td><td class="mono"><b>'+(m.qty>0?'+':'')+fmtQ(m.qty)+'</b> '+esc(m.unit||'')+'</td><td class="mono">'+fmtQ(m.bal)+'</td><td class="small">'+esc([m.use?forName(m.use):'',m.note].filter(Boolean).join(' · '))+'</td><td>'+esc(m.by||'')+'</td></tr>';}).join('')+'</tbody></table></div></section>';
+}
+/* take out / receive / add / edit / delete */
+async function partAct(act,id){
+  const p=S.parts.find(x=>x.id===id);if(!p)return;
+  try{
+    if(act==='out'||act==='in'){
+      const out=act==='out';
+      const r=await stockDlg({title:(out?'Take out: ':'Receive: ')+p.name,msg:'In stock now: '+fmtQ(p.qty)+' '+(p.unit||''),ok:out?'Take out':'Receive',
+        fields:[{id:'qty',label:'Quantity'+(p.unit?' ('+p.unit+')':''),type:'number',req:true}].concat(out?[{id:'use',label:'Used for',type:'select',options:PART_FOR,value:p.use||'general'}]:[]).concat([{id:'note',label:out?'Note (optional)':'Supplier or invoice (optional)',type:'text'}]),
+        validate:v=>{const n=Number(v.qty);if(!(n>0))return 'Type a quantity above zero.';if(out&&n>(Number(p.qty)||0))return 'Only '+fmtQ(p.qty)+' '+(p.unit||'')+' in stock.';return null;}});
+      if(!r)return;const n=Number(r.vals.qty);
+      const nq=await moveStock(id,out?-n:n,{type:out?'out':'in',use:r.vals.use||'',note:r.vals.note.trim(),by:r.by});
+      toast((out?'Taken out. ':'Received. ')+p.name+': '+fmtQ(nq)+' '+(p.unit||'')+' now.');
+      if(out&&(Number(p.min)||0)>0&&nq<=Number(p.min))toast(p.name+' is low: '+fmtQ(nq)+' left (minimum '+fmtQ(p.min)+').',true);
+    }else if(act==='edit')await partEdit(p);
+    else if(act==='del'){
+      const r=await stockDlg({title:'Delete this part?',msg:p.name+' ('+fmtQ(p.qty)+' '+(p.unit||'')+' in stock). Its past movements stay in the history.',ok:'Yes, delete'});if(!r)return;
+      await S.db.doc('parts/'+id).delete();toast('Part deleted.');
+    }
+  }catch(e){toast(e&&e.message&&!e.code?e.message:dbErr(e),true);}
+}
+async function partEdit(p){
+  const adm=adminEff(),add=!p;
+  const dup=(name,spec,self)=>S.parts.some(x=>x.id!==self&&String(x.name||'').trim().toLowerCase()===name.toLowerCase()&&String(x.spec||'').trim().toLowerCase()===spec.toLowerCase());
+  const fields=[{id:'name',label:'Part name',req:true,value:add?'':p.name},{id:'spec',label:'Size / rating / model (optional)',value:add?'':p.spec,ph:'e.g. 6307, 80x110x10, 0.75 kW'},{id:'cat',label:'Category',type:'select',options:PART_CATS.map(x=>[x,x]),value:add?'Other':(p.cat||'Other')},{id:'code',label:'Order code (optional)',value:add?'':p.code},
+    {id:'use',label:'Used for',type:'select',options:PART_FOR,value:add?'general':(p.use||'general')},{id:'unit',label:'Unit',value:add?'pcs':(p.unit||'pcs'),ph:'pcs, L, kg, set'},
+    {id:'loc',label:'Shelf / location (optional)',value:add?'':p.loc},{id:'supplier',label:'Supplier (optional)',value:add?'':p.supplier},
+    {id:'min',label:'Minimum stock (warn at or below)',type:'number',value:add?'0':(p.min||0)}];
+  if(add)fields.push({id:'qty',label:'Quantity in stock now',type:'number',value:'0'});
+  else if(adm)fields.push({id:'qty',label:'Counted quantity (admin only; a change is recorded as a count fix)',type:'number',value:p.qty});
+  if(adm)fields.push({id:'price',label:'Price per unit (admin only)',type:'number',value:add?'':(p.price||'')});
+  const r=await stockDlg({title:add?'Add spare part':'Edit: '+p.name,msg:add?'A unique code (UC) is created automatically.':(p.uc?'UC '+p.uc:''),fields,ok:'Save',
+    validate:v=>{if(!v.name.trim())return 'Type the part name.';
+      for(const k of ['min','qty','price']){if(v[k]!=null&&v[k]!==''&&!(Number(v[k])>=0))return 'Type '+k+' as a number, zero or more.';}
+      if(dup(v.name.trim(),v.spec.trim(),add?null:p.id))return 'This part (same name and size) already exists.';return null;}});
+  if(!r)return;const v=r.vals;
+  try{
+    const data={name:v.name.trim(),spec:v.spec.trim(),cat:v.cat,code:v.code.trim(),use:v.use,unit:v.unit.trim()||'pcs',loc:v.loc.trim(),supplier:v.supplier.trim(),min:Number(v.min)||0};
+    if(adm&&v.price!=null)data.price=v.price===''?0:Number(v.price);
+    if(add){data.qty=0;data.price=data.price||0;data.uc=nextUC(ucLetters(data.use,data.cat));data.grp=ucPrefix(data.use,data.cat);data.createdAt=new Date().toISOString();const ref=await S.db.collection('parts').add(data);const q=Number(v.qty)||0;if(q>0)await moveStock(ref.id,q,{type:'in',note:'Opening stock',by:r.by});toast('Part added.');}
+    else{if(!p.uc)data.uc=nextUC(ucLetters(data.use,data.cat));if(!p.grp)data.grp=ucPrefix(data.use,data.cat);await S.db.doc('parts/'+p.id).update(data);if(adm&&v.qty!=null&&v.qty!==''&&Number(v.qty)!==(Number(p.qty)||0)){await moveStock(p.id,Number(v.qty)-(Number(p.qty)||0),{type:'adj',note:'Counted '+fmtQ(v.qty),by:r.by});}toast('Part saved.');}
+  }catch(e){toast(e&&e.message&&!e.code?e.message:dbErr(e),true);}
+}
+/* download stock list / order list as a spreadsheet file */
+async function partsCsv(kind){
+  const adm=adminEff(),q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  let head,rows,name;
+  if(kind==='order'){const ol=orderList();if(!ol.length){toast('Nothing to order.',true);return;}head=['UC','Supplier','Part','Size / rating','Order code','Category','In stock','Minimum','Order','Unit'];rows=ol.map(p=>[p.uc||'',p.supplier||'',p.name,p.spec||'',p.code||'',p.cat||'',fmtQ(p.qty),fmtQ(p.min),p.need,p.unit||'']);name='parts_to_order_'+S.today+'.csv';}
+  else{if(!S.parts.length){toast('No parts yet.',true);return;}head=['UC','Item code','Name','Size / rating','Category','Order code','Used for','Unit','Shelf','Quantity','Minimum','Supplier'].concat(adm?['Price','Value']:[]);
+    rows=S.parts.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(p=>[p.uc||'',p.grp||'',p.name,p.spec||'',p.cat||'',p.code||'',forName(p.use),p.unit||'',p.loc||'',fmtQ(p.qty),fmtQ(p.min),p.supplier||''].concat(adm?[p.price||0,Math.round((Number(p.qty)||0)*(Number(p.price)||0)*100)/100]:[]));name='spare_parts_stock_'+S.today+'.csv';}
+  try{const dl=await window.claude.use('downloads');if(!dl){toast('Download is not available in this view.',true);return;}
+    await dl.save({filename:name,data:'﻿'+[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n')});toast('File saved.');}
+  catch(e){if(!(e&&e.code==='declined'))toast(dbErr(e),true);}
+}
+/* import a parts list pasted from Excel, or loaded from a .csv file */
+function importHTML(){
+  const adm=adminEff();
+  return '<section class="card"><h2>Import parts list</h2><p class="muted small" style="margin:4px 0 8px">Choose a <b>.csv</b> file, or copy rows from Excel and paste them below. With a heading row, columns are found by their names (<b>UC, Item code, Name, Spec, Category, Used for, Unit, Shelf, Quantity, Minimum, Supplier, Order code'+(adm?', Price':'')+'</b>). Without a heading row, use that order. Parts whose UC or name and size already exist are left unchanged. A part without a UC gets one automatically.</p><div class="row" style="margin-bottom:8px"><label class="btn" style="cursor:pointer">Choose .csv file<input type="file" id="impFile" accept=".csv,.tsv,.txt,text/csv" hidden></label><span class="muted small" id="impFn"></span></div><textarea id="impTx" rows="6" style="width:100%;font:13px/1.4 var(--f-m,monospace)" placeholder="UC&#9;Item code&#9;Name&#9;Spec&#9;Category&#9;Used for&#9;Unit&#9;Shelf&#9;Quantity&#9;Minimum&#9;Supplier&#9;Order code"></textarea><div id="impOut" style="margin-top:10px"></div><div class="row" style="margin-top:10px"><button class="btn pri" id="impGo" disabled>Import</button><button class="btn" id="impClr">Clear</button></div></section>';
+}
+function parseTable(text){
+  text=String(text).replace(/^﻿/,'');
+  const first=text.split(/\r?\n/).find(l=>l.trim())||'';
+  const sep=first.includes('\t')?'\t':((first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':',');
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else if(c==='"'&&f==='')q=true;
+    else if(c===sep){row.push(f);f='';}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);f='';if(row.some(x=>x.trim()!==''))rows.push(row);row=[];}
+    else f+=c;}
+  row.push(f);if(row.some(x=>x.trim()!==''))rows.push(row);
+  return rows.map(r=>r.map(x=>x.trim()));
+}
+const IMP_ALIAS={uc:['uc','unique code','uc code'],grp:['item code','group','group code'],name:['name','item','item name','part','part name'],spec:['spec','size','rating','specification','remark','size / rating','size/rating','size / rating / model'],cat:['category','cat','type','group'],use:['used for','machine','for','used on'],unit:['unit','uom'],loc:['shelf','location','loc','shelf / location'],qty:['quantity','qty','stock','in stock','count'],min:['minimum','min','min stock','minimum stock','reorder level'],sup:['supplier','vendor'],code:['order code','order cod','code','part code','part number'],price:['price','unit price','price per unit']};
+const IMP_DEFAULT=['uc','grp','name','spec','cat','use','unit','loc','qty','min','sup','code','price'];
+function parseImport(text){
+  const ok=[],bad=[],dups=[];
+  const key=(n,s)=>String(n).trim().toLowerCase()+'|'+String(s||'').trim().toLowerCase();
+  const have=new Set(S.parts.map(p=>key(p.name,p.spec)));const haveUC=new Set(S.parts.map(p=>p.uc).filter(Boolean));
+  const rows=parseTable(text);if(!rows.length)return {ok,bad,dups};
+  let map=IMP_DEFAULT.slice(),start=0;
+  const hdr=rows[0].map(x=>x.toLowerCase().replace(/\s+/g,' ').trim());
+  const hits={};hdr.forEach((h,i)=>{for(const k in IMP_ALIAS){if(IMP_ALIAS[k].includes(h)&&hits[k]==null){hits[k]=i;break;}}});
+  if(hits.name!=null&&Object.keys(hits).length>=2){map=[];Object.keys(hits).forEach(k=>{map[hits[k]]=k;});start=1;}
+  const adm=adminEff();
+  const useOf=s=>{const t=String(s||'').trim().toLowerCase();if(!t)return 'general';const m=PART_FOR.find(x=>x[0]===t||x[1].toLowerCase()===t||(AREA_CODE[x[0]]||'').toLowerCase()===t);return m?m[0]:'general';};
+  const catOfS=s=>{const t=String(s||'').trim().toLowerCase();if(!t)return 'Other';return PART_CATS.find(x=>x.toLowerCase()===t)||'Other';};
+  const num=s=>{const t=String(s==null?'':s).trim().replace(/\s/g,'').replace(/,(?=\d{3}\b)/g,'').replace(',','.');if(t===''||t==='-')return 0;const n=Number(t);return isFinite(n)&&n>=0?n:NaN;};
+  rows.slice(start).forEach((c,i)=>{
+    const g={};map.forEach((k,j)=>{if(k)g[k]=c[j]==null?'':c[j];});
+    const ln=i+start+1;
+    if(!g.name){bad.push('Line '+ln+': the name is empty.');return;}
+    const q=num(g.qty),m=num(g.min),pr=num(g.price);
+    if(isNaN(q)||isNaN(m)||isNaN(pr)){bad.push('Line '+ln+' ('+g.name+'): quantity, minimum or price is not a number.');return;}
+    const k=key(g.name,g.spec),uc=(g.uc||'').trim();
+    if(have.has(k)||(uc&&haveUC.has(uc))){dups.push(g.name);return;}
+    have.add(k);if(uc)haveUC.add(uc);
+    ok.push({uc,grp:g.grp||'',name:g.name,spec:g.spec||'',cat:catOfS(g.cat),code:g.code||'',use:useOf(g.use),unit:g.unit||'pcs',loc:g.loc||'',qty:q,min:m,supplier:g.sup||'',price:adm?pr:0});
+  });
+  return {ok,bad,dups};
+}
+function bindImport(){
+  const tx=$('#impTx'),out=$('#impOut'),go=$('#impGo');
+  const upd=()=>{const t=tx.value;if(!t.trim()){out.innerHTML='';go.disabled=true;S.imp=null;return;}
+    const r=S.imp=parseImport(t);
+    out.innerHTML='<div class="row small"><span class="chip ok">'+r.ok.length+' ready to import</span>'+(r.dups.length?'<span class="chip warn">'+r.dups.length+' already exist (skipped)</span>':'')+(r.bad.length?'<span class="chip bad">'+r.bad.length+' with problems (skipped)</span>':'')+'</div>'+(r.bad.length?'<ul class="small" style="margin:8px 0 0 18px">'+r.bad.slice(0,6).map(x=>'<li>'+esc(x)+'</li>').join('')+(r.bad.length>6?'<li>…and '+(r.bad.length-6)+' more</li>':'')+'</ul>':'');
+    go.disabled=!r.ok.length;};
+  tx.oninput=upd;$('#impClr').onclick=()=>{tx.value='';$('#impFn').textContent='';upd();};
+  $('#impFile').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{tx.value=String(rd.result||'');$('#impFn').textContent=f.name;upd();};rd.onerror=()=>toast('Could not read that file.',true);rd.readAsText(f);e.target.value='';};
+  go.onclick=async()=>{const r=S.imp;if(!r||!r.ok.length)return;
+    const w=await stockDlg({title:'Import '+r.ok.length+' parts?',msg:'They are added to the stock list with their opening quantities.',ok:'Yes, import'});if(!w)return;
+    go.disabled=true;let n=0;const at=new Date().toISOString(),taken={};r.ok.forEach(p=>{const m=/^(.*)-(\d+)$/.exec(p.uc||'');if(m&&(taken[m[1]]||0)<+m[2])taken[m[1]]=+m[2];});r.ok.forEach(p=>{if(!p.uc)p.uc=nextUC(ucLetters(p.use,p.cat),taken);if(!p.grp)p.grp=ucPrefix(p.use,p.cat);});
+    try{for(let i=0;i<r.ok.length;i+=8){await Promise.all(r.ok.slice(i,i+8).map(async p=>{
+        const ref=await S.db.collection('parts').add({uc:p.uc,grp:p.grp,name:p.name,spec:p.spec,cat:p.cat,code:p.code,use:p.use,unit:p.unit,loc:p.loc,supplier:p.supplier,min:p.min,price:p.price,qty:p.qty,createdAt:at});
+        if(p.qty>0)await S.db.collection('part_moves').add({part:ref.id,name:pname(p),uc:p.uc,code:p.code,unit:p.unit,type:'in',qty:p.qty,bal:p.qty,use:'',note:'Opening stock (import)',by:w.by||'',at,taskId:''});
+        n++;}));toast('Imported '+n+' of '+r.ok.length+'…');}
+      toast('Imported '+n+' parts.');S.pf.view='stock';paintParts();}
+    catch(e){toast((n?'Stopped after '+n+' parts. ':'')+(e&&e.message&&!e.code?e.message:dbErr(e)),true);go.disabled=false;}};
+}
+/* optional step when a maintenance task is marked done: which parts were used */
+function partsUsedDlg(taskName){
+  return new Promise(resolve=>{
+    const old=$('#dlg');if(old)old.remove();
+    const ps=S.parts.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+    const w=document.createElement('div');w.id='dlg';w.className='ovl';
+    const rowH='<div class="row pu" style="gap:8px;flex-wrap:nowrap"><select class="pu_p" style="flex:1 1 auto;min-width:0"><option value="">Choose a part…</option>'+ps.map(p=>'<option value="'+esc(p.id)+'">'+esc((p.uc?p.uc+' · ':'')+pname(p)+' — '+fmtQ(p.qty)+' '+(p.unit||'')+' in stock')+'</option>').join('')+'</select><input type="number" class="pu_q" step="any" min="0" placeholder="Qty" style="width:90px"></div>';
+    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true"><h2>Spare parts used?</h2><p>'+esc(taskName)+' is marked done. If any spare parts were used, add them here and the stock goes down. You can skip this.</p><div id="pu_rows" style="display:grid;gap:8px">'+rowH+'</div><button type="button" class="btn sm" id="pu_add" style="margin-top:8px">+ Add another part</button><div id="pu_err" class="status bad" hidden></div><div class="row" style="margin-top:10px"><button type="button" class="btn big" id="pu_no">Skip</button><button type="button" class="btn pri big" id="pu_yes">Take from stock</button></div></div>';
+    document.body.appendChild(w);
+    const done=v=>{w.remove();resolve(v);};
+    $('#pu_add').onclick=()=>{$('#pu_rows').insertAdjacentHTML('beforeend',rowH);};
+    $('#pu_no').onclick=()=>done(null);
+    $('#pu_yes').onclick=()=>{
+      const out=[],er=$('#pu_err');er.hidden=true;const sum={};
+      for(const r of $$('.pu',w)){const id=r.querySelector('.pu_p').value,q=Number(r.querySelector('.pu_q').value);if(!id&&!r.querySelector('.pu_q').value)continue;
+        if(!id||!(q>0)){er.textContent='Choose a part and a quantity above zero for each line.';er.hidden=false;return;}
+        sum[id]=(sum[id]||0)+q;}
+      for(const id of Object.keys(sum)){const p=S.parts.find(x=>x.id===id);if(p&&sum[id]>(Number(p.qty)||0)){er.textContent='Only '+fmtQ(p.qty)+' '+(p.unit||'')+' of '+p.name+' in stock.';er.hidden=false;return;}out.push({id,qty:sum[id]});}
+      done(out);};
+  });
+}
+async function takePartsForTask(list,t,by,histId){
+  const used=[];
+  for(const u of list){try{const p=S.parts.find(x=>x.id===u.id);await moveStock(u.id,-u.qty,{type:'out',use:TASK_AREA[catOf(t)]||'general',note:'Used in: '+t.name,by,taskId:t.id});used.push({id:u.id,name:p?p.name:'',unit:p?p.unit||'':'',qty:u.qty});}catch(e){toast(e&&e.message?e.message:dbErr(e),true);}}
+  if(used.length&&histId){try{await S.db.doc('maint_history/'+histId).update({parts:used});}catch(e){}}
+  return used;
 }
 
 /* ---- problems ---- */
