@@ -117,8 +117,8 @@ td.n,th.n{text-align:right}
 tr.clk{cursor:pointer} tr.clk:hover{background:var(--panel2)}
 .hscroll,.tscroll{overflow-x:auto}
 
-.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:2px solid var(--line)}
-.tab{background:transparent;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;padding:10px 16px;font:600 18px var(--f-d);letter-spacing:.06em;text-transform:uppercase;color:var(--mut);min-height:44px}
+.tabs{display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;border-bottom:2px solid var(--line)}.tab{flex:0 0 auto;white-space:nowrap}
+.tab{background:transparent;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;padding:10px 9px;font:600 14px var(--f-d);letter-spacing:.03em;text-transform:uppercase;color:var(--mut);min-height:44px}
 .tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
 .kpis{display:flex;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:8px}
 .kpi{flex:1 1 150px;padding:12px 16px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
@@ -126,9 +126,9 @@ tr.clk{cursor:pointer} tr.clk:hover{background:var(--panel2)}
 .kpi b{font:600 34px/1 var(--f-d);font-variant-numeric:tabular-nums}
 .kpi span{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
 .kpi.warn b{color:var(--warn)} .kpi.bad b{color:var(--bad)}
-.hg{min-width:700px;display:flex;flex-direction:column;gap:6px}
-.hrow{display:grid;grid-template-columns:140px 1fr 210px;gap:10px;align-items:center}
-.hname{font:600 18px var(--f-d);text-transform:uppercase;letter-spacing:.04em}
+.hg{min-width:880px;display:flex;flex-direction:column;gap:6px}
+.hrow{display:grid;grid-template-columns:168px 1fr 62px 52px 74px 64px;gap:8px;align-items:center}.hrow>.hst,.hrow>.hhd{text-align:center}.hst{font:500 14px var(--f-m)}.hst.bad{color:var(--bad);font-weight:700}.hst.stp{color:var(--stop);font-weight:700}.hst.dim{color:var(--mut);font-weight:400}.hhd{font:600 10px var(--f-m);text-transform:uppercase;letter-spacing:.04em;color:var(--mut);line-height:1.1}.hrow+.hrow{border-top:1px solid var(--line);padding-top:6px}.hrow.hdr+.hrow{border-top:0;padding-top:0}.stopchips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.stopchips .chip{font-size:13px;padding:4px 11px}
+.hname{font:600 15px/1.15 var(--f-d);text-transform:uppercase;letter-spacing:.04em}
 .hcells{display:grid;grid-template-columns:repeat(24,1fr);gap:3px}
 .cell{height:30px;border:2px solid var(--line);border-radius:3px;background:var(--panel2);padding:0}
 .cell.done{background:var(--ok);border-color:var(--ok)}
@@ -171,7 +171,9 @@ fieldset.plain{border:0;padding:0;margin:0;min-width:0;display:flex;flex-directi
 .vals small{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;overflow-wrap:anywhere}
 .vals b{font:500 16px var(--f-m);font-variant-numeric:tabular-nums}
 .ent{padding:10px 0;border-top:1px solid var(--line)}.ent:first-of-type{border-top:0}
-.fld.locked{opacity:.5}.fld.lead .ir{border-style:dashed}
+form.emodal{display:none}form.emodal.open{display:block;position:fixed;inset:0;z-index:40;overflow-y:auto;margin:0;border-radius:0;border:0;padding:16px max(16px,calc((100vw - 1100px)/2)) 90px}
+.hview{columns:3 260px;column-gap:14px}.hgrp{break-inside:avoid;margin:0 0 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card,transparent)}.hgrp h4{margin:0;padding:7px 12px;font:600 13px var(--f-d);text-transform:uppercase;letter-spacing:.06em;color:var(--accent);background:rgba(127,127,127,.12);border-bottom:1px solid var(--line)}.hl{display:flex;justify-content:flex-start;align-items:baseline;gap:8px;padding:6px 12px;border-bottom:1px solid var(--line);font-size:15px}.hl:last-child{border-bottom:0}.hl span{flex:1 1 auto;min-width:0;color:var(--mut)}.hl b{flex:0 0 auto;font-weight:600;text-align:right}.hl b small{font-weight:400;color:var(--mut)}.hl.hi{background:rgba(220,120,0,.1)}.hl.hi b{color:var(--warn)}
+.ebar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}.fld.locked{display:none}.shiftbox{padding:9px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:15px;color:var(--mut)}.shiftbox b{color:var(--ink);font-weight:600}.fld.lead .ir{border-style:dashed}
 .orow{grid-template-columns:minmax(140px,2fr) minmax(140px,2fr) 80px 70px 40px !important}
 .usr{font-size:14px;font-weight:600;white-space:nowrap;max-width:26vw;overflow:hidden;text-overflow:ellipsis}.usr .r{font-weight:400;opacity:.8}
 @media (max-width:760px){.usr .r{display:none}}
@@ -205,7 +207,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 @media (prefers-reduced-motion:no-preference){.ntb-ico{animation:alertp 1.2s ease-in-out infinite}}
 @media (prefers-reduced-motion:no-preference){.ntline.due{animation:alertp 1.2s ease-in-out infinite}}
 .ntsent{font-size:13px;padding:6px 10px;margin:-4px 0 10px;border-radius:6px;background:var(--warnbg);color:var(--warn);border-left:4px solid var(--warn)}
-.elines{display:flex;flex-direction:column}.eline{display:flex;align-items:center;gap:12px;padding:9px 6px;border-bottom:1px solid var(--line);font-size:15px;white-space:nowrap;overflow:hidden}.eline>span:last-child{overflow:hidden;text-overflow:ellipsis}.eline.clk{cursor:pointer}.eline.clk:hover{background:var(--panel2)}
+.elines{display:flex;flex-direction:column}.eline{display:flex;align-items:center;gap:12px;padding:9px 6px;border-bottom:1px solid var(--line);font-size:15px;white-space:nowrap;overflow:hidden}.eline>span:last-child{overflow:hidden;text-overflow:ellipsis}.eline.clk{cursor:pointer}.eline{flex-wrap:wrap;row-gap:4px;white-space:normal}.eline>span:last-child{overflow:visible}.eline.stp{background:var(--badbg);border-left:4px solid var(--bad)}.elt tr.stp td{background:var(--badbg)}.elt tr.stp td:first-child{box-shadow:inset 4px 0 0 var(--bad)}.elt td,.elt th{padding:7px 8px;vertical-align:top}.elt tr.clk{cursor:pointer}.delstop{background:none;border:0;padding:2px 4px;font-size:14px;line-height:1;cursor:pointer;opacity:.7;min-height:0;min-width:0}.delstop:hover{opacity:1}.elt td,.elt th{white-space:nowrap}.elt .stt{font-size:11px}.elt .edi{font-size:13px;color:var(--mut);cursor:help}.elt td .chip{margin-left:4px}.elt th{white-space:nowrap}.eline .gap,td .gap{margin-left:auto;font-size:12px;color:var(--mut)}td .gap{display:block;margin:0}.eline.clk:hover{background:var(--panel2)}
 .sumrow{display:flex;justify-content:space-between;gap:12px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:16px}.sumrow b.mono{white-space:nowrap}.sumrow.sub{padding-left:22px;font-size:14px;color:var(--mut)}
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.mx{font-size:13px}.mx th,.mx td{padding:6px 5px}.mx td:first-child{white-space:normal;min-width:84px}.mx th.sl{font-size:11px;line-height:1.25;white-space:normal}.mx th.sl .chip{display:flex;justify-content:center;font-size:10px;padding:2px 4px;white-space:normal;text-align:center}.mx th.n{white-space:normal}@media(max-width:900px){.split{grid-template-columns:1fr}}
 .mx th.sl{text-align:center;font-size:12px;white-space:nowrap}.mx th.sl.warn{background:var(--warnbg)}.mx th.sl.bad{background:var(--badbg)}.mx th.sl.ok{background:var(--okbg)}.mx td.n{text-align:right}
@@ -255,7 +257,7 @@ const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const REASONS=['Planned stop','Breakdown','Cleaning / changeover','Material shortage','Power cut','Quality hold','Other'];
 
 /* ---------- standard setup (used until the admin saves their own in Setup) ---------- */
-const PACK_WIN=[[30,90],[870,930],[1350,1410]];
+const PACK_WIN=[[390,450],[870,930],[1350,1410]];
 const WIN_IDS=['film_waste','scotch','dmg_carton','flour','semolina','regr_used','regr_prod'];
 function N(id,label,unit,group,o){o=o||{};const p={id:id,label:label,unit:unit||'',min:null,max:null,group:group||'',total:!!o.total,kind:o.kind||'num',calc:o.calc||'',options:o.options||[]};if(WIN_IDS.indexOf(id)>=0&&o.pack)p.win=PACK_WIN;if(o.opt)p.opt=true;if(o.sm)p.sm=true;return p;}
 const BRANDS=['AL-TAJ','AL-AMERA','KHAYR','FAMI','HADHIMO','LUIGI','MAIDA'];
@@ -268,12 +270,13 @@ function migrateCfg(c){
   if((a.id==='macaroni'||a.id==='spaghetti')&&!a.params.some(p=>p.id==='line_hm'))a.params.push(N('line_hm','Line hour meter','h','Hour meters',{opt:true,sm:true}));
   if(a.id==='boiler'&&!a.params.some(p=>p.id==='chiller_hm'))a.params.push(N('chiller_hm','Chiller hour meter','h','Hour meters',{opt:true,sm:true}));
   if(a.id==='ro'){if(!a.params.some(p=>p.id==='ro_comp_hm'))a.params.push(N('ro_comp_hm','RO compressor hour meter','h','Hour meters',{opt:true,sm:true}));if(a.equipment.indexOf('RO compressor')<0)a.equipment.push('RO compressor');}
+  if(a.id==='macaroni'||a.id==='spaghetti')a.noStatus=true;
   if(a.id==='pack_mac'||a.id==='pack_spa'){const pre=a.id==='pack_mac'?'MACARONI':'SPAGHETTI';a.params.forEach(p=>{if(p.id==='ptype'&&(p.kind||'text')==='text'){p.kind='select';p.label='Production type';p.options=BRANDS.map(b=>pre+' - '+b);}});}
-  if(String(a.id).indexOf('pack_')===0){a.params.forEach(p=>{if(['flour','semolina','regr_used','regr_prod'].indexOf(p.id)>=0&&p.unit==='cartons')p.unit='kg';});a.params=a.params.filter(p=>p.id!=='pallet_times');a.params.forEach(p=>{if(WIN_IDS.indexOf(p.id)>=0&&!p.win)p.win=PACK_WIN;});}});return c;}
+  if(String(a.id).indexOf('pack_')===0){a.params.forEach(p=>{if(['flour','semolina','regr_used','regr_prod'].indexOf(p.id)>=0&&p.unit==='cartons')p.unit='kg';});a.params=a.params.filter(p=>p.id!=='pallet_times');a.params.forEach(p=>{if(p.id==='pallets'){p.label='Cartons completed';p.unit='cartons';}});a.params.forEach(p=>{if(WIN_IDS.indexOf(p.id)>=0)p.win=PACK_WIN;});}});return c;}
 const C_='°C',H_='%RH';
 function sensors(list){return list.map(c=>{const t=c.slice(-1);if(t==='T'||t==='H')return N('s'+c.toLowerCase(),c+(t==='T'?' temp':' humidity'),t==='T'?C_:H_,'Dryer temperature & humidity');return N('s'+c,'Motor '+c+' speed','Hz','Dryer motor speeds');});}
 function pack(id,name){return {id:id,name:name,every:'any',timed:true,equipment:['Packing machine','Carton sealer','Pallet wrapper','Conveyor'],params:[
-  N('pallets','Pallets completed','pcs','Production',{total:true}),N('ptype','Production type (e.g. AL-TAJ)','','Production',{kind:'text'}),
+  N('pallets','Cartons completed','cartons','Production',{total:true}),N('ptype','Production type (e.g. AL-TAJ)','','Production',{kind:'text'}),
   N('film_waste','Film wastage','kg','Film and carton wastage',{total:true,pack:true}),N('scotch','Scotch used in carton','cartons','Film and carton wastage',{total:true,pack:true}),N('dmg_carton','Damaged carton','pcs','Film and carton wastage',{total:true,pack:true}),
   N('flour','Flour used','kg','Raw material',{total:true,pack:true}),N('semolina','Semolina used','kg','Raw material',{total:true,pack:true}),N('regr_used','Regrinding used','kg','Raw material',{total:true,pack:true}),N('regr_prod','Regrinding produced','kg','Raw material',{total:true,pack:true})]};}
 function lab(id,name,zones){return {id:id,name:name,every:'any',timed:true,noStatus:true,equipment:['Moisture analyzer','Drying oven','Balance'],params:[N('zone','Zone','','Sample',{kind:'select',options:zones}),N('result','Moisture result','%','Sample')]};}
@@ -534,7 +537,7 @@ setInterval(()=>{
   if(S.view==='area'){
     const a=area(S.areaId);
     if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;
-    if(a&&!a.timed&&!adminEff()&&!S.dirty&&S.date===S.today&&S.lastHour!==nowH()){S.hour=nowH();S.lastHour=nowH();refreshStrip();renderForm();}
+    if(a&&!a.timed&&!adminEff()&&!S.dirty&&!S.entryOpen&&S.date===S.today&&S.lastHour!==nowH()){S.hour=nowH();S.lastHour=nowH();refreshStrip();renderForm();}
     else{S.lastHour=nowH();refreshStrip();applyWindow();}
     refreshRecent();paintAreaIssues();
   }
@@ -558,7 +561,7 @@ function go(view,areaId,tab){
   unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
   if(tab)S.tab=tab;
-  if(view==='area'){S.date=S.today;S.hour=nowH();S.lastHour=nowH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;lsSet('plant.view','area:'+areaId);}
+  if(view==='area'){S.date=S.today;S.hour=nowH();S.lastHour=nowH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;S.entryOpen=false;lsSet('plant.view','area:'+areaId);}
   if(view==='admin'){lsSet('plant.view','admin');}
   if(view==='mplace'){lsSet('plant.view','mplace');}
   if(view==='summary'){lsSet('plant.view','summary');S.sumDay='today';}
@@ -587,12 +590,19 @@ function renderHome(){
 
 /* ---------- summary room ---------- */
 function sumDate(){return S.sumDay==='yday'?addDays(S.today,-1):(S.sumDay&&S.sumDay.length===10?S.sumDay:S.today);}
+function sumShifts(){return S.cfg.shifts.slice().sort((a,b)=>ordH(a.start)-ordH(b.start));}
+function sumViewOpts(){const shs=sumShifts();
+  return '<option value="all">Total · 24 hours</option>'+shs.map((s,i)=>'<option value="sh'+i+'">'+esc(s.name)+' · '+hh(s.start)+' – '+hh(shs[(i+1)%shs.length].start)+'</option>').join('')+'<option value="day">Day · '+hh(dayStart())+' – '+hh((dayStart()+12)%24)+'</option><option value="night">Night · '+hh((dayStart()+12)%24)+' – '+hh(dayStart())+'</option>';}
+function sumRange(v){const shs=sumShifts();if(v==='day')return {r:[0,720],t:'Day '+hh(dayStart())+' – '+hh((dayStart()+12)%24)};if(v==='night')return {r:[720,1440],t:'Night '+hh((dayStart()+12)%24)+' – '+hh(dayStart())};
+  const m=/^sh(\d+)$/.exec(v||'');if(m&&shs[+m[1]]){const i=+m[1];return {r:[ordH(shs[i].start)*60,i+1<shs.length?ordH(shs[i+1].start)*60:1440],t:shs[i].name+' '+hh(shs[i].start)+' – '+hh(shs[(i+1)%shs.length].start)};}
+  return {r:[0,1440],t:'Total 24 hours'};}
 function renderSummary(){
   S.sumLogs={};S.sumHist=[];
-  $('#main').innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Summary</h2><div class="muted small" id="sumWhen"></div></div><div class="seg" id="sumTog"><button type="button" class="btn sm" data-d="yday">Yesterday</button><button type="button" class="btn sm" data-d="today">Today</button>'+(adminEff()?'<input type="date" id="sumPick" max="'+S.today+'" min="'+addDays(S.today,-6)+'" style="min-height:36px">':'')+'</div></div></div><div id="sumBody"></div>';
+  $('#main').innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Summary</h2><div class="muted small" id="sumWhen"></div></div><label class="l" style="min-width:230px;margin:0">Show results for<select id="sumView">'+sumViewOpts()+'</select></label><div class="seg" id="sumTog"><button type="button" class="btn sm" data-d="yday">Yesterday</button><button type="button" class="btn sm" data-d="today">Today</button>'+(adminEff()?'<input type="date" id="sumPick" max="'+S.today+'" min="'+addDays(S.today,-6)+'" style="min-height:36px">':'')+'</div></div></div><div id="sumBody"></div>';
   const setDay=d=>{S.sumDay=d;$$('#sumTog button').forEach(b=>b.classList.toggle('pri',b.dataset.d===(d==='today'||d==='yday'?d:'')));subSummary();};
   $$('#sumTog button').forEach(b=>b.onclick=()=>setDay(b.dataset.d));
   const pk=$('#sumPick');if(pk)pk.onchange=e=>{if(e.target.value)setDay(e.target.value);};
+  const sv=$('#sumView');if(sv){sv.value=S.sumView||'all';sv.onchange=()=>{S.sumView=sv.value;paintSummary();};}
   setDay('today');
 }
 function subSummary(){
@@ -607,37 +617,57 @@ function subSummary(){
 function paintSummary(){
   const el=$('#sumBody');if(!el||S.view!=='summary')return;
   const date=sumDate(),L=S.sumLogs||{};
+  const SR=sumRange(S.sumView),RG=SR.r,inR=min=>{const o=om(min);return o>=RG[0]&&o<RG[1];},fe=doc=>entries(doc).filter(x=>inR(x.min));
+  const sw=$('#sumWhen');if(sw)sw.textContent='Production day '+date+' · '+SR.t+(date===S.today?' · so far':'');
   const row=(k,v,sub)=>'<div class="sumrow'+(sub?' sub':'')+'"><span>'+esc(k)+'</span><b class="mono">'+v+'</b></div>';
-  const sumP=(a,id)=>{let t=null;entries(L[a.id+'_'+date]).forEach(x=>{const v=num(x.e.v&&x.e.v[id]);if(v!=null)t=(t||0)+v;});return t;};
+  const sumP=(a,id)=>{let t=null;fe(L[a.id+'_'+date]).forEach(x=>{const v=num(x.e.v&&x.e.v[id]);if(v!=null)t=(t||0)+v;});return t;};
   const packs=S.cfg.areas.filter(isPack);
   let prod='',raw='';
   packs.forEach(a=>{
-    const es=entries(L[a.id+'_'+date]),by={};let tot=0;
+    const es=fe(L[a.id+'_'+date]),by={};let tot=0;
     es.forEach(x=>{const v=num(x.e.v&&x.e.v.pallets);if(v!=null){tot+=v;const k=abbr(x.e.v.ptype==null||x.e.v.ptype===''?'Not set':x.e.v.ptype);by[k]=(by[k]||0)+v;}});
-    prod+=row(a.name,fmtN(tot)+' pallets')+Object.keys(by).sort().map(k=>row(k,fmtN(by[k])+' pallets',true)).join('');
+    prod+=row(a.name,fmtN(tot)+' cartons')+Object.keys(by).sort().map(k=>row(k,fmtN(by[k])+' cartons',true)).join('');
     raw+='<h3 style="margin:14px 0 2px">'+esc(a.name)+'</h3>';
     a.params.filter(p=>p.win&&REGR.indexOf(p.id)<0).forEach(p=>{const t=sumP(a,p.id);raw+=row(p.label,(t==null?'–':fmtN(t))+' <span class="muted">'+esc(p.unit)+'</span>');});
   });
-  const rg=L['regr_'+date],rt={};REGR.forEach(id=>{let t=null;if(rg&&rg.slots)Object.keys(rg.slots).forEach(k=>{const v=num(rg.slots[k][id]);if(v!=null)t=(t||0)+v;});rt[id]=t;});
+  const rg=L['regr_'+date],rt={};REGR.forEach(id=>{let t=null;if(rg&&rg.slots)Object.keys(rg.slots).forEach(k=>{if(!inR(Number(k.slice(1))))return;const v=num(rg.slots[k][id]);if(v!=null)t=(t||0)+v;});rt[id]=t;});
   raw+='<h3 style="margin:14px 0 2px">Regrinding (one value for macaroni and spaghetti)</h3>'+row('Regrinding used',(rt.regr_used==null?'–':fmtN(rt.regr_used))+' <span class="muted">kg</span>')+row('Regrinding produced',(rt.regr_prod==null?'–':fmtN(rt.regr_prod))+' <span class="muted">kg</span>');
   let lines='';
   S.cfg.areas.filter(a=>PLACE_OF[a.id]==='press').forEach(a=>{
-    const es=entries(L[a.id+'_'+date]);let run=0,down=0,al=0;es.forEach(x=>{if(x.e.run===false)down+=(x.e.down||0);else run++;al+=x.e.alarms||0;});
+    const es=fe(L[a.id+'_'+date]);let run=0,down=0,al=0;es.forEach(x=>{if(x.e.run===false)down+=(x.e.down||0);else run++;al+=x.e.alarms||0;});
     lines+=row(a.name,run+' h running · '+down+' min stopped'+(al?' · '+al+' out of range':''));
   });
   let lab='';
   S.cfg.areas.filter(a=>PLACE_OF[a.id]==='lab').forEach(a=>{
-    const es=entries(L[a.id+'_'+date]);let txt=es.length+' entries';
+    const es=fe(L[a.id+'_'+date]);let txt=es.length+' entries';
     const rp=a.params.find(p=>p.id==='result');if(rp){let n=0,t=0;es.forEach(x=>{const v=num(x.e.v&&x.e.v.result);if(v!=null){n++;t+=v;}});if(n)txt+=' · average moisture '+fmtN(Math.round(t/n*100)/100)+' %';}
     lab+=row(a.name,txt);
+  });
+  let miss='';
+  const lastDue=date<S.today?23:(date===S.today?ordH(nowH())-1:-1),nmo=om(nowMin());
+  S.cfg.areas.forEach(a=>{
+    const all=entries(L[a.id+'_'+date]);let ms=[],lbl=a.name;
+    if(isPack(a)){
+      lbl=a.name+' · film, carton & raw material';const wps=a.params.filter(p=>p.win);
+      packSlots(a).forEach(sl=>{if(!inR(sl.s))return;const passed=date<S.today||(date===S.today&&nmo>=om(sl.s)+(sl.e-sl.s));if(!passed)return;
+        if(!all.some(x=>x.min>=sl.s&&x.min<sl.e&&x.e&&x.e.v&&wps.some(p=>x.e.v[p.id]!=null)))ms.push(winText([[sl.s,sl.e]]));});
+    }else if(a.timed){
+      if(a.every==='shift')shiftWindows(date).forEach(w=>{if(!w.ended||!inR(Math.round((w.segs[0][0]+dayStart()*60)%1440)))return;if(!all.some(x=>w.segs.some(sg=>om(x.min)>=sg[0]&&om(x.min)<sg[1])))ms.push(w.name);});
+      else return;
+    }else{
+      const done={};all.forEach(x=>{done[x.h]=1;});
+      HRS().forEach((h,k)=>{if(k<=lastDue&&inR(h*60)&&!done[h])ms.push(hh(h));});
+    }
+    miss+=row(lbl,ms.length?'<span class="chip bad">'+ms.length+' missed</span> <span class="muted small">'+esc(ms.join(', '))+'</span>':'<span class="chip ok">none missed</span>');
   });
   const dayIss=(S.areaIss||[]).filter(i=>pdate(new Date(i.ts))===date);
   const maint=row('Requests sent to maintenance',dayIss.length+' ('+dayIss.filter(i=>i.status==='open').length+' still open)')+row('Preventive tasks done',String((S.sumHist||[]).length));
   el.innerHTML='<section class="card"><h3>Production</h3>'+(prod||'<div class="empty">No packaging areas.</div>')+'</section>'+
    '<section class="card"><h3>Film, carton and raw materials</h3>'+raw+'</section>'+
    '<section class="card"><h3>Press lines</h3>'+(lines||'<div class="muted">–</div>')+'</section>'+
+   '<section class="card"><h3>Missed readings</h3>'+(miss||'<div class="muted">–</div>')+'</section>'+
    '<section class="card"><h3>Laboratory and RO</h3>'+(lab||'<div class="muted">–</div>')+'</section>'+
-   '<section class="card"><h3>Maintenance</h3>'+maint+'</section>';
+   '<section class="card"><h3>Maintenance <span class="muted small" style="font-weight:400">'+(SR.r[1]-SR.r[0]<1440?'whole day':'')+'</span></h3>'+maint+'</section>';
 }
 /* ---------- area entry screen ---------- */
 function renderArea(){
@@ -649,7 +679,8 @@ function renderArea(){
    '<div class="row">'+(adminEff()?'<label class="l" style="width:190px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+(a.timed&&adminEff()?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
    noticeBoxHTML(a)+
    (isPack(a)?'<div id="slotBar"></div>':'')+
-   '<form class="card" id="entry" autocomplete="off" novalidate></form>'+
+   (a.timed?'':'<section class="card" id="hourCard"><div class="ebar" id="eBar"></div><div id="hourView"></div></section>')+
+   '<form class="card'+(a.timed?'':' emodal')+'" id="entry" autocomplete="off" novalidate></form>'+
    (isPack(a)?'<div class="split"><div class="card"><h3>Entries on this date</h3><div id="recent" class="tscroll"></div></div><div class="card"><h3>Film, carton &amp; raw material <span class="muted small" style="font-weight:400">3 times a day</span></h3><div id="recent2" class="tscroll"></div></div></div>':'<div class="card"><h3>Entries on this date</h3><div id="recent" class="tscroll"></div></div>')+
    '<details class="d" id="issueBox"><summary>Send a request to maintenance (problem or breakdown)</summary><div style="display:grid;gap:12px;margin-top:12px"><label class="l">Equipment<select id="isEq">'+a.equipment.map(e=>'<option>'+esc(e)+'</option>').join('')+'<option>Other</option></select></label>'+
    '<label class="l">What is wrong?<textarea id="isTx" placeholder="Noise, leak, alarm, stoppage…"></textarea></label><div><button type="button" class="btn pri" id="isSend">Send to maintenance</button></div></div></details><div id="issHist"></div>';
@@ -709,6 +740,40 @@ function refreshStrip(){
   el.innerHTML=html;
   $$('.hb',el).forEach(b=>b.onclick=()=>{S.hour=Number(b.dataset.h);S.dirty=false;refreshStrip();renderForm();});
   if(w)w.textContent=shiftOf(S.hour)+' · '+hh(S.hour)+' – '+hh((S.hour+1)%24)+' · production day '+S.date+' ('+hh(dayStart())+' to '+hh(dayStart())+')';
+  renderHourView();paintEntryBar();
+}
+function hourViewHTML(a){
+  const e=curEntry(a),h=S.hour;
+  const head='<h2 style="margin:0 0 6px">'+hh(h)+' – '+hh((h+1)%24)+' <span class="muted small" style="font-weight:400">'+esc(shiftOf(h))+' · '+S.date+'</span></h2>';
+  if(!e){const st=cellState(S.day,S.date,h,a);return head+'<div class="empty">'+(st==='future'?'This hour has not started yet.':st==='miss'?'No reading was logged for this hour (missed).':'No reading logged yet for this hour. Press Data entry to fill it.')+'</div>';}
+  const tm=e.at?new Date(e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+  const et=e.editedAt?new Date(e.editedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+  const info='<div class="row small" style="gap:10px;margin:0 0 12px">Filled by <b>'+esc(e.by)+'</b>'+(tm?' at '+tm:'')+(e.editedBy?'<span class="chip">✎ edited by '+esc(e.editedBy)+(et?' '+et:'')+'</span>':'')+(e.late?'<span class="chip warn">Late entry</span>':'')+(!a.noStatus&&e.run===false?'<span class="chip bad">Stopped '+(e.down||0)+' min'+(e.why?' · '+esc(e.why):'')+'</span>':'')+(e.alarms?'<span class="chip warn">'+e.alarms+' out of range</span>':'')+(e.note?'<span class="muted">“'+esc(e.note)+'”</span>':'')+'</div>';
+  const groups=[];a.params.filter(p=>!smHidden(a,p)).forEach(p=>{let g=groups.find(x=>x.n===p.group);if(!g){g={n:p.group,ps:[]};groups.push(g);}g.ps.push(p);});
+  return head+info+'<div class="hview">'+groups.map(g=>'<div class="hgrp"><h4>'+esc(g.n||'Readings')+'</h4>'+g.ps.map(p=>{const v=e.v&&e.v[p.id],nm=(p.kind||'num')==='num',st=nm&&v!=null?pState(p,v):'ok',hi=st==='high'||st==='low';
+    return '<div class="hl'+(hi?' hi':'')+'"><span title="'+esc(p.label)+'">'+esc(p.label)+'</span><b class="mono">'+(nm?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&nm?' <small>'+esc(p.unit)+'</small>':'')+(hi?(st==='high'?' ▲':' ▼'):'')+'</b></div>';}).join('')+'</div>').join('')+'</div>';
+}
+function renderHourView(){
+  const a=area(S.areaId),el=$('#hourView');if(!a||a.timed||!el)return;
+  const h=hourViewHTML(a);if(el._h!==h){el._h=h;el.innerHTML=h;}
+}
+function paintEntryBar(){
+  const a=area(S.areaId),bar=$('#eBar');if(!a||a.timed||!bar)return;
+  const pm=perm(),e=curEntry(a),Lx=adminEff()||leaderActive();
+  const h='<button type="button" class="btn pri big" id="eOpen"'+(pm.can?'':' disabled')+'>'+(e?'Edit data':'Data entry')+'</button>'+
+    ((!pm.can&&pm.lockable&&!Lx)?'<button type="button" class="btn" id="unlockBtn">Shift leader: unlock</button>':(unlockOn()?'<span class="chip warn">Unlocked by '+esc(S.unlock.name)+' · locks in <span id="lockLeft"></span></span> <button type="button" class="btn sm" id="lockBtn">Lock now</button>':''))+
+    '<span class="shiftbox"><b>'+esc(shiftLabel(S.hour))+'</b></span><span class="status '+(pm.cls||'')+'" style="flex:1;min-width:200px">'+esc(pm.msg)+'</span>';
+  if(bar._h!==h){bar._h=h;bar.innerHTML=h;
+    const o=$('#eOpen',bar);if(o)o.onclick=openEntry;const u=$('#unlockBtn',bar);if(u)u.onclick=unlockLeader;const lb=$('#lockBtn',bar);if(lb)lb.onclick=lockNow;lockTick();}
+}
+function openEntry(){
+  const a=area(S.areaId),f=$('#entry');if(!a||a.timed||!f)return;
+  if(!perm().can){paintEntryBar();return;}
+  S.entryOpen=true;S.dirty=false;f.classList.add('open');renderForm();window.scrollTo({top:0});
+}
+function closeEntry(){
+  const f=$('#entry');S.entryOpen=false;S.dirty=false;if(f)f.classList.remove('open');
+  if(f)renderForm(true);paintEntryBar();
 }
 async function sha(t){
   try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}}catch(e){}
@@ -744,7 +809,7 @@ function ask(o){
   });
 }
 const EDIT_MS=5*60e3;
-const editLeft=e=>(e&&e.at)?EDIT_MS-(Date.now()-new Date(e.at).getTime()):0;
+const editLeft=e=>(e&&e.at&&!e.late)?EDIT_MS-(Date.now()-new Date(e.at).getTime()):0;
 const left5=ms=>{const t=Math.max(0,Math.ceil(ms/1000)),m=Math.floor(t/60);return m+':'+pad(t%60);};
 const t12=m=>{const h=Math.floor(m/60);return ((h%12)||12)+':'+pad(m%60);};
 const winText=w=>w.slice().sort((a,b)=>om(a[0])-om(b[0])).map(x=>t12(x[0])+'–'+t12(x[1])+(x[1]/60<12?' AM':' PM')).join(', ');
@@ -811,7 +876,7 @@ function authorize(a,e,who){
 const sameP=(who,e)=>(who.id&&who.id===e.byId)||(!who.id&&!e.byId&&who.name===e.by);
 const UNLOCK_IDLE=60e3;
 function lockNow(){S.unlock=null;applyWindow();refreshRecent();}
-function lockTick(){if(!S.unlock)return;if(S.unlock.exp<=Date.now()){lockNow();return;}const l=$('#lockLeft');if(l)l.textContent=Math.ceil((S.unlock.exp-Date.now())/1000)+'s';}
+function lockTick(){if(!S.unlock)return;if(S.unlock.exp<=Date.now()){lockNow();return;}$$('#lockLeft').forEach(l=>{l.textContent=Math.ceil((S.unlock.exp-Date.now())/1000)+'s';});}
 setInterval(lockTick,1000);
 ['pointerdown','keydown','input'].forEach(ev=>document.addEventListener(ev,()=>{if(S.unlock&&S.unlock.exp>Date.now())S.unlock.exp=Date.now()+UNLOCK_IDLE;},true));
 async function unlockLeader(){
@@ -830,7 +895,9 @@ function applyWindow(){
   if(pm.can)a.params.forEach(p=>{if(!p.win)return;const inp=ctl(p.id);if(!inp)return;const lab=inp.closest('.fld'),md=fieldMode(p),h=$('.hint',lab);
     inp.disabled=(md==='locked');lab.classList.toggle('locked',md==='locked');lab.classList.toggle('lead',md==='leader');if(md==='locked')anyLocked=true;
     if(h&&!lab.classList.contains('need'))h.textContent=md==='locked'?'Opens '+winText(p.win):md==='leader'?'Open for shift leader (optional)':'Open now until '+winText([[0,p.win.find(w=>nowMin()>=w[0]&&nowMin()<w[1])[1]]]).replace(/^[^–]*–/,'')+' · '+winText(p.win);});
-  if(row){row.innerHTML=((!pm.can&&pm.lockable)||anyLocked)&&!adminEff()&&!leaderActive()?'<button type="button" class="btn" id="unlockBtn">Shift leader: unlock</button>':(unlockOn()?'<span class="chip warn">Unlocked by '+esc(S.unlock.name)+' · locks in <span id="lockLeft">'+Math.ceil((S.unlock.exp-Date.now())/1000)+'s</span></span> <button type="button" class="btn sm" id="lockBtn">Lock now</button>':'');const ub=$('#unlockBtn');if(ub)ub.onclick=unlockLeader;const lb=$('#lockBtn');if(lb)lb.onclick=lockNow;}
+  $$('fieldset.grp').forEach(g=>{const fl=$$('.fld',g);g.style.display=fl.length&&fl.every(x=>x.classList.contains('locked'))?'none':'';});
+  if(row){row.innerHTML=((!pm.can&&pm.lockable)||anyLocked)&&!adminEff()&&!leaderActive()?'<button type="button" class="btn" id="unlockBtn">Shift leader: unlock</button>':(unlockOn()?'<span class="chip warn">Unlocked by '+esc(S.unlock.name)+' · locks in <span id="lockLeft">'+Math.ceil((S.unlock.exp-Date.now())/1000)+'s</span></span> <button type="button" class="btn sm" id="lockBtn">Lock now</button>':'');const ub=$('#unlockBtn',row);if(ub)ub.onclick=unlockLeader;const lb=$('#lockBtn',row);if(lb)lb.onclick=lockNow;}
+  paintEntryBar();
 }
 function evalCalc(expr,get){
   let ok=true;
@@ -864,8 +931,15 @@ const REGR=['regr_used','regr_prod'];
 function slotStartFor(a,m){const wp=a.params.find(p=>p.win);if(!wp)return null;const w=wp.win.find(x=>m>=x[0]&&m<x[1]);return w?w[0]:null;}
 function keyMin(k){const c0=k.charAt(0),n=Number(k.slice(1));return c0==='s'?Math.floor(n/60):c0==='t'?n:Number(k)*60;}
 const sharedVal=(doc,start,id)=>{const sl=doc&&doc.slots&&doc.slots['s'+start];return sl&&sl[id]!=null?sl[id]:null;};
+const PT_KEY=id=>'plant.ptype.'+id;
+function lastPtype(a){
+  try{const es=S.day&&S.day.hours?entries(S.day).slice().reverse():[];const h=es.find(x=>x.e&&x.e.v&&x.e.v.ptype);if(h)return h.e.v.ptype;}catch(e){}
+  try{if(S.lastPt&&S.lastPt[a.id])return S.lastPt[a.id];}catch(e){}
+  try{return localStorage.getItem(PT_KEY(a.id))||null;}catch(e){return null;}
+}
 function fv(a,p,e){
   const v=e&&e.v?e.v[p.id]:null;if(v!=null)return v;
+  if(p.id==='ptype'&&isPack(a)&&!e){const lp=lastPtype(a);if(lp&&(p.options||[]).indexOf(lp)>=0)return lp;}
   if(isPack(a)&&REGR.indexOf(p.id)>=0){const m=S.editKey?keyMin(S.editKey):nowMin(),st=slotStartFor(a,m);if(st!=null)return sharedVal(S.regr,st,p.id);}
   return null;
 }
@@ -878,7 +952,7 @@ function renderForm(fromSnap){
   const a=area(S.areaId),timed=!!a.timed;
   const e=S.day&&S.day.hours?(timed?(S.editKey?S.day.hours[S.editKey]:null):S.day.hours[String(S.hour)]):null;
   const groups=[];a.params.filter(p=>!smHidden(a,p)).forEach(p=>{let g=groups.find(x=>x.n===p.group);if(!g){g={n:p.group,ps:[]};groups.push(g);}g.ps.push(p);});
-  let html='<div id="winMsg" class="status"></div><div class="row" id="navRow">'+(timed?'':'<button type="button" class="btn big" id="hPrev" aria-label="Previous hour">◀ Previous hour</button><button type="button" class="btn big" id="hNext" aria-label="Next hour">Next hour ▶</button>')+'<span id="lockRow" style="display:contents"></span></div><fieldset id="fset" class="plain">';
+  let html='<div id="winMsg" class="status"></div><div class="row" id="navRow">'+(timed?'':'<h2 style="margin:0;flex:1">Data entry · '+hh(S.hour)+' – '+hh((S.hour+1)%24)+' <span class="muted small" style="font-weight:400">'+esc(a.name)+'</span></h2><button type="button" class="btn" id="eCancel">Cancel</button>')+'<span id="lockRow" style="display:contents"></span><span class="shiftbox" id="fShift"><b>'+esc(shiftLabel(timed?nowH():S.hour))+'</b></span></div><fieldset id="fset" class="plain">';
   html+='<div class="status">Every reading must be filled before you can save.'+(a.noStatus?'':' If the line is stopped, choose Stopped and the readings can stay blank.')+'</div>';
   groups.forEach(g=>{
     html+='<fieldset class="grp"><legend>'+esc(g.n||'Readings')+'</legend><div class="fields">'+g.ps.map(p=>fieldHTML(p,fv(a,p,e))).join('')+'</div></fieldset>';
@@ -888,11 +962,12 @@ function renderForm(fromSnap){
    '<div class="fields" id="stopBox" style="margin-top:12px"'+(run?' hidden':'')+'><label class="l">Minutes stopped<input type="number" inputmode="numeric" min="0" max="'+(timed?720:60)+'" id="fDown" value="'+(e&&e.down!=null?e.down:(timed?30:60))+'"></label>'+
    '<label class="l">Reason<select id="fWhy">'+REASONS.map(r=>'<option'+(e&&e.why===r?' selected':'')+'>'+r+'</option>').join('')+'</select></label>'+
    '<label class="l">Stopped at<input type="time" id="fStopAt" value="'+esc(e&&e.stopAt||'')+'"></label><label class="l">Started again at<input type="time" id="fStartAt" value="'+esc(e&&e.startAt||'')+'"></label></div></fieldset>';
-  html+='<div class="fields"><label class="l">Shift (automatic)<input type="text" id="fShift" readonly value="'+esc(shiftLabel(a.timed?nowH():S.hour))+'"></label>'+
-   '<label class="l" style="grid-column:1/-1">Notes<textarea id="fNote" placeholder="Anything unusual">'+esc(e&&e.note||'')+'</textarea></label></div></fieldset>'+
+  html+='<div class="fields"><label class="l" style="grid-column:1/-1">Notes<textarea id="fNote" placeholder="Anything unusual">'+esc(e&&e.note||'')+'</textarea></label></div></fieldset>'+
    (S.canWrite?'':'<div class="status">You can view this logbook but not save readings. Ask the plant manager for contributor access.</div>')+
    '<div class="row"><button class="btn pri big" type="submit" id="fSave">'+(timed?'Save entry':'Save '+hh(S.hour)+' reading')+'</button><span class="status" id="eState"></span></div>';
   f.innerHTML=html;
+  {const cb=$('#eCancel');if(cb)cb.onclick=closeEntry;}
+  {const sa=$('#fStopAt'),sb=$('#fStartAt'),dn=$('#fDown');const calc=()=>{if(!sa||!sb||!dn||!sa.value||!sb.value)return;const t=x=>{const q=x.split(':');return Number(q[0])*60+Number(q[1]);};let d=t(sb.value)-t(sa.value);if(d<0)d+=1440;dn.value=Math.min(d,720);};if(sa)sa.addEventListener('input',calc);if(sb)sb.addEventListener('input',calc);}
   S.dirty=false;
   navHours();
   refreshCalcs();
@@ -921,7 +996,8 @@ async function saveEntry(){
   const mode=p=>p.win?fieldMode(p):'on';
   if(run){
     const missing=[];
-    a.params.forEach(p=>{if(smHidden(a,p))return;const inp=ctl(p.id),md=mode(p),bad=md==='on'&&reqd(a,p)&&(inp.value||'').trim()==='';inp.closest('.fld').classList.toggle('need',bad);if(bad)missing.push(p.label);});
+    const prodOpt=isPack(a)&&(unlockOn()||adminEff()||leaderActive());
+    a.params.forEach(p=>{if(smHidden(a,p))return;const inp=ctl(p.id),md=mode(p),bad=md==='on'&&reqd(a,p)&&!(prodOpt&&!p.win)&&(inp.value||'').trim()==='';inp.closest('.fld').classList.toggle('need',bad);if(bad)missing.push(p.label);});
     if(missing.length){toast(missing.length+' reading'+(missing.length>1?'s':'')+' still empty ('+missing.slice(0,3).join(', ')+(missing.length>3?', …':'')+'). Fill every open reading'+(a.noStatus?'':', or choose Stopped')+'.',true);const f1=$('.fld.need input,.fld.need select');if(f1){f1.focus();f1.scrollIntoView({block:'center',behavior:'smooth'});}return;}
   }
   const v={};let alarms=0,empty=0;
@@ -931,7 +1007,16 @@ async function saveEntry(){
     const raw=ctl(p.id).value;
     if((p.kind||'num')!=='num'){v[p.id]=(raw||'').trim()||null;return;}
     const n=num(raw);v[p.id]=n;if(n==null){if(!p.win&&reqd(a,p))empty++;}else if(pState(p,n)!=='ok')alarms++;});
-  const what=timed?(e0?'Save changes to this entry in '+a.name+'?':'Save a new entry in '+a.name+' now?'):a.name+' · '+hh(S.hour)+' reading on '+S.date+(e0?' (changes)':'');
+  let wPlan=null;
+  if(isPack(a)&&timed&&!S.editKey){
+    const wps=a.params.filter(p=>p.win&&!smHidden(a,p));
+    if(wps.length&&fieldMode(wps[0])==='leader'&&wps.some(p=>v[p.id]!=null)){
+      const slots=packSlots(a),nm=om(nowMin());
+      const nx=slots.find(sl=>om(sl.s)>nm)||slots[slots.length-1];
+      wPlan={slot:nx,ids:wps.map(p=>p.id)};
+    }
+  }
+  const what=(timed?(e0?'Save changes to this entry in '+a.name+'?':'Save a new entry in '+a.name+' now?'):a.name+' · '+hh(S.hour)+' reading on '+S.date+(e0?' (changes)':''))+(wPlan?' Film, carton and raw material values will be saved in the '+winText([[wPlan.slot.s,wPlan.slot.e]])+' window.':'');
   let who;
   if(unlockOn()){
     const okc=await ask({title:'Do you want to save?',msg:what+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;
@@ -951,14 +1036,23 @@ async function saveEntry(){
   const obj={v,run,down:run?0:Math.max(0,Math.min(timed?720:60,num($('#fDown')?$('#fDown').value:0)||0)),why:run?'':$('#fWhy').value,note:($('#fNote').value||'').trim(),shift:shiftOf(timed?nowH():S.hour),stopAt:run?'':($('#fStopAt')?$('#fStopAt').value:''),startAt:run?'':($('#fStartAt')?$('#fStartAt').value:''),alarms,empty};
   if(e1){obj.by=e1.by;obj.byId=e1.byId||null;obj.at=e1.at;obj.editedAt=nowIso;obj.editedBy=who.name;obj.late=!!e1.late;}
   else{obj.by=who.name;obj.byId=who.id||null;obj.at=nowIso;obj.late=!timed&&!base.open;}
+  let wKey=null,wObj=null;
+  if(wPlan&&!e1){
+    const vw={};a.params.forEach(p=>{vw[p.id]=null;});wPlan.ids.forEach(id=>{vw[id]=v[id];v[id]=null;});
+    wKey='s'+(wPlan.slot.s*60+new Date().getSeconds());
+    wObj={v:vw,run:true,down:0,why:'',note:'',shift:shiftOf(Math.floor(wPlan.slot.s/60)),stopAt:'',startAt:'',alarms:0,empty:0,by:who.name,byId:who.id||null,at:nowIso,late:false,ovr:true};
+  }
   btn.disabled=true;
   try{
-    await writeEntry(S.areaId,S.date,key,obj,null);
+    const mainEmpty=!!wObj&&!e1&&a.params.every(p=>p.win||p.id==='ptype'||v[p.id]==null)&&!(obj.note)&&run;
+    if(!mainEmpty)await writeEntry(S.areaId,S.date,key,obj,null);
+    if(wObj){await writeEntry(S.areaId,S.date,wKey,wObj,null);const patch={};REGR.forEach(id=>{if(wObj.v[id]!=null)patch[id]=wObj.v[id];});if(Object.keys(patch).length){try{await writeShared(S.date,'s'+wPlan.slot.s,Object.assign(patch,{by:who.name,at:nowIso,from:S.areaId}));}catch(e2){}}}
     if(isPack(a)){const st=slotStartFor(a,min),patch={};REGR.forEach(id=>{if(v[id]!=null)patch[id]=v[id];});if(st!=null&&Object.keys(patch).length){try{await writeShared(S.date,'s'+st,Object.assign(patch,{by:who.name,at:nowIso,from:S.areaId}));}catch(e2){}}}
+    if(v.ptype){S.lastPt=S.lastPt||{};S.lastPt[a.id]=v.ptype;try{localStorage.setItem(PT_KEY(a.id),v.ptype);}catch(e3){}}
     S.dirty=false;
     toast((timed?hm(min):hh(S.hour))+(e1?' changed by ':' saved by ')+who.name+(alarms?' · '+alarms+' reading'+(alarms>1?'s':'')+' out of range':''));
     S.unlock=null;
-    if(timed){S.editKey=null;renderForm();}
+    if(timed){S.editKey=null;renderForm();}else closeEntry();
   }catch(e){toast(dbErr(e),true);}
   btn.disabled=false;applyWindow();
 }
@@ -996,17 +1090,33 @@ function rdBar(){
   return '<div class="seg" id="rdTog" style="margin:0 0 10px"><button type="button" class="btn sm'+(S.rd==='yday'?'':' pri')+'" data-d="today">Today</button><button type="button" class="btn sm'+(S.rd==='yday'?' pri':'')+'" data-d="yday">Yesterday</button></div>';
 }
 function bindRd(){$$('#rdTog button').forEach(b=>b.onclick=()=>{if((S.rd||'today')!==b.dataset.d)setRd(b.dataset.d);else refreshRecent();$$('#rdTog button').forEach(x=>x.classList.toggle('pri',x===b));});}
+const gapOf=list=>{const m={};list.filter(x=>!(x.e&&(x.e.ovr||x.e.run===false))).forEach((x,i,arr)=>{if(i>0){const d=x.min-arr[i-1].min;if(d>0)m[x.k]=d;}});return m;};
+const gapTxt=d=>d==null?'':d+' min';
+const stopTimes=e=>e.stopAt&&e.startAt?e.stopAt+' → '+e.startAt:e.stopAt?'from '+e.stopAt:e.startAt?'until '+e.startAt:'';
+async function delStop(key){
+  const who=await ask({title:'Delete this stoppage record?',msg:'The stoppage record will be removed from the log. This cannot be undone.',pw:true,leaderOnly:true,ok:'Yes, delete'});
+  if(!who)return;
+  try{await writeEntry(S.areaId,S.date,key,null,null);toast('Stoppage record deleted by '+(who.name||'Admin'));}catch(e){toast(dbErr(e),true);}
+}
+function bindDelStop(el){$$('.delstop',el).forEach(b=>b.onclick=ev=>{ev.stopPropagation();delStop(b.dataset.k);});}
 function refreshPack(a){
   const el=$('#recent'),el2=$('#recent2'),bar=$('#slotBar');if(!el)return;
   const R=rdDoc();
   if(R.ro&&R.doc==null){el.innerHTML='<div class="empty">Loading yesterday…</div>';if(el2)el2.innerHTML='';return;}
-  const all=entries(R.doc),es=all.slice().reverse();
+  const all=entries(R.doc),es=all.filter(x=>!(x.e&&x.e.ovr)).reverse();
   const slots=packSlots(a),wps=a.params.filter(p=>p.win);
   const chip=e=>(!R.ro&&editLeft(e)>0)?' <span class="chip ok">edit '+left5(editLeft(e))+'</span>':'';
-  el.innerHTML=rdBar()+(es.length?'<div class="elines">'+es.map(x=>{const e=x.e,v=e.v||{};
-    return '<div class="eline'+(R.ro?'':' clk')+'" data-k="'+esc(x.k)+'"><b class="mono">'+hm(x.min)+'</b><span>'+esc(e.by)+(e.editedBy?' ✎':'')+chip(e)+'</span><span class="mono">'+(v.pallets==null?'–':fmtN(v.pallets))+' pcs</span><span>'+esc(abbr(v.ptype))+'</span>'+(e.note?'<span class="muted">'+esc(e.note)+'</span>':'')+'</div>';}).join('')+'</div>'+(R.ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to open it. Operators can change their own entry for 5 minutes after saving; a shift leader can change any entry.</p>'):'<div class="empty">No entries for '+esc(R.date)+'.</div>');
-  bindRd();
-  if(!R.ro)$$('.eline.clk',el).forEach(r=>r.onclick=()=>{S.editKey=r.dataset.k;S.dirty=false;refreshStrip();renderForm();window.scrollTo({top:0,behavior:'smooth'});});
+  const gaps=gapOf(all);
+  const rows=es.map(x=>{const e=x.e,v=e.v||{},gp=gaps[x.k]!=null?gapTxt(gaps[x.k]):'';
+    const et=e.editedAt?new Date(e.editedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+    const by='<b>'+esc(e.by)+'</b>'+(e.editedBy?' <span class="edi" title="Edited'+(et?' '+et:'')+' by '+esc(e.editedBy)+'">✎</span>':'')+chip(e);
+    const nt=e.note?' <span class="edi" title="'+esc(e.note)+'">✉</span>':'';
+    const cls=(R.ro?'':'clk')+(e.run===false?' stp':'');
+    if(e.run===false)return '<tr class="'+cls+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <span class="mono stt">'+esc(stopTimes(e))+'</span>'+nt+'</td><td>'+by+'</td><td class="n">'+(R.ro?'':'<button type="button" class="delstop" data-k="'+esc(x.k)+'" title="Delete this stoppage record (shift leader password)" aria-label="Delete stoppage record">🗑</button>')+'</td></tr>';
+    return '<tr class="'+cls+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(v.pallets==null?'–':fmtN(v.pallets))+' <span class="muted small">ctn</span></td><td>'+esc(abbr(v.ptype))+nt+'</td><td>'+by+'</td><td class="n muted small">'+gp+'</td></tr>';}).join('');
+  el.innerHTML=rdBar()+(es.length?'<table class="elt"><thead><tr><th>Time</th><th>Quantity</th><th>Type</th><th>By</th><th class="n">Diff</th></tr></thead><tbody>'+rows+'</tbody></table>'+(R.ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to open it. Operators can change their own entry for 5 minutes after saving; a shift leader can change any entry.</p>'):'<div class="empty">No entries for '+esc(R.date)+'.</div>');
+  bindRd();bindDelStop(el);
+  if(!R.ro)$$('tr.clk',el).forEach(r=>r.onclick=()=>{S.editKey=r.dataset.k;S.dirty=false;refreshStrip();renderForm();window.scrollTo({top:0,behavior:'smooth'});});
   const info=slots.map(sl=>packSlotInfo(a,R.date,all,sl));
   if(el2){
     const cellSum=(sl,p)=>{if(REGR.indexOf(p.id)>=0&&R.regr&&R.regr.slots){const sv=sharedVal(R.regr,sl.s,p.id);if(sv!=null)return sv;}
@@ -1028,18 +1138,18 @@ function refreshRecent(){
   if(isPack(a)){refreshPack(a);return;}
   const R=rdDoc();
   if(R.ro&&R.doc==null){el.innerHTML='<div class="empty">Loading yesterday…</div>';return;}
-  const es=entries(R.doc).reverse();
+  const es=entries(R.doc).reverse(),gaps=gapOf(entries(R.doc));
   const tog=rdBar();
   if(!es.length){el.innerHTML=tog+'<div class="empty">'+(R.ro?'No readings saved yesterday.':'No readings saved for '+S.date+' yet. Fill in the form above and press Save.')+'</div>';bindRd();return;}
   const chip=e=>editLeft(e)>0?' <span class="chip ok">editable '+left5(editLeft(e))+'</span>':'';
   if(a.timed){
     el.innerHTML='<table><thead><tr><th>Time</th><th>Operator</th>'+a.params.map(p=>'<th>'+esc(p.label)+'</th>').join('')+'<th>Notes</th></tr></thead><tbody>'+es.map(x=>{const e=x.e;
-      return '<tr class="clk" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td>'+esc(e.by)+chip(e)+(e.editedBy?'<div class="muted small">edited by '+esc(e.editedBy)+'</div>':'')+'</td>'+a.params.map(p=>{const v=e.v&&e.v[p.id];return '<td class="mono">'+((p.kind||'num')==='num'?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&(p.kind||'num')==='num'?' <span class="muted">'+esc(p.unit)+'</span>':'')+'</td>';}).join('')+'<td>'+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table><p class="muted small">Tap a row to open it. Operators can change their own entry for 5 minutes after saving; a shift leader can change any entry.</p>';
+      return '<tr class="clk'+(e.run===false?' stp':'')+'"'+(e.run===false?' style="background:var(--badbg)"':'')+' data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+(gaps[x.k]!=null?'<span class="gap">'+gapTxt(gaps[x.k])+'</span>':'')+'</td><td>'+esc(e.by)+chip(e)+(e.editedBy?'<div class="muted small">edited by '+esc(e.editedBy)+'</div>':'')+'</td>'+a.params.map(p=>{const v=e.v&&e.v[p.id];return '<td class="mono">'+((p.kind||'num')==='num'?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&(p.kind||'num')==='num'?' <span class="muted">'+esc(p.unit)+'</span>':'')+'</td>';}).join('')+'<td>'+(e.run===false?'<span class="chip bad">Stopped · '+(e.down||0)+' min</span> '+esc(stopTimes(e))+' '+(R.ro?'':'<button type="button" class="delstop" data-k="'+esc(x.k)+'" title="Delete this stoppage record (shift leader password)" aria-label="Delete stoppage record">🗑</button> '):'')+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table><p class="muted small">Tap a row to open it. Operators can change their own entry for 5 minutes after saving; a shift leader can change any entry.</p>';
   }else{
     el.innerHTML='<table><thead><tr><th>Hour</th><th>Operator</th><th>Line</th><th class="n">Out of range</th><th>Notes</th></tr></thead><tbody>'+es.map(x=>{const e=x.e;
       return '<tr class="clk" data-h="'+x.h+'"><td class="mono">'+hh(x.h)+'</td><td>'+esc(e.by)+chip(e)+'</td><td>'+(e.run===false?'<span class="chip">Stopped '+(e.down||0)+' min</span>':'<span class="chip ok">Running</span>')+'</td><td class="n mono">'+(e.alarms?'<span class="chip warn">'+e.alarms+'</span>':'0')+'</td><td>'+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table>';
   }
-  el.innerHTML=tog+el.innerHTML;bindRd();
+  el.innerHTML=tog+el.innerHTML;bindRd();bindDelStop(el);
   if(R.ro){$$('tr.clk',el).forEach(r=>r.classList.remove('clk'));return;}
   $$('tr.clk',el).forEach(r=>r.onclick=()=>{if(a.timed)S.editKey=r.dataset.k;else S.hour=Number(r.dataset.h);S.dirty=false;refreshStrip();renderForm();window.scrollTo({top:0,behavior:'smooth'});});
 }
@@ -1377,12 +1487,12 @@ function paintOverview(){
    '<div class="kpi'+(sum('alarms')?' warn':'')+'"><b>'+sum('alarms')+'</b><span>Readings out of range</span></div>'+
    '<div class="kpi'+(open?' bad':'')+'"><b>'+open+'</b><span>Open requests</span></div>'+
    '<div class="kpi'+(pmDue?' bad':'')+'"><b>'+pmDue+'</b><span>Maintenance due</span></div></div>';
-  html+='<section class="card"><h2>Hour by hour · production day '+date+' <span class="muted small" style="font-weight:400">('+hh(dayStart())+' to '+hh(dayStart())+')</span></h2><div class="hscroll"><div class="hg"><div class="hrow"><span></span><div class="hcells">'+HRS().map(h=>'<span class="hlab">'+pad(h)+'</span>').join('')+'</div><span></span></div>';
+  html+='<section class="card"><h2>Hour by hour · production day '+date+' <span class="muted small" style="font-weight:400">('+hh(dayStart())+' to '+hh(dayStart())+')</span></h2><div class="hscroll"><div class="hg"><div class="hrow hdr"><span></span><div class="hcells">'+HRS().map(h=>'<span class="hlab">'+pad(h)+'</span>').join('')+'</div><span class="hhd">Logged</span><span class="hhd">Run h</span><span class="hhd">Stopped min</span><span class="hhd">Missed</span></div>';
   areas.forEach((a,i)=>{
     const doc=S.logs[a.id+'_'+date];
     let cells='';for(const h of HRS()){const c=cellState(doc,date,h,a);cells+='<button class="cell '+(c==='now'?'':c)+(S.sel&&S.sel.area===a.id&&S.sel.hour===h?' sel':'')+'" data-a="'+esc(a.id)+'" data-h="'+h+'" title="'+esc(a.name)+' '+hh(h)+' · '+c+'"'+(c==='future'?' disabled':'')+'></button>';}
     const x=st[i];
-    html+='<div class="hrow"><span class="hname">'+esc(a.name)+'</span><div class="hcells">'+cells+'</div><span class="hsum mono">'+(x.timed?x.logged+' entries'+(x.due?' · '+(x.due-x.missed)+'/'+x.due+' shifts covered':''):x.logged+'/'+(x.due||'–')+' logged')+' · run '+x.run+' h<br>down '+x.down+' min'+(x.missed?' · <b style="color:var(--bad)">'+x.missed+' missed</b>':'')+'</span></div>';
+    html+='<div class="hrow"><span class="hname">'+esc(a.name)+'</span><div class="hcells">'+cells+'</div><span class="hst">'+(x.timed?x.logged:x.logged+'/'+(x.due||'–'))+'</span><span class="hst'+(x.run?'':' dim')+'">'+x.run+'</span><span class="hst'+(x.down?' stp':' dim')+'">'+(x.down?x.down:'–')+'</span><span class="hst'+(x.missed?' bad':' dim')+'">'+(x.missed?x.missed:'–')+'</span></div>';
   });
   html+='</div></div><div class="legend"><span><i style="background:var(--ok);border-color:var(--ok)"></i>Logged</span><span><i style="background:var(--warn);border-color:var(--warn)"></i>Out of range</span><span><i style="background:var(--stop);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--okbg);border-style:dashed;border-color:var(--ok)"></i>Partial</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span><span><i></i>Not due (timed areas: lab, RO, packaging)</span></div></section>';
   html+=detailHTML();
@@ -1390,9 +1500,56 @@ function paintOverview(){
   body.innerHTML=html;
   $$('.cell',body).forEach(b=>b.onclick=()=>{S.sel={area:b.dataset.a,date:date,hour:Number(b.dataset.h)};paintOverview();});
 }
+function ovPackHour(a,date,h){
+  const all=entries(S.logs[a.id+'_'+date]),gaps=gapOf(all);
+  const es=all.filter(x=>x.h===h&&!(x.e&&x.e.ovr)).reverse();
+  const rows=es.map(x=>{const e=x.e,v=e.v||{},gp=gaps[x.k]!=null?gapTxt(gaps[x.k]):'';
+    const et=e.editedAt?new Date(e.editedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+    const by='<b>'+esc(e.by)+'</b>'+(e.editedBy?' <span class="edi" title="Edited'+(et?' '+et:'')+' by '+esc(e.editedBy)+'">✎</span>':'');
+    const nt=e.note?' <span class="edi" title="'+esc(e.note)+'">✉</span>':'';
+    if(e.run===false)return '<tr class="stp"><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <span class="mono stt">'+esc(stopTimes(e))+'</span>'+(e.why?' <span class="muted small">'+esc(e.why)+'</span>':'')+nt+'</td><td>'+by+'</td><td></td></tr>';
+    return '<tr><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(v.pallets==null?'–':fmtN(v.pallets))+' <span class="muted small">ctn</span></td><td>'+esc(abbr(v.ptype))+nt+'</td><td>'+by+'</td><td class="n muted small">'+gp+'</td></tr>';}).join('');
+  const left=es.length?'<div class="tscroll"><table class="elt"><thead><tr><th>Time</th><th>Quantity</th><th>Type</th><th>By</th><th class="n">Diff</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty">No entry saved in this hour.</div>';
+  const hourEs=all.filter(x=>x.h===h),tot={};
+  hourEs.forEach(x=>a.params.filter(p=>p.win).forEach(p=>{const v=num(x.e.v&&x.e.v[p.id]);if(v!=null)tot[p.id]=(tot[p.id]||0)+v;}));
+  const any=Object.keys(tot).length>0;
+  const right='<table class="mx"><tbody>'+a.params.filter(p=>p.win).map(p=>'<tr><td>'+esc(p.label)+'</td><td class="n mono">'+(tot[p.id]==null?'<span class="muted">–</span>':fmtN(tot[p.id])+' <span class="muted small">'+esc(p.unit)+'</span>')+'</td></tr>').join('')+'</tbody></table>'+(any?'':'<p class="muted small">Nothing saved for these in this hour.</p>');
+  return '<div class="split"><section class="card"><h3>'+esc(a.name)+' · '+hh(h)+' · '+date+'</h3>'+left+'</section><section class="card"><h3>Film, carton &amp; raw material · '+hh(h)+'</h3>'+right+'</section></div>';
+}
+function ovPackHTML(date){
+  const packs=S.cfg.areas.filter(isPack);if(!packs.length)return '';
+  const rg=S.logs['regr_'+date];
+  return packs.map(a=>{
+    const all=entries(S.logs[a.id+'_'+date]),es=all.filter(x=>!(x.e&&x.e.ovr)).reverse(),gaps=gapOf(all);
+    const rows=es.map(x=>{const e=x.e,v=e.v||{},gp=gaps[x.k]!=null?gapTxt(gaps[x.k]):'';
+      const et=e.editedAt?new Date(e.editedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+      const by='<b>'+esc(e.by)+'</b>'+(e.editedBy?' <span class="edi" title="Edited'+(et?' '+et:'')+' by '+esc(e.editedBy)+'">✎</span>':'');
+      const nt=e.note?' <span class="edi" title="'+esc(e.note)+'">✉</span>':'';
+      if(e.run===false)return '<tr class="stp"><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <span class="mono stt">'+esc(stopTimes(e))+'</span>'+nt+'</td><td>'+by+'</td><td></td></tr>';
+      return '<tr><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(v.pallets==null?'–':fmtN(v.pallets))+' <span class="muted small">ctn</span></td><td>'+esc(abbr(v.ptype))+nt+'</td><td>'+by+'</td><td class="n muted small">'+gp+'</td></tr>';}).join('');
+    const left=es.length?'<div class="tscroll"><table class="elt"><thead><tr><th>Time</th><th>Quantity</th><th>Type</th><th>By</th><th class="n">Diff</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty">No entries on this day.</div>';
+    const slots=packSlots(a),wps=a.params.filter(p=>p.win),info=slots.map(sl=>packSlotInfo(a,date,all,sl));
+    const cellSum=(sl,p)=>{if(REGR.indexOf(p.id)>=0&&rg&&rg.slots){const sv=sharedVal(rg,sl.s,p.id);if(sv!=null)return sv;}
+      let t=null;all.forEach(x=>{if(x.min>=sl.s&&x.min<sl.e){const v=num(x.e.v&&x.e.v[p.id]);if(v!=null)t=(t||0)+v;}});return t;};
+    const right='<div class="tscroll"><table class="mx"><thead><tr><th></th>'+slots.map((sl,i)=>'<th class="sl '+info[i].cls+'">'+winText([[sl.s,sl.e]])+'<div class="chip '+info[i].cls+'" style="margin-top:4px">'+esc(info[i].txt)+'</div></th>').join('')+'<th class="n">Day total</th></tr></thead><tbody>'+wps.map(p=>{let tot=null;const cs=slots.map(sl=>{const v=cellSum(sl,p);if(v!=null)tot=(tot||0)+v;return '<td class="n mono">'+(v==null?'<span class="muted">–</span>':fmtN(v))+'</td>';}).join('');
+      return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+'</span></td>'+cs+'<td class="n mono"><b>'+(tot==null?'–':fmtN(tot))+'</b></td></tr>';}).join('')+'</tbody></table></div>';
+    return '<div class="split"><section class="card"><h3>'+esc(a.name)+' · entries on '+date+'</h3>'+left+'</section><section class="card"><h3>'+esc(a.name)+' · film, carton &amp; raw material</h3>'+right+'</section></div>';
+  }).join('');
+}
+function stopsHTML(date){
+  const rows=[],tot={};
+  S.cfg.areas.forEach(a=>{if(a.noStatus)return;tot[a.id]=0;
+    entries(S.logs[a.id+'_'+date]).forEach(x=>{const e=x.e;if(e.run!==false)return;const d=e.down||0;tot[a.id]+=d;rows.push({a:a,min:x.min,hourly:!a.timed,d:d,e:e});});});
+  const all=Object.keys(tot).reduce((q,k)=>q+tot[k],0);
+  rows.sort((p,q)=>om(p.min)-om(q.min));
+  const chips='<div class="stopchips">'+S.cfg.areas.filter(a=>!a.noStatus).map(a=>'<span class="chip'+(tot[a.id]?' bad':'')+'">'+esc(a.name)+' · '+(tot[a.id]||0)+' min</span>').join('')+'</div>';
+  const tbl=rows.length?'<div class="tscroll"><table class="elt"><thead><tr><th>Time</th><th>Area</th><th class="n">Stopped</th><th>From → to</th><th>Reason</th><th>By</th></tr></thead><tbody>'+rows.map(r=>'<tr class="stp"><td class="mono">'+(r.hourly?hh(Math.floor(r.min/60)):hm(r.min))+'</td><td>'+esc(r.a.name)+'</td><td class="n mono"><b>'+r.d+' min</b></td><td class="mono">'+esc(stopTimes(r.e)||'–')+'</td><td>'+esc(r.e.why||'–')+(r.e.note?'<div class="muted small">'+esc(r.e.note)+'</div>':'')+'</td><td>'+esc(r.e.by||'')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No stoppage recorded on this production day.</div>';
+  return '<section class="card"><h2>Stoppages · '+date+' <span class="muted small" style="font-weight:400">total '+all+' min</span></h2>'+chips+tbl+'</section>';
+}
 function detailHTML(){
   if(!S.sel)return '<section class="card"><div class="empty">Select an hour in the grid to see the readings logged for it.</div></section>';
   const a=area(S.sel.area),doc=S.logs[S.sel.area+'_'+S.sel.date],es=entries(doc).filter(x=>x.h===S.sel.hour);
+  if(isPack(a))return ovPackHour(a,S.sel.date,S.sel.hour);
   const head='<h2>'+esc(a.name)+' · '+hh(S.sel.hour)+' · '+S.sel.date+'</h2>';
   if(!es.length)return '<section class="card">'+head+'<div class="empty">No reading was logged in this hour.</div></section>';
   if(a.timed)return '<section class="card">'+head+'<div class="tscroll"><table><thead><tr><th>Time</th><th>Operator</th>'+a.params.map(p=>'<th>'+esc(p.label)+'</th>').join('')+'<th>Notes</th></tr></thead><tbody>'+es.map(x=>{const e=x.e;
@@ -1400,7 +1557,7 @@ function detailHTML(){
   return '<section class="card">'+head+es.map(x=>{const e=x.e;
    const cells=a.params.map(p=>{const v=e.v&&e.v[p.id],st=pState(p,v),isNum=(p.kind||'num')==='num',hi=st==='high'||st==='low';
      return '<div class="'+(hi?'hi':v==null?'empty0':'')+'"><small>'+esc(p.label)+'</small><b>'+(isNum?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&isNum?' <span class="muted" style="font-size:12px">'+esc(p.unit)+'</span>':'')+(hi?' <span class="chip warn">'+(st==='high'?'High':'Low')+'</span>':'')+'</b></div>';}).join('');
-   return '<div class="ent"><div class="row small" style="gap:10px"><b class="mono" style="font-size:15px">'+hm(x.min)+'</b><span class="muted">Shift '+esc(shiftOf(x.h))+'</span><span><b>'+esc(e.by)+'</b>'+'</span>'+(e.run===false?'<span class="chip">Stopped '+(e.down||0)+' min · '+esc(e.why)+'</span>':'')+(e.late?'<span class="chip warn">Late entry</span>':'')+(e.editedBy?'<span class="chip">edited by '+esc(e.editedBy)+'</span>':'')+(e.note?'<span class="muted">“'+esc(e.note)+'”</span>':'')+'</div><div class="vals">'+cells+'</div></div>';}).join('')+'</section>';
+   return '<div class="ent"><div class="row small" style="gap:10px"><b class="mono" style="font-size:15px">'+hm(x.min)+'</b><span class="muted">'+esc(shiftOf(x.h))+'</span><span><b>'+esc(e.by)+'</b>'+'</span>'+(e.run===false?'<span class="chip">Stopped '+(e.down||0)+' min · '+esc(e.why)+'</span>':'')+(e.late?'<span class="chip warn">Late entry</span>':'')+(e.editedBy?'<span class="chip">edited by '+esc(e.editedBy)+'</span>':'')+(e.note?'<span class="muted">“'+esc(e.note)+'”</span>':'')+'</div><div class="vals">'+cells+'</div></div>';}).join('')+'</section>';
 }
 function watchHTML(){
   const cut=Date.now()-24*3600e3,out=[];
