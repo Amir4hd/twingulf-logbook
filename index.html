@@ -214,6 +214,10 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .ntsent{font-size:13px;padding:6px 10px;margin:-4px 0 10px;border-radius:6px;background:var(--warnbg);color:var(--warn);border-left:4px solid var(--warn)}
 .elines{display:flex;flex-direction:column}.eline{display:flex;align-items:center;gap:12px;padding:9px 6px;border-bottom:1px solid var(--line);font-size:15px;white-space:nowrap;overflow:hidden}.eline>span:last-child{overflow:hidden;text-overflow:ellipsis}.eline.clk{cursor:pointer}.eline{flex-wrap:wrap;row-gap:4px;white-space:normal}.eline>span:last-child{overflow:visible}.eline.stp{background:var(--badbg);border-left:4px solid var(--bad)}.elt tr.stp td{background:var(--badbg)}.elt tr.stp td:first-child{box-shadow:inset 4px 0 0 var(--bad)}.elt td,.elt th{padding:7px 8px;vertical-align:top}.elt tr.clk{cursor:pointer}.delstop{background:none;border:0;padding:2px 4px;font-size:14px;line-height:1;cursor:pointer;opacity:.7;min-height:0;min-width:0}.delstop:hover{opacity:1}.elt td,.elt th{white-space:nowrap}.elt .stt{font-size:11px}.elt .edi{font-size:13px;color:var(--mut);cursor:help}.elt td .chip{margin-left:4px}.elt th{white-space:nowrap}.eline .gap,td .gap{margin-left:auto;font-size:12px;color:var(--mut)}td .gap{display:block;margin:0}.eline.clk:hover{background:var(--panel2)}
 .sumrow{display:flex;justify-content:space-between;gap:12px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:16px}.sumrow b.mono{white-space:nowrap}.sumrow.sub{padding-left:22px;font-size:14px;color:var(--mut)}
+#rmDlg h2{font-size:22px}#rmDlg .fld .ir input,#rmDlg .fld .ir select{font-size:16px!important;min-height:42px!important;padding-top:4px;padding-bottom:4px}#rmDlg .fld .fl,#rmDlg .l{font-size:13px}#rmDlg .fld .ir i{font-size:13px}#rmDlg .rmh{margin:12px 0 6px;font-size:14px}#rmDlg .dlg{padding:18px}#rmDlg .btn.big{min-height:48px;font-size:17px}#rmKindSel{font-size:20px;min-height:54px}label.l:has(#rmKindSel){font-size:15px}
+.rmc{padding:10px 12px;border:1px solid var(--line);border-radius:10px;display:grid;gap:2px}.rmg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rmres{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.rmres.g5{grid-template-columns:repeat(5,minmax(0,1fr))}@media (max-width:560px){.rmres.g5{grid-template-columns:repeat(3,minmax(0,1fr))}}.rmh{margin:16px 0 8px;font-size:16px;text-transform:uppercase}#rmMat .btn{min-width:130px}@media (max-width:560px){.rmg2{grid-template-columns:1fr}}
+.opsel{min-height:40px;font-size:15px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);max-width:190px}
+.labgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.labcol{display:flex;flex-direction:column;gap:16px;min-width:0}.labh{margin:0;padding:10px 14px;border-radius:10px;font-size:20px;text-transform:uppercase;background:var(--okbg);border:1px solid var(--ok)}#lc_lab_spa .labh{background:var(--warnbg);border-color:var(--warn)}.labcol td,.labcol th{white-space:normal}.labcol .status{margin:0 0 12px}.labfs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.labfs .fld{min-width:0}@media (max-width:720px){.labgrid{grid-template-columns:1fr}}
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.mx{font-size:13px}.mx th,.mx td{padding:6px 5px}.mx td:first-child{white-space:normal;min-width:84px}.mx th.sl{font-size:11px;line-height:1.25;white-space:normal}.mx th.sl .chip{display:flex;justify-content:center;font-size:10px;padding:2px 4px;white-space:normal;text-align:center}.mx th.n{white-space:normal}@media(max-width:900px){.split{grid-template-columns:1fr}}
 .mx th.sl{text-align:center;font-size:12px;white-space:nowrap}.mx th.sl.warn{background:var(--warnbg)}.mx th.sl.bad{background:var(--badbg)}.mx th.sl.ok{background:var(--okbg)}.mx td.n{text-align:right}
 @keyframes blk{50%{opacity:.55}}.blink{animation:blk 1.2s infinite}
@@ -329,8 +333,9 @@ const nowH=()=>new Date().getHours();
 const area=id=>S.cfg.areas.find(a=>a.id===id)||null;
 const shiftLabel=h=>{const sh=S.cfg.shifts.slice().sort((a,b)=>a.start-b.start),n=shiftOf(h),i=sh.findIndex(x=>x.name===n);if(i<0)return n;const nx=sh[(i+1)%sh.length];return n+' · '+hh(sh[i].start)+' – '+hh(nx.start);};
 const shiftOf=h=>{const sh=S.cfg.shifts.slice().sort((a,b)=>a.start-b.start);let r=sh[sh.length-1];sh.forEach(s=>{if(s.start<=h)r=s;});return r?r.name:'';};
-function pState(p,v){v=num(v);if(v==null)return 'empty';if(p.min!=null&&v<p.min)return 'low';if(p.max!=null&&v>p.max)return 'high';return 'ok';}
-function limitText(p){if(p.min!=null&&p.max!=null)return p.min+' – '+p.max+' '+p.unit;if(p.max!=null)return 'max '+p.max+' '+p.unit;if(p.min!=null)return 'min '+p.min+' '+p.unit;return 'no limits set';}
+function zlim(p,z){const l=p.zl&&z!=null?p.zl[z]:null;return l&&(l.min!=null||l.max!=null)?Object.assign({},p,{min:l.min==null?null:l.min,max:l.max==null?null:l.max}):p;}
+function pState(p,v,z){p=zlim(p,z);v=num(v);if(v==null)return 'empty';if(p.min!=null&&v<p.min)return 'low';if(p.max!=null&&v>p.max)return 'high';return 'ok';}
+function limitText(p,z){p=zlim(p,z);if(p.min!=null&&p.max!=null)return p.min+' – '+p.max+' '+p.unit;if(p.max!=null)return 'max '+p.max+' '+p.unit;if(p.min!=null)return 'min '+p.min+' '+p.unit;return 'no limits set';}
 function resub(key,fn){if(S.subs[key]){try{S.subs[key]()}catch(e){}}S.subs[key]=fn();}
 function unsub(key){if(S.subs[key]){try{S.subs[key]()}catch(e){}delete S.subs[key];}}
 let toastT;
@@ -480,6 +485,8 @@ function restoreView(){
   else if(v==='summary')go('summary');
   else if(v==='mplace'&&adminEff())go('mplace');
   else if(v==='ops'&&S.dev.place==='all')go('ops');
+  else if(v==='lab'&&labOK())go('lab');
+  else if(v==='rm'&&labOK())go('rm');
   else if(v.indexOf('area:')===0&&canSee(area(v.slice(5))))go('area',v.slice(5));
   else go('home');
 }
@@ -488,7 +495,7 @@ function restoreView(){
 function setBH(){const b=document.querySelector('header.bar');if(b)document.documentElement.style.setProperty('--bh',b.offsetHeight+'px');}
 window.addEventListener('resize',()=>setBH());
 function renderTop(){
-  const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':(S.view==='mplace'?'Maintenance':(S.view==='summary'?'Summary':(S.view==='ops'?'Operators':''))));
+  const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':(S.view==='mplace'?'Maintenance':(S.view==='lab'?'Lab Moisture':S.view==='rm'?'Flour & semolina tests':S.view==='summary'?'Summary':(S.view==='ops'?'Operators':''))));
   const t=new Date();
   const sub=[S.dev?placeName(S.dev.place):'',where].filter(Boolean).join(' · ');
   $('#top').innerHTML='<header class="bar"><div class="tl"><span class="brand">'+esc(S.cfg.plantName||'Plant Logbook')+'</span>'+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</div><span class="sp"></span>'+
@@ -552,6 +559,8 @@ setInterval(()=>{
     else{S.lastHour=nowH();refreshStrip();applyWindow();}
     refreshRecent();paintAreaIssues();
   }
+  if(S.view==='rm'&&S.rm&&S.rm.rows&&!$('#rmDlg'))paintRmList();
+  if(S.view==='lab'&&S.lab){if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;if(S.date!==S.today&&!adminEff()){S.date=S.today;S.lab.edit={};S.lab.dirty={};subLab();}LABS.forEach(id=>{if(!S.lab.dirty[id])paintLabList(id);});}
   if(S.view==='admin'&&(S.tab==='overview'||S.tab==='devices'))paintTab();
   if(S.view==='admin')paintDevBadge();
 },10000);
@@ -566,13 +575,17 @@ function go(view,areaId,tab){
   if(view==='summary'&&!(adminEff()||S.dev.place==='all'))view='home';
   if(view==='ops'&&S.dev.place!=='all')view='home';
   if(view==='area'&&!canSee(area(areaId)))view='home';
+  if(view==='lab'&&!labOK())view='home';
+  if(view==='rm'&&!labOK())view='home';
   if(view==='home'&&S.dev&&S.dev.place==='maint')view='mplace';
   if(view==='mplace'&&!(S.dev&&S.dev.place==='maint')&&!adminEff())view='home';
   if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done'&&S.tab!=='parts')S.tab='issues';
-  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');
+  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');if(view!=='rm')S.rm=null;S.opsDraft=null;S.acctDraft=null;
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
   if(tab)S.tab=tab;
   if(view==='area'){S.date=S.today;S.hour=nowH();S.lastHour=nowH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;S.entryOpen=false;lsSet('plant.view','area:'+areaId);}
+  if(view==='lab'){S.date=S.today;S.unlock=null;S.areaId=null;lsSet('plant.view','lab');}
+  if(view==='rm'){S.unlock=null;S.areaId=null;lsSet('plant.view','rm');}
   if(view==='admin'){lsSet('plant.view','admin');}
   if(view==='mplace'){lsSet('plant.view','mplace');}
   if(view==='summary'){lsSet('plant.view','summary');S.sumDay='today';}
@@ -580,6 +593,8 @@ function go(view,areaId,tab){
   renderTop();
   if(view==='home')renderHome();
   if(view==='area')renderArea();
+  if(view==='lab')renderLab();
+  if(view==='rm')renderRm();
   if(view==='admin')renderAdmin();
   if(view==='mplace')renderMplace();
   if(view==='summary')renderSummary();
@@ -590,13 +605,201 @@ function go(view,areaId,tab){
 function renderHome(){
   if(!S.dev){renderGate();return;}
   const vis=S.cfg.areas.filter(canSee);
-  const cards=vis.map(a=>'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>').join('');
+  const mergeLab=labOK();let labDone=false;
+  const cards=vis.map(a=>mergeLab&&LABS.indexOf(a.id)>=0?(labDone?'':(labDone=true,'<button class="acard" data-a="__lab"><b>Lab Moisture</b><span class="muted">Macaroni and Spaghetti moisture readings, side by side</span></button><button class="acard" data-a="__rm"><b>Flour &amp; semolina tests</b><span class="muted">Gluten, ash, moisture, color, spots and granulation of raw material</span></button>')):'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>').join('');
   const sub=adminEff()?'Admin: every area and the Control room.':'Signed in as: '+placeName(S.dev.place)+(S.acct&&S.acct.email?' ('+S.acct.email+')':'')+'.';
   $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
    (vis.length||adminEff()?'':'<div class="empty">No areas are set up for this place.</div>')+
    '<div class="areas">'+cards+(S.dev.place==='all'?'<button class="acard sum" data-a="__ops"><b>Operators and passwords</b><span>Add, remove or change operator passwords</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()?'<button class="acard sum" data-a="__maint"><b>Maintenance</b><span>Requests, preventive maintenance, recent maintenance done</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
-  $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else if(a==='__ops')go('ops');else if(a==='__maint')go('mplace');else go('area',a);});
+  $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__lab')go('lab');else if(a==='__rm')go('rm');else if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else if(a==='__ops')go('ops');else if(a==='__maint')go('mplace');else go('area',a);});
+}
+
+/* ---------- merged laboratory (Macaroni left, Spaghetti right) ---------- */
+const LABS=['lab_mac','lab_spa'],LAB_T={lab_mac:'Macaroni',lab_spa:'Spaghetti'};
+const labOK=()=>LABS.every(id=>canSee(area(id)));
+function renderLab(){
+  S.lab={docs:{},edit:{},dirty:{}};
+  $('#main').innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Lab Moisture · timed entries</h2><div class="muted small">The time is recorded automatically when you save · <span id="labWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:190px">Date<input type="date" id="labDt" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+'</div></div>'+
+   '<div class="labgrid">'+LABS.map(id=>'<section class="labcol" id="lc_'+id+'"><h3 class="labh">'+LAB_T[id]+'</h3><div class="card" id="lf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="lr_'+id+'" class="tscroll"></div></div></section>').join('')+'</div>';
+  const dt=$('#labDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.date=v;S.lab.edit={};S.lab.dirty={};subLab();};
+  LABS.forEach(id=>paintLabForm(id));subLab();
+}
+function subLab(){
+  const w=$('#labWhen');if(w)w.textContent=S.date;
+  if(!S.db){LABS.forEach(id=>{paintLabList(id);});return;}
+  LABS.forEach((id,i)=>{S.lab.docs[id]=null;resub(i?'labB':'labA',()=>S.db.doc('logs/'+id+'_'+S.date).onSnapshot(snap=>{S.lab.docs[id]=snap.exists?snap.data():{hours:{}};paintLabList(id);if(!S.lab.dirty[id])paintLabForm(id);},e=>toast(dbErr(e),true)));});
+}
+const labEntry=id=>{const k=S.lab.edit[id],d=S.lab.docs[id];return k&&d&&d.hours&&d.hours[k]?d.hours[k]:null;};
+function paintLabForm(id){
+  const box=$('#lf_'+id);if(!box||!S.lab)return;
+  const a=area(id),e=labEntry(id),v=(e&&e.v)||{};
+  box.innerHTML='<div class="labfs">'+a.params.map(p=>fieldHTML(p,v[p.id])).join('')+'</div><label class="l">Notes<input type="text" class="lnote" placeholder="Optional" value="'+esc(e?e.note||'':'')+'"></label><div class="status" data-lm></div><div class="row"><button type="button" class="btn pri big" data-ls>'+(e?'Save changes':'Save')+'</button>'+(e?'<button type="button" class="btn big" data-ln>New entry</button>':'')+'</div>';
+  const m=$('[data-lm]',box);
+  if(e){const l=editLeft(e);m.className='status '+(l>0?'ok':'bad');m.textContent=l>0?'Saved by '+e.by+'. You can change it for '+left5(l)+' more.':'Saved by '+e.by+'. Locked: only the lab head or a shift leader can change it now.';}
+  else m.textContent='Fill the readings and press Save.';
+  const mark=()=>{const pp=a.params.find(x=>x.id==='result'),zn=$('select[data-p=zone]',box).value,rv=$('input[data-p=result]',box).value,fl=$('.fld[data-p=result]',box),st=pState(pp,rv,zn),q=zlim(pp,zn);fl.classList.toggle('high',st==='high');fl.classList.toggle('low',st==='low');$('.hint',fl).textContent=st==='high'?'Above '+q.max+' %':st==='low'?'Below '+q.min+' %':(zn?'':'choose a zone · ')+limitText(pp,zn);};
+  mark();
+  box.oninput=ev=>{S.lab.dirty[id]=true;mark();};
+  box.onchange=ev=>{S.lab.dirty[id]=true;const fl=ev.target.closest&&ev.target.closest('.fld');if(fl)fl.classList.remove('need');mark();};
+  $('[data-ls]',box).onclick=()=>labSave(id);
+  const nb=$('[data-ln]',box);if(nb)nb.onclick=()=>{S.lab.edit[id]=null;S.lab.dirty[id]=false;paintLabForm(id);paintLabList(id);};
+}
+function paintLabList(id){
+  const el=$('#lr_'+id);if(!el||!S.lab)return;
+  const d=S.lab.docs[id];
+  if(d==null){el.innerHTML='<div class="empty">'+(S.db?'Loading…':'No database connection.')+'</div>';return;}
+  const es=entries(d).reverse();
+  if(!es.length){el.innerHTML='<div class="empty">No readings saved for '+S.date+' yet.</div>';return;}
+  const chip=e=>editLeft(e)>0?' <span class="chip ok">editable '+left5(editLeft(e))+'</span>':'';
+  el.innerHTML='<table class="elt"><thead><tr><th>Time</th><th>Zone</th><th class="n">Result</th><th>By</th></tr></thead><tbody>'+es.map(x=>{const e=x.e,v=e.v||{};
+    return '<tr class="clk'+(S.lab.edit[id]===x.k?' sel':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td>'+esc(v.zone==null?'–':v.zone)+'</td><td class="n mono">'+fmtN(v.result)+(e.alarms?' <span class="chip warn">!</span>':'')+'</td><td><b>'+esc(e.by)+'</b>'+(e.editedBy?' <span class="edi" title="Edited by '+esc(e.editedBy)+'">✎</span>':'')+chip(e)+(e.note?'<div class="muted small">'+esc(e.note)+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table>';
+  $$('tr.clk',el).forEach(r=>r.onclick=()=>{S.lab.edit[id]=r.dataset.k;S.lab.dirty[id]=false;paintLabForm(id);paintLabList(id);});
+}
+async function labSave(id){
+  if(!S.db)return toast('No database connection.',true);
+  const a=area(id),box=$('#lf_'+id),e0=labEntry(id);
+  const zone=($('select[data-p=zone]',box).value||'').trim(),rin=$('input[data-p=result]',box),res=num(rin.value);
+  const bad=[];
+  $('.fld[data-p=zone]',box).classList.toggle('need',!zone);if(!zone)bad.push('Zone');
+  $('.fld[data-p=result]',box).classList.toggle('need',res==null);if(res==null)bad.push('Moisture result');
+  if(bad.length){toast('Fill: '+bad.join(', ')+'.',true);return;}
+  const rp=a.params.find(x=>x.id==='result'),alarms=pState(rp,res,zone)!=='ok'?1:0;
+  const what='Lab · '+LAB_T[id]+': '+zone+' = '+res+' %'+(e0?' (changes)':'')+'.';
+  let who;
+  if(unlockOn()){const okc=await ask({title:'Do you want to save?',msg:what+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;who={name:S.unlock.name,id:S.unlock.id,leader:true};}
+  else{who=await ask({title:'Do you want to save?',msg:what,pw:true,ok:'Yes, save'});if(!who)return;}
+  const e1=labEntry(id);
+  if(e1&&!(adminEff()||leaderActive()||who.leader||who.labHead||(sameP(who,e1)&&editLeft(e1)>0))){toast('Only the operator who saved this entry (within '+editMin()+' minutes), the lab head or a shift leader can change it.',true);paintLabForm(id);return;}
+  let key;
+  if(S.lab.edit[id]&&e1)key=S.lab.edit[id];else{const d=new Date(),sec=d.getHours()*3600+d.getMinutes()*60+d.getSeconds();key='s'+sec;}
+  const nowIso=new Date().toISOString();
+  const obj={v:{zone:zone,result:res},run:true,down:0,why:'',note:($('.lnote',box).value||'').trim(),shift:shiftOf(nowH()),stopAt:'',startAt:'',alarms,empty:0};
+  if(e1){obj.by=e1.by;obj.byId=e1.byId||null;obj.at=e1.at;obj.editedAt=nowIso;obj.editedBy=who.name;obj.late=!!e1.late;}
+  else{obj.by=who.name;obj.byId=who.id||null;obj.at=nowIso;obj.late=false;}
+  const sb=$('[data-ls]',box);sb.disabled=true;
+  try{
+    await writeEntry(id,S.date,key,obj,null);
+    S.lab.dirty[id]=false;S.lab.edit[id]=null;S.unlock=null;
+    toast(LAB_T[id]+' '+hm(Math.floor(Number(key.slice(1))/60))+(e1?' changed by ':' saved by ')+who.name+(alarms?' · out of range':''));
+    paintLabForm(id);paintLabList(id);
+  }catch(er){toast(dbErr(er),true);sb.disabled=false;}
+}
+
+/* ---------- flour & semolina tests (lab) ---------- */
+const RM={flour:{id:'lab_flour',name:'Flour'},semo:{id:'lab_semo',name:'Semolina'}};
+const RM_GR=[['g450','>450 µm'],['g300','>300 µm'],['g212','>212 µm'],['g150','>150 µm'],['gl150','<150 µm']];
+const RM_K={batch:'Batch received',sample:'Supplier sample'};
+const rmRes=m=>[['wet','Wet gluten','%'],['dry','Dry gluten','%'],['ash','Ash','%'],['moist','Moisture','%'],['color','Color','']].concat(m==='semo'?[['black','Black spots','/100 cm²'],['brown','Brown spots','/100 cm²']]:[]);
+const rmFld=(id,label,unit,val)=>'<label class="fld" data-p="'+id+'"><span class="fl">'+esc(label)+'</span><span class="ir"><input '+(id==='color'?'type="text" autocomplete="off"':'type="number" inputmode="decimal" step="any"')+' data-r="'+id+'" value="'+(val==null?'':esc(val))+'"><i>'+esc(unit)+'</i></span></label>';
+const rmMatOf=area=>area===RM.semo.id?'semo':'flour';
+function renderRm(){
+  S.rm={kind:S.rm&&S.rm.kind||'batch',edit:null,rows:null};
+  $('#main').innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Flour &amp; semolina tests</h2><div class="muted small">Test every batch received, or a sample sent by a supplier.</div></div></div>'+
+   '<div class="row" style="margin-top:12px;align-items:flex-end"><label class="l" style="min-width:240px;margin:0">Test type<select id="rmKindSel">'+Object.keys(RM_K).map(k=>'<option value="'+k+'"'+(S.rm.kind===k?' selected':'')+'>'+RM_K[k]+'</option>').join('')+'</select></label><button type="button" class="btn pri big" id="rmEnter">Enter data</button></div></div>'+
+   '<div class="card"><h3 id="rmListH"></h3><div id="rmList" class="tscroll"></div></div>';
+  $('#rmKindSel').onchange=e=>{S.rm.kind=e.target.value;paintRmList();};
+  $('#rmEnter').onclick=openRmChoose;
+  loadRm();
+}
+async function loadRm(){
+  if(!S.db){S.rm.rows=[];paintRmList();return;}
+  const f=addDays(S.today,-14);
+  try{
+    const snap=await S.db.collection('logs').where('date','>=',f).where('date','<=',S.today).limit(1000).get();
+    const ids=[RM.flour.id,RM.semo.id],rows=[];
+    snap.docs.forEach(d=>{const x=d.data();if(!x||ids.indexOf(x.area)<0)return;entries(x).forEach(q=>rows.push({date:x.date,area:x.area,k:q.k,min:q.min,e:q.e}));});
+    rows.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:om(b.min)-om(a.min));
+    if(S.view!=='rm'||!S.rm)return;
+    S.rm.rows=rows;paintRmList();
+  }catch(e){if(S.rm)S.rm.rows=[];toast(dbErr(e),true);paintRmList();}
+}
+const rmEdRow=()=>{const ed=S.rm&&S.rm.edit;return ed&&S.rm.rows?S.rm.rows.find(r=>r.date===ed.date&&r.k===ed.k&&r.area===ed.area)||null:null;};
+function rmOvl(id,html){
+  const old=$('#'+id);if(old)old.remove();
+  const w=document.createElement('div');w.id=id;w.className='ovl';
+  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:680px;max-height:92vh;overflow:auto">'+html+'</div>';
+  document.body.appendChild(w);return w;
+}
+function openRmChoose(){
+  const w=rmOvl('rmCh','<h2>What do you want to enter?</h2><p>'+esc(RM_K[S.rm.kind])+'</p><div class="row"><button type="button" class="btn pri big" data-m="flour" style="flex:1">Flour</button><button type="button" class="btn pri big" data-m="semo" style="flex:1">Semolina</button></div><button type="button" class="btn big cyan" id="rmChX" style="width:100%;margin-top:10px">Cancel</button>');
+  $('#rmChX').onclick=()=>w.remove();
+  $$('button[data-m]',w).forEach(b=>b.onclick=()=>{w.remove();S.rm.edit=null;openRmForm(b.dataset.m,null);});
+}
+function openRmForm(m,er){
+  const ev=(er&&er.e.v)||{},kind=er?(ev.kind||'batch'):S.rm.kind;
+  S.rm.fm=m;S.rm.fk=kind;
+  const sup=[];(S.rm.rows||[]).forEach(r=>{const n=r.e.v&&r.e.v.supplier;if(n&&sup.indexOf(n)<0)sup.push(n);});
+  const w=rmOvl('rmDlg','<h2 style="margin:0 0 4px">'+RM[m].name+' · '+RM_K[kind]+'</h2>'+(er?'<span class="chip warn">Editing the test of '+esc(er.date)+'</span>':'')+
+   '<div class="rmg2" style="margin-top:12px"><label class="fld"><span class="fl">Supplier name</span><span class="ir"><input type="text" data-r="supplier" list="rmSup" autocomplete="off" value="'+esc(ev.supplier||'')+'"></span></label>'+
+   '<label class="fld"><span class="fl">'+(kind==='sample'?'Sample received date':'Received date')+'</span><span class="ir"><input type="date" data-r="recDate" max="'+S.today+'" value="'+esc(ev.recDate||S.today)+'"></span></label>'+
+   '<label class="fld"><span class="fl">Batch / lot no. (optional)</span><span class="ir"><input type="text" data-r="lot" autocomplete="off" value="'+esc(ev.lot||'')+'"></span></label>'+
+   '<label class="fld"><span class="fl">Decision</span><span class="ir"><select data-r="decision" style="border:0;min-height:50px;font-size:20px;background:transparent">'+['','Accepted','Rejected','Pending'].map(o=>'<option value="'+o+'"'+((ev.decision||'')===o?' selected':'')+'>'+(o||'Not set')+'</option>').join('')+'</select></span></label></div>'+
+   '<datalist id="rmSup">'+sup.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist>'+
+   '<h4 class="rmh">Results</h4><div class="rmres">'+rmRes(m).map(r=>rmFld(r[0],r[1],r[2],ev[r[0]])).join('')+'</div>'+
+   (m==='semo'?'<h4 class="rmh">Granulation <span class="muted small" style="font-weight:400">% retained on each sieve · <b id="rmGs"></b></span></h4><div class="rmres g5">'+RM_GR.map(r=>rmFld(r[0],r[1],'%',ev[r[0]])).join('')+'</div>':'')+
+   '<label class="l" style="margin-top:12px">Notes<input type="text" data-r="note" placeholder="Optional" value="'+esc(er?er.e.note||'':'')+'"></label>'+
+   '<div class="row" style="margin-top:12px"><button type="button" class="btn big cyan" id="rmX">Cancel</button><button type="button" class="btn pri big" id="rmSv">Save</button></div>');
+  const gs=()=>{const el=$('#rmGs',w);if(!el)return;let t=0,n=0;RM_GR.forEach(r=>{const v=num($('[data-r='+r[0]+']',w).value);if(v!=null){t+=v;n++;}});el.textContent=n?'total '+(Math.round(t*100)/100)+' %':'';el.style.color=n&&Math.abs(t-100)>1?'var(--bad)':'';};
+  gs();w.oninput=gs;
+  $('#rmX').onclick=()=>{S.rm.edit=null;w.remove();};$('#rmSv').onclick=rmSave;
+  const f=$('[data-r=supplier]',w);if(f)f.focus();
+}
+function openRmView(r){
+  const e=r.e,v=e.v||{},m=rmMatOf(r.area),f=x=>x==null?'–':fmtN(x);
+  const cell=(l,val)=>'<div class="rmc"><span class="muted small">'+esc(l)+'</span><b class="mono">'+val+'</b></div>';
+  const w=rmOvl('rmVw','<h2 style="margin:0 0 4px">'+RM[m].name+' · '+RM_K[v.kind||'batch']+'</h2><div class="muted small">'+esc(v.supplier||'–')+' · received '+esc(v.recDate||'–')+(v.lot?' · lot '+esc(v.lot):'')+'</div>'+
+   '<div class="rmres" style="margin-top:12px">'+rmRes(m).map(q=>cell(q[1],(q[0]==='color'?esc(v.color==null?'–':v.color):f(v[q[0]]))+(v[q[0]]!=null&&q[2]?' <span class="muted small">'+esc(q[2])+'</span>':''))).join('')+'</div>'+
+   (m==='semo'?'<h4 class="rmh">Granulation</h4><div class="rmres g5">'+RM_GR.map(q=>cell(q[1],f(v[q[0]])+(v[q[0]]!=null?' <span class="muted small">%</span>':''))).join('')+'</div>':'')+
+   '<div class="muted small" style="margin-top:12px">Decision: <b>'+esc(v.decision||'not set')+'</b> · tested '+esc(r.date)+' '+hm(r.min)+' by '+esc(e.by)+(e.editedBy?' (edited by '+esc(e.editedBy)+')':'')+(e.note?'<br>Note: '+esc(e.note):'')+'</div>'+
+   '<div class="row" style="margin-top:12px"><button type="button" class="btn big" id="rvX">Close</button><button type="button" class="btn pri big" id="rvEd">'+(editLeft(e)>0?'Edit ('+left5(editLeft(e))+' left)':'Edit')+'</button></div>');
+  $('#rvX').onclick=()=>w.remove();
+  $('#rvEd').onclick=()=>{w.remove();S.rm.edit={date:r.date,k:r.k,area:r.area};openRmForm(m,r);};
+}
+function paintRmList(){
+  const el=$('#rmList');if(!el||!S.rm)return;
+  const h=$('#rmListH');if(h)h.textContent=RM_K[S.rm.kind]+' · last 14 days';
+  if(S.rm.rows==null){el.innerHTML='<div class="empty">Loading…</div>';return;}
+  const rows=S.rm.rows.filter(r=>((r.e.v&&r.e.v.kind)||'batch')===S.rm.kind);
+  if(!rows.length){el.innerHTML='<div class="empty">No '+RM_K[S.rm.kind].toLowerCase()+' tests in the last 14 days.</div>';return;}
+  el.innerHTML='<table class="elt"><thead><tr><th>Date</th><th>Material</th><th>Supplier</th></tr></thead><tbody>'+rows.map((r,i)=>{const v=r.e.v||{};
+    return '<tr class="clk" data-i="'+i+'"><td class="mono">'+esc(r.date.slice(5))+' '+hm(r.min)+'</td><td>'+(r.area===RM.semo.id?'Semolina':'Flour')+'</td><td><b>'+esc(v.supplier||'–')+'</b>'+(v.lot?' <span class="muted small">'+esc(v.lot)+'</span>':'')+(editLeft(r.e)>0?' <span class="chip ok">editable · '+Math.ceil(editLeft(r.e)/60000)+' min left</span>':'')+'</td></tr>';}).join('')+'</tbody></table><p class="muted small" style="margin:8px 0 0">Tap a line to see all the results.</p>';
+  $$('tr.clk',el).forEach(tr=>tr.onclick=()=>openRmView(rows[Number(tr.dataset.i)]));
+}
+function rmCollect(box){const o={};$$('[data-r]',box).forEach(i=>{o[i.dataset.r]=i.value;});return o;}
+async function rmSave(){
+  if(!S.db)return toast('No database connection.',true);
+  const box=$('#rmDlg'),m=S.rm.fm,o=rmCollect(box),er=rmEdRow();
+  const sup=(o.supplier||'').trim(),vals={};
+  rmRes(m).concat(m==='semo'?RM_GR:[]).forEach(r=>{vals[r[0]]=r[0]==='color'?((o.color||'').trim()||null):num(o[r[0]]);});
+  const bad=[];
+  const mk=(sel,b)=>{const el=$(sel,box);if(el)el.closest('.fld').classList.toggle('need',b);};
+  mk('[data-r=supplier]',!sup);if(!sup)bad.push('Supplier name');
+  mk('[data-r=recDate]',!o.recDate);if(!o.recDate)bad.push('Received date');
+  const any=Object.keys(vals).some(k=>vals[k]!=null);if(!any)bad.push('at least one result');
+  if(bad.length){toast('Fill: '+bad.join(', ')+'.',true);return;}
+  let gnote='';
+  if(m==='semo'){let t=0,n=0;RM_GR.forEach(r=>{if(vals[r[0]]!=null){t+=vals[r[0]];n++;}});if(n&&Math.abs(t-100)>1)gnote=' Granulation adds up to '+(Math.round(t*100)/100)+' % (it should be about 100).';}
+  const what=RM[m].name+' · '+(S.rm.fk==='sample'?'supplier sample':'batch')+' from '+sup+(er?' (changes)':'')+'.'+gnote;
+  let who;
+  if(unlockOn()){const okc=await ask({title:'Do you want to save?',msg:what+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;who={name:S.unlock.name,id:S.unlock.id,leader:true};}
+  else{who=await ask({title:'Do you want to save?',msg:what,pw:true,ok:'Yes, save'});if(!who)return;}
+  const e1=rmEdRow();
+  if(e1&&!(adminEff()||leaderActive()||who.leader||who.labHead||(sameP(who,e1.e)&&editLeft(e1.e)>0))){toast('Only the operator who saved this test (within '+editMin()+' minutes), the lab head or a shift leader can change it.',true);return;}
+  const v=Object.assign({kind:S.rm.fk,supplier:sup,recDate:o.recDate,lot:(o.lot||'').trim(),decision:o.decision||''},vals);
+  let date,key;
+  if(e1){date=e1.date;key=e1.k;}else{date=S.today;const d=new Date();key='s'+(d.getHours()*3600+d.getMinutes()*60+d.getSeconds());}
+  const nowIso=new Date().toISOString();
+  const obj={v,run:true,down:0,why:'',note:(o.note||'').trim(),shift:shiftOf(nowH()),stopAt:'',startAt:'',alarms:0,empty:0};
+  if(e1){obj.by=e1.e.by;obj.byId=e1.e.byId||null;obj.at=e1.e.at;obj.editedAt=nowIso;obj.editedBy=who.name;obj.late=!!e1.e.late;}
+  else{obj.by=who.name;obj.byId=who.id||null;obj.at=nowIso;obj.late=false;}
+  const sb=$('#rmSv',box);sb.disabled=true;
+  try{
+    await writeEntry(RM[m].id,date,key,obj,null);
+    S.rm.edit=null;S.unlock=null;
+    toast(RM[m].name+' test '+(e1?'changed by ':'saved by ')+who.name);
+    box.remove();await loadRm();
+  }catch(er2){toast(dbErr(er2),true);sb.disabled=false;}
 }
 
 /* ---------- summary room ---------- */
@@ -819,7 +1022,7 @@ function ask(o){
     let op=null;
     const done=v=>{w.remove();document.removeEventListener('keydown',onKey);resolve(v);};
     const fv=()=>o.field?{field:$('#dField').value}:{};
-    const yes=()=>done(Object.assign(o.pw?{name:noOps?$('#dName').value.trim():op.name,id:op?op.id:null,leader:!!(op&&op.leader)}:{},fv()));
+    const yes=()=>done(Object.assign(o.pw?{name:noOps?$('#dName').value.trim():op.name,id:op?op.id:null,leader:!!(op&&op.leader),labHead:!!(op&&op.labHead)}:{},fv()));
     const onKey=e=>{if(e.key==='Escape')done(null);if(e.key==='Enter'&&!$('#dYes').disabled){e.preventDefault();yes();}};
     document.addEventListener('keydown',onKey);
     $('#dNo').onclick=()=>done(null);$('#dYes').onclick=yes;
@@ -828,7 +1031,7 @@ function ask(o){
       if(noOps){const n=$('#dName');n.oninput=()=>{$('#dYes').disabled=!n.value.trim();};n.focus();}
       else{const p=$('#dPw');let seq=0;p.oninput=async()=>{const my=++seq;op=null;$('#dYes').disabled=true;const who=$('#dWho');who.textContent='';who.className='who';if(!p.value)return;const f=await findOperator(p.value);if(my!==seq)return;
         if(f&&o.leaderOnly&&!f.leader){who.textContent='Not a shift leader password';who.className='who bad';}
-        else if(f){op=f;who.textContent='Signed in as '+f.name+(f.leader?' (shift leader)':'');who.className='who ok';$('#dYes').disabled=false;}else if(p.value.length>=4){who.textContent='Password not recognised';who.className='who bad';}};p.focus();}
+        else if(f){op=f;who.textContent='Signed in as '+f.name+(f.leader?' (shift leader)':f.labHead?' (lab head)':'');who.className='who ok';$('#dYes').disabled=false;}else if(p.value.length>=4){who.textContent='Password not recognised';who.className='who bad';}};p.focus();}
     }else $('#dYes').focus();
   });
 }
@@ -1676,9 +1879,9 @@ function detailHTML(){
   const head='<h2>'+esc(a.name)+' · '+hh(S.sel.hour)+' · '+S.sel.date+'</h2>';
   if(!es.length)return '<section class="card">'+head+'<div class="empty">No reading was logged in this hour.</div></section>';
   if(a.timed)return '<section class="card">'+head+'<div class="tscroll"><table><thead><tr><th>Time</th><th>Operator</th>'+a.params.map(p=>'<th>'+esc(p.label)+'</th>').join('')+'<th>Notes</th></tr></thead><tbody>'+es.map(x=>{const e=x.e;
-    return '<tr><td class="mono">'+hm(x.min)+'</td><td>'+esc(e.by)+(e.late?' <span class="chip warn">Late entry</span>':'')+(e.editedBy?'<div class="muted small">edited by '+esc(e.editedBy)+'</div>':'')+'</td>'+a.params.map(p=>{const v=e.v&&e.v[p.id],st=pState(p,v),nm=(p.kind||'num')==='num';return '<td class="mono'+(st==='high'||st==='low'?' hi':'')+'">'+(nm?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&nm?' <span class="muted">'+esc(p.unit)+'</span>':'')+'</td>';}).join('')+'<td>'+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table></div></section>';
+    return '<tr><td class="mono">'+hm(x.min)+'</td><td>'+esc(e.by)+(e.late?' <span class="chip warn">Late entry</span>':'')+(e.editedBy?'<div class="muted small">edited by '+esc(e.editedBy)+'</div>':'')+'</td>'+a.params.map(p=>{const v=e.v&&e.v[p.id],st=pState(p,v,e.v&&e.v.zone),nm=(p.kind||'num')==='num';return '<td class="mono'+(st==='high'||st==='low'?' hi':'')+'">'+(nm?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&nm?' <span class="muted">'+esc(p.unit)+'</span>':'')+'</td>';}).join('')+'<td>'+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table></div></section>';
   return '<section class="card">'+head+es.map(x=>{const e=x.e;
-   const cells=a.params.map(p=>{const v=e.v&&e.v[p.id],st=pState(p,v),isNum=(p.kind||'num')==='num',hi=st==='high'||st==='low';
+   const cells=a.params.map(p=>{const v=e.v&&e.v[p.id],st=pState(p,v,e.v&&e.v.zone),isNum=(p.kind||'num')==='num',hi=st==='high'||st==='low';
      return '<div class="'+(hi?'hi':v==null?'empty0':'')+'"><small>'+esc(p.label)+'</small><b>'+(isNum?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&isNum?' <span class="muted" style="font-size:12px">'+esc(p.unit)+'</span>':'')+(hi?' <span class="chip warn">'+(st==='high'?'High':'Low')+'</span>':'')+'</b></div>';}).join('');
    return '<div class="ent"><div class="row small" style="gap:10px"><b class="mono" style="font-size:15px">'+hm(x.min)+'</b><span class="muted">'+esc(shiftOf(x.h))+'</span><span><b>'+esc(e.by)+'</b>'+'</span>'+(e.run===false?'<span class="chip">Stopped '+(e.down||0)+' min · '+esc(e.why)+'</span>':'')+(e.late?'<span class="chip warn">Late entry</span>':'')+(e.editedBy?'<span class="chip">edited by '+esc(e.editedBy)+'</span>':'')+(e.note?'<span class="muted">“'+esc(e.note)+'”</span>':'')+'</div><div class="vals">'+cells+'</div></div>';}).join('')+'</section>';
 }
@@ -1686,7 +1889,7 @@ function watchHTML(){
   const cut=Date.now()-24*3600e3,out=[];
   S.cfg.areas.forEach(a=>{
     const cnt={};
-    Object.keys(S.logs).forEach(id=>{const d=S.logs[id];if(d.area!==a.id)return;entries(d).forEach(x=>{if(entTime(d.date,x.min)<cut)return;a.params.forEach(p=>{const s=pState(p,x.e.v&&x.e.v[p.id]);if(s==='high'||s==='low'){cnt[p.id]=cnt[p.id]||{n:0,s:s};cnt[p.id].n++;}});});});
+    Object.keys(S.logs).forEach(id=>{const d=S.logs[id];if(d.area!==a.id)return;entries(d).forEach(x=>{if(entTime(d.date,x.min)<cut)return;a.params.forEach(p=>{const s=pState(p,x.e.v&&x.e.v[p.id],x.e.v&&x.e.v.zone);if(s==='high'||s==='low'){cnt[p.id]=cnt[p.id]||{n:0,s:s};cnt[p.id].n++;}});});});
     a.params.forEach(p=>{if(cnt[p.id]&&cnt[p.id].n>=2)out.push({a:a.name,p:p.label,n:cnt[p.id].n,s:cnt[p.id].s});});
   });
   if(!out.length)return '<div class="empty">No reading has been out of range twice or more in the last 24 hours.</div>';
@@ -1757,25 +1960,26 @@ async function paintTrend(){
   const series=zones.map((z,i)=>({name:z,color:TCOL[i%TCOL.length],pts:[]}));
   docs.forEach(d=>entries(d).forEach(x=>{const v=num(x.e.v&&x.e.v[p.id]);if(v==null)return;
     let si=0;if(zp){si=zones.indexOf(x.e.v.zone);if(si<0)return;}
-    series[si].pts.push({t:entTime(d.date,x.min),v});}));
+    series[si].pts.push({t:entTime(d.date,x.min),v,z:zp?x.e.v.zone:null});}));
   series.forEach(sr=>sr.pts.sort((a,b)=>a.t-b.t));
   const pts=[].concat.apply([],series.map(sr=>sr.pts)).sort((a,b)=>a.t-b.t);
   if(!pts.length){el.innerHTML='<div class="empty">No “'+esc(p.label)+'” readings in this period yet.</div>';return;}
   const vs=pts.map(x=>x.v);let lo=Math.min.apply(null,vs),hi=Math.max.apply(null,vs);
-  if(p.min!=null)lo=Math.min(lo,p.min);if(p.max!=null)hi=Math.max(hi,p.max);
+  const pe=(zp&&series.length===1)?zlim(p,series[0].name):p;
+  if(pe.min!=null)lo=Math.min(lo,pe.min);if(pe.max!=null)hi=Math.max(hi,pe.max);
   if(lo===hi){lo-=1;hi+=1;}const padY=(hi-lo)*0.08;lo-=padY;hi+=padY;
   const W=860,H=300,L=56,R=14,T=14,B=34,pw=W-L-R,ph=H-T-B;
   const X=tt=>L+(tt-startT)/(endT-startT)*pw,Y=v=>T+(1-(v-lo)/(hi-lo))*ph;
   let g='';for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);g+='<line class="grid" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+fmtN(v)+'</text>';}
   if(days===1){for(let h=0;h<=24;h+=3){const tt=startT+h*3600e3;if(tt>endT)break;g+='<text x="'+X(tt)+'" y="'+(H-10)+'" text-anchor="middle">'+pad((h+dayStart())%24)+':00</text>';}}
   else{const step=Math.max(1,Math.ceil(days/10));for(let d=0;d<days;d+=step){const tt=startT+d*864e5,q=new Date(tt);g+='<line class="grid" x1="'+X(tt)+'" x2="'+X(tt)+'" y1="'+T+'" y2="'+(T+ph)+'"/><text x="'+(X(tt)+4)+'" y="'+(H-10)+'">'+(days>10?(q.getMonth()+1)+'/'+q.getDate():DOW[q.getDay()]+' '+q.getDate())+'</text>';}}
-  let band='';if(p.min!=null&&p.max!=null)band='<rect class="band" x="'+L+'" y="'+Y(p.max)+'" width="'+pw+'" height="'+(Y(p.min)-Y(p.max))+'"/>';
-  let lim='';if(p.max!=null)lim+='<line class="lim" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(p.max)+'" y2="'+Y(p.max)+'"/>';if(p.min!=null)lim+='<line class="lim" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(p.min)+'" y2="'+Y(p.min)+'"/>';
+  let band='';if(pe.min!=null&&pe.max!=null)band='<rect class="band" x="'+L+'" y="'+Y(pe.max)+'" width="'+pw+'" height="'+(Y(pe.min)-Y(pe.max))+'"/>';
+  let lim='';if(pe.max!=null)lim+='<line class="lim" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(pe.max)+'" y2="'+Y(pe.max)+'"/>';if(pe.min!=null)lim+='<line class="lim" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(pe.min)+'" y2="'+Y(pe.min)+'"/>';
   const multi=series.length>1;
   const lines=series.map(sr=>{if(!sr.pts.length)return '';let path='',prev=null;sr.pts.forEach(q=>{path+=(prev&&q.t-prev<(days>3?30:2.5)*3600e3?'L':'M')+X(q.t).toFixed(1)+' '+Y(q.v).toFixed(1)+' ';prev=q.t;});
-    const dots=sr.pts.map(q=>'<circle class="pt'+(pState(p,q.v)==='ok'?'':' x')+'" cx="'+X(q.t).toFixed(1)+'" cy="'+Y(q.v).toFixed(1)+'" r="3.5"'+(multi?' style="fill:'+sr.color+'"':'')+'/>').join('');
+    const dots=sr.pts.map(q=>'<circle class="pt'+(pState(p,q.v,q.z)==='ok'?'':' x')+'" cx="'+X(q.t).toFixed(1)+'" cy="'+Y(q.v).toFixed(1)+'" r="3.5"'+(multi?' style="fill:'+sr.color+'"':'')+'/>').join('');
     return '<path class="ln" d="'+path+'"'+(multi?' style="stroke:'+sr.color+'"':'')+'/>'+dots;}).join('');
-  const out=pts.filter(q=>pState(p,q.v)!=='ok').length,avg=vs.reduce((a,b)=>a+b,0)/vs.length,last=pts[pts.length-1];
+  const out=pts.filter(q=>pState(p,q.v,q.z)!=='ok').length,avg=vs.reduce((a,b)=>a+b,0)/vs.length,last=pts[pts.length-1];
   const leg=multi?'<div class="row small" style="margin-bottom:8px">'+series.map(sr=>'<span class="chip" style="border:2px solid '+sr.color+'">'+esc(sr.name)+' · '+sr.pts.length+'</span>').join('')+'</div>':'';
   el.innerHTML=leg+'<div class="row small" style="margin-bottom:8px"><span class="chip acc">Last '+fmtN(last.v)+' '+esc(p.unit)+'</span><span class="chip">Avg '+fmtN(avg)+'</span><span class="chip">Min '+fmtN(Math.min.apply(null,vs))+'</span><span class="chip">Max '+fmtN(Math.max.apply(null,vs))+'</span><span class="chip '+(out?'warn':'ok')+'">'+out+' out of range</span><span class="muted">Limits: '+esc(limitText(p))+'</span></div>'+
    '<svg class="ch" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+esc(p.label)+' trend">'+band+g+lim+lines+'</svg>';
@@ -2225,17 +2429,24 @@ function setupShell(){
   const c=S.cfg,sec=S.setupSec||'plant';
   const secs=[['plant','Plant'],['ops','Operators and passwords'],['acct','Tablet account passwords']].concat(c.areas.map(a=>[a.id,a.name]));
   const menu='<div class="smenu" role="tablist" aria-label="Setup sections">'+secs.map(x=>'<button type="button" class="btn sm'+(x[0]===sec?' pri':'')+'" data-s="'+esc(x[0])+'" aria-selected="'+(x[0]===sec)+'">'+esc(x[1])+'</button>').join('')+'</div>';
-  if(sec==='ops')return menu+'<div id="opHost"></div>';
-  if(sec==='acct')return menu+'<div id="acctHost"></div>';
+  if(sec==='ops'){if(!S.opsDraft||!S.setupEditing)S.opsDraft=cloneOps();}else S.opsDraft=null;
+  if(sec==='acct'){if(!S.acctDraft||!S.setupEditing)S.acctDraft={};}else S.acctDraft=null;
+  if(sec==='ops')return menu+'<div id="opHost"></div><div class="row" style="margin-top:12px"><button class="btn pri big" id="sSave">Save operators</button></div>';
+  if(sec==='acct')return menu+'<div id="acctHost"></div><div class="row" style="margin-top:12px"><button class="btn pri big" id="sSave">Save account passwords</button></div>';
   const a=c.areas.find(x=>x.id===sec);
   if(a)return menu+'<section class="card" data-area="'+esc(a.id)+'"><h2>'+esc(a.name)+'</h2><p class="muted small">Limits that are blank are not checked. “Σ” marks a reading that is a total for the hour (packs, kg) and is added up into daily totals. Type the normal min and max for each reading and the app will flag values outside them.</p>'+
     '<div class="prow h"><span>Reading</span><span>Group</span><span>Unit</span><span>Min</span><span>Max</span><span>Σ</span></div><div class="plist">'+a.params.map(paramRow).join('')+'</div>'+
-    '<div class="row" style="margin-top:8px"><button type="button" class="btn sm s-add">Add reading</button></div>'+
+    zoneLimCard(a)+'<div class="row" style="margin-top:8px"><button type="button" class="btn sm s-add">Add reading</button></div>'+
     '<label class="l" style="margin-top:12px">Equipment in this area (one per line, used for problem reports and maintenance)<textarea class="s-eq">'+esc(a.equipment.join('\n'))+'</textarea></label></section>'+
     '<div class="row"><button class="btn pri big" id="sSave">Save '+esc(a.name)+'</button></div>';
   return menu+'<section class="card"><h2>Plant</h2><div class="ctlrow"><label class="l" style="flex:2 1 260px">Plant name<input type="text" id="sName" value="'+esc(c.plantName)+'"></label>'+
    c.shifts.map((s,i)=>'<label class="l">'+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'<label class="l">Hourly entry window (minutes, 1 to 59)<input type="number" min="1" max="59" id="sEntry" value="'+(Number(c.entryMin)>=1&&Number(c.entryMin)<=59?Math.round(Number(c.entryMin)):20)+'"></label><label class="l">Packaging: highlight a reading when the gap since the last one is less than (minutes, 0 = off)<input type="number" min="0" max="240" id="sGap" value="'+(Number(c.gapWarnMin)>=0?Math.round(Number(c.gapWarnMin)):30)+'"></label><label class="l">Data entry edit duration (minutes)<input type="number" min="1" max="60" id="sNtEdit" value="'+(Number(c.noticeEditMin)>=1?Math.round(Number(c.noticeEditMin)):5)+'"></label></div><p class="muted small" style="margin:8px 0 0">Operators can enter an hourly reading only during the first minutes of the hour. After that only a shift leader can enter it (unlock button). Lab, packaging and RO entries are not affected.</p></section>'+
    '<div class="row"><button class="btn pri big" id="sSave">Save plant</button><button class="btn" id="sReset">Restore starter setup</button></div>'+clearCardHTML();
+}
+function zoneLimCard(a){
+  const zp=a.params.find(p=>p.id==='zone'&&p.options),rp=a.params.find(p=>p.id==='result');if(!zp||!rp)return '';
+  return '<div class="zlbox" data-zl="1" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px"><h3 style="margin:0 0 4px">Moisture limits by zone</h3><p class="muted small" style="margin:0 0 8px">Each zone has its own normal range. A blank zone uses the Min / Max of the Moisture result row above.</p>'+
+   zp.options.map(z=>{const l=(rp.zl&&rp.zl[z])||{};return '<div class="zlrow" data-z="'+esc(z)+'" style="display:grid;grid-template-columns:minmax(90px,1fr) 110px 110px;gap:10px;align-items:center;margin:6px 0"><b>'+esc(z)+'</b><input type="number" step="any" class="zl-min" placeholder="Min" value="'+(l.min==null?'':l.min)+'" aria-label="Minimum for '+esc(z)+'"><input type="number" step="any" class="zl-max" placeholder="Max" value="'+(l.max==null?'':l.max)+'" aria-label="Maximum for '+esc(z)+'"></div>';}).join('')+'</div>';
 }
 function clearCardHTML(){
   if(!adminEff())return '';
@@ -2273,7 +2484,7 @@ function bindSetup(rootSel,lim){
     const del=e.target.closest('.s-del');if(del){del.closest('.prow').remove();S.setupEditing=true;return;}
     const add=e.target.closest('.s-add');if(add){const l=add.closest('section').querySelector('.plist');l.insertAdjacentHTML('beforeend',paramRow({id:'p_'+Date.now().toString(36)+Math.floor(Math.random()*99),label:'',unit:'',group:'',min:null,max:null,total:false}));l.lastElementChild.querySelector('input').focus();S.setupEditing=true;}
   };
-  const sv=$('#sSave');if(sv)sv.onclick=()=>{const sec=S.setupSec||'plant';if(sec==='plant')savePlant();else saveArea(sec);};
+  const sv=$('#sSave');if(sv)sv.onclick=()=>{const sec=S.setupSec||'plant';if(sec==='plant')savePlant();else if(sec==='ops')saveOps();else if(sec==='acct')saveAcct();else saveArea(sec);};
   if((S.setupSec||'plant')==='ops'&&$('#opHost'))opsPanel($('#opHost'),true);
   if((S.setupSec||'plant')==='acct'&&$('#acctHost'))acctPanel($('#acctHost'));
   {const cl=$('#sClear');if(cl)cl.onclick=clearTest;}
@@ -2302,6 +2513,8 @@ function saveArea(id){
     const params=[];
     $$('.prow',sec).forEach(r=>{if(r.classList.contains('h'))return;const label=$('.s-label',r).value.trim();if(!label)return;
       params.push({id:r.dataset.id,label,group:$('.s-group',r).value.trim(),unit:$('.s-unit',r).value.trim(),min:num($('.s-min',r).value),max:num($('.s-max',r).value),total:$('.s-tot',r).checked,kind:r.dataset.kind||'num',calc:r.dataset.calc||'',options:JSON.parse(r.dataset.opts||'[]'),win:JSON.parse(r.dataset.win||'null')||undefined,opt:r.dataset.opt==='1'||undefined,sm:r.dataset.sm==='1'||undefined});});
+    const zb=$('.zlbox',sec),rpp=params.find(q=>q.id==='result');
+    if(zb&&rpp){const zl={};$$('.zlrow',zb).forEach(r=>{const mn=num($('.zl-min',r).value),mx=num($('.zl-max',r).value);if(mn!=null||mx!=null)zl[r.dataset.z]={min:mn,max:mx};});if(Object.keys(zl).length)rpp.zl=zl;}
     a.params=params;a.equipment=$('.s-eq',sec).value.split('\n').map(x=>x.trim()).filter(Boolean);
   },'this area');
 }
@@ -2310,12 +2523,12 @@ const ACCT_LIST=[['press@local.com','Press'],['lab@local.com','Laboratory'],['pa
 function acctPanel(host){
   const can=!!(S.user&&typeof S.user.setAccountPassword==='function');
   host.innerHTML='<section class="card"><h2>Tablet account passwords</h2><p class="muted small">These are the passwords used to sign a tablet in (the email and password on the sign-in screen). Passwords are never shown, only replaced. A tablet that is already signed in stays signed in; the new password is needed the next time it signs in. At least 6 characters.</p>'+(can?'':'<p class="status warn">Preview only: changing these works in the real tablet app after the one-time server setup.</p>')+
-   ACCT_LIST.map(a=>'<div class="orow2"><b class="nm">'+esc(a[1])+'</b><span class="muted">'+esc(a[0])+'</span><button type="button" class="btn sm" data-em="'+esc(a[0])+'"'+(can?'':' disabled')+'>Set new password</button></div>').join('')+'</section>';
+   ACCT_LIST.map(a=>'<div class="orow2"><b class="nm">'+esc(a[1])+'</b><span class="muted">'+esc(a[0])+'</span>'+(S.acctDraft&&S.acctDraft[a[0]]?'<span class="chip warn">New password waiting for Save</span>':'')+'<button type="button" class="btn sm" data-em="'+esc(a[0])+'"'+(can?'':' disabled')+'>'+(S.acctDraft&&S.acctDraft[a[0]]?'Change again':'Set new password')+'</button></div>').join('')+'</section>';
   host.onclick=async e=>{
     const b=e.target.closest('[data-em]');if(!b||!can)return;const em=b.dataset.em;
     const r=await opDlg({title:'New password: '+em,msg:'Type the new sign-in password twice.',fields:[{id:'p1',label:'New password (at least 6 characters)'},{id:'p2',label:'Repeat new password'}],ok:'Set password',validate:async v=>{if(v.p1.length<6)return 'At least 6 characters.';if(v.p1!==v.p2)return 'The two passwords are not the same.';return null;}});
     if(!r)return;
-    try{await S.user.setAccountPassword(em,r.vals.p1);toast('Password changed for '+em+'.');}catch(err){toast(String(err&&err.message||err),true);}
+    if(!S.acctDraft)S.acctDraft={};S.acctDraft[em]=r.vals.p1;S.setupEditing=true;acctPanel(host);toast('Kept for '+em+'. Press Save account passwords to apply.');
   };
 }
 /* operators and passwords: same panel for the shift leader (limited) and the admin (full, can assign leaders) */
@@ -2344,27 +2557,44 @@ function opDlg(o){
     ready();
   });
 }
+const OP=()=>S.opsDraft||S.ops;
+const cloneOps=()=>S.ops.map(o=>({id:o.id,name:o.name,active:o.active!==false,leader:!!o.leader,labHead:!!o.labHead,salt:o.salt,hash:o.hash}));
+async function saveOps(){
+  const L=S.opsDraft;if(!L)return;
+  if(!await ask({title:'Do you want to save?',msg:'Save operators and passwords.',ok:'Yes, save'}))return;
+  try{await S.db.doc('config/operators').set({list:L});S.ops=L.map(o=>Object.assign({},o));S.opsDraft=null;S.setupEditing=false;toast('Operators and passwords saved.');buildTab();}catch(e){toast(dbErr(e),true);}
+}
+async function saveAcct(){
+  const d=S.acctDraft||{},ks=Object.keys(d);if(!ks.length){toast('No changes to save.',true);return;}
+  if(!await ask({title:'Do you want to save?',msg:'Change the sign-in password of '+ks.length+' tablet account'+(ks.length>1?'s':'')+'.',ok:'Yes, save'}))return;
+  const fail=[];
+  for(const em of ks){try{await S.user.setAccountPassword(em,d[em]);delete d[em];}catch(err){fail.push(em+': '+String(err&&err.message||err));}}
+  if(fail.length){toast('Not saved: '+fail.join('; '),true);const h=$('#acctHost');if(h)acctPanel(h);return;}
+  S.setupEditing=false;S.acctDraft={};toast('Tablet account passwords saved.');buildTab();
+}
 async function opsWrite(mut){
-  const list=S.ops.map(o=>({id:o.id,name:o.name,active:o.active!==false,leader:!!o.leader,salt:o.salt,hash:o.hash}));
+  const list=OP().map(o=>({id:o.id,name:o.name,active:o.active!==false,leader:!!o.leader,labHead:!!o.labHead,salt:o.salt,hash:o.hash}));
   mut(list);
+  if(S.opsDraft){S.opsDraft=list;S.setupEditing=true;const h=$('#opHost');if(h)opsPanel(h,true);return true;}
   try{await S.db.doc('config/operators').set({list});return true;}catch(e){toast(dbErr(e),true);return false;}
 }
-const pwUsed=async(pw,exceptId)=>{for(const q of S.ops){if(q.id===exceptId)continue;if(q.hash&&await hashPw(q.salt,pw)===q.hash)return q;}return null;};
+const pwUsed=async(pw,exceptId)=>{for(const q of OP()){if(q.id===exceptId)continue;if(q.hash&&await hashPw(q.salt,pw)===q.hash)return q;}return null;};
 function opsPanel(host,adm){
-  const rows=S.ops.map(o=>{
-    const chips=(o.leader?'<span class="chip warn">Shift leader</span>':'')+(o.active===false?'<span class="chip bad">Inactive</span>':'<span class="chip ok">Active</span>');
-    if(!adm&&o.leader)return '<div class="orow2" data-id="'+esc(o.id)+'"><b class="nm">'+esc(o.name)+'</b>'+chips+'<span class="muted small">Only the admin can change a shift leader</span></div>';
-    return '<div class="orow2" data-id="'+esc(o.id)+'"><b class="nm">'+esc(o.name)+'</b>'+chips+(adm?'<button type="button" class="btn sm" data-act="ren">Rename</button>':'')+'<button type="button" class="btn sm" data-act="pw">Change password</button>'+(adm?'<button type="button" class="btn sm" data-act="lead">'+(o.leader?'Remove leader':'Make shift leader')+'</button>':'')+'<button type="button" class="btn sm" data-act="act">'+(o.active===false?'Make active':'Make inactive')+'</button><button type="button" class="btn sm bad ico" data-act="del" title="Remove" aria-label="Remove">'+TRASH+'</button></div>';
+  const rows=OP().map(o=>{
+    const chips=(o.leader?'<span class="chip warn">Shift leader</span>':'')+(o.labHead?'<span class="chip warn">Lab head</span>':'')+(o.active===false?'<span class="chip bad">Inactive</span>':'<span class="chip ok">Active</span>');
+    if(!adm&&(o.leader||o.labHead))return '<div class="orow2" data-id="'+esc(o.id)+'"><b class="nm">'+esc(o.name)+'</b>'+chips+'<span class="muted small">Only the admin can change a shift leader or lab head</span></div>';
+    return '<div class="orow2" data-id="'+esc(o.id)+'"><b class="nm">'+esc(o.name)+'</b>'+chips+(adm?'<button type="button" class="btn sm" data-act="ren">Rename</button>':'')+'<select class="opsel" aria-label="Actions for '+esc(o.name)+'"><option value="">Choose action…</option><option value="pw">Change password</option>'+(adm?'<option value="lead">'+(o.leader?'Remove leader':'Make shift leader')+'</option><option value="lhead">'+(o.labHead?'Remove lab head':'Make lab head')+'</option>':'')+'<option value="act">'+(o.active===false?'Make active':'Make inactive')+'</option></select><button type="button" class="btn sm bad ico" data-act="del" title="Remove" aria-label="Remove">'+TRASH+'</button></div>';
   }).join('');
-  host.innerHTML='<section class="card"><h2>Operators and passwords</h2><p class="muted small">'+(adm?'Every change saves straight away. You are the admin, so no shift leader approval is needed. You can also make an operator a shift leader.':'Every change needs a shift leader password. Changing a password asks for the old password first. Shift leaders can only be changed by the admin.')+'</p><div id="opPage">'+(rows||'<div class="empty">No operators yet.</div>')+'</div><div class="row" style="margin-top:10px"><button type="button" class="btn pri" id="opAdd">Add operator</button></div></section>';
+  host.innerHTML='<section class="card"><h2>Operators and passwords</h2><p class="muted small">'+(adm?(S.opsDraft?'Changes are kept here until you press Save operators at the bottom. ':'Every change saves straight away. ')+'You are the admin, so no shift leader approval is needed. You can also make an operator a shift leader.':'Every change needs a shift leader password. Changing a password asks for the old password first. Shift leaders can only be changed by the admin.')+'</p><div id="opPage">'+(rows||'<div class="empty">No operators yet.</div>')+'</div><div class="row" style="margin-top:10px"><button type="button" class="btn pri" id="opAdd">Add operator</button></div></section>';
   const pwRules=async(v,id,oldOk)=>{if(v.p1.length<4)return 'Passwords need at least 4 characters.';if(v.p1!==v.p2)return 'The two passwords are not the same.';const u=await pwUsed(v.p1,id);if(u)return 'This password is already used by '+u.name+'. Choose another.';return null;};
   $('#opAdd').onclick=async()=>{
     const r=await opDlg({title:'Add operator',msg:adm?'Type the new operator name and password.':'Type the new operator name and password, then a shift leader approves.',fields:[{id:'name',label:'Operator name',type:'text'},{id:'p1',label:'Password (at least 4 characters)'},{id:'p2',label:'Repeat password'}],ok:'Add operator',validate:v=>pwRules(v,null)});
     if(!r)return;const v=r.vals,salt=newSalt(),hash=await hashPw(salt,v.p1);
     if(await opsWrite(l=>l.push({id:'o_'+Date.now().toString(36)+Math.floor(Math.random()*99),name:v.name.trim(),active:true,leader:false,salt,hash})))toast(v.name.trim()+' added.');
   };
+  $('#opPage').onchange=e=>{const sel=e.target.closest&&e.target.closest('select.opsel');if(!sel||!sel.value)return;const act=sel.value,row=sel.closest('.orow2');sel.value='';$('#opPage').onclick({target:{closest:()=>({dataset:{act:act},closest:()=>row})}});};
   $('#opPage').onclick=async e=>{
-    const b=e.target.closest('[data-act]');if(!b)return;const id=b.closest('.orow2').dataset.id,o=S.ops.find(x=>x.id===id);if(!o||(!adm&&o.leader))return;
+    const b=e.target.closest('[data-act]');if(!b)return;const id=b.closest('.orow2').dataset.id,o=OP().find(x=>x.id===id);if(!o||(!adm&&(o.leader||o.labHead)))return;
     const act=b.dataset.act;
     if(act==='pw'){
       const fields=adm?[{id:'p1',label:'New password (at least 4 characters)'},{id:'p2',label:'Repeat new password'}]:[{id:'old',label:'Old password'},{id:'p1',label:'New password (at least 4 characters)'},{id:'p2',label:'Repeat new password'}];
@@ -2379,6 +2609,10 @@ function opsPanel(host,adm){
       const to=!o.leader;
       const r=await opDlg({title:(to?'Make shift leader: ':'Remove leader status: ')+o.name,msg:to?'This person will be able to approve tablets, unlock screens and change saved entries.':'This person will become a normal operator.',fields:[],ok:to?'Make shift leader':'Remove leader'});
       if(!r)return;if(await opsWrite(l=>{l.find(y=>y.id===id).leader=to;}))toast(o.name+(to?' is now a shift leader.':' is now a normal operator.'));
+    }else if(act==='lhead'){
+      const to=!o.labHead;
+      const r=await opDlg({title:(to?'Make lab head: ':'Remove lab head: ')+o.name,msg:to?'This person can change any saved entry in Lab Moisture and Flour & semolina tests with their password. Nothing else.':'This person will become a normal operator.',fields:[],ok:to?'Make lab head':'Remove lab head'});
+      if(!r)return;if(await opsWrite(l=>{l.find(y=>y.id===id).labHead=to;}))toast(o.name+(to?' is now a lab head.':' is no longer a lab head.'));
     }else if(act==='act'){
       const nowOn=o.active!==false;
       const r=await opDlg({title:(nowOn?'Make inactive: ':'Make active: ')+o.name,msg:nowOn?'This person will no longer be able to save readings.':'This person will be able to save readings again.',fields:[],ok:nowOn?'Make inactive':'Make active'});
