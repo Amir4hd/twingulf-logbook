@@ -215,6 +215,8 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .elines{display:flex;flex-direction:column}.eline{display:flex;align-items:center;gap:12px;padding:9px 6px;border-bottom:1px solid var(--line);font-size:15px;white-space:nowrap;overflow:hidden}.eline>span:last-child{overflow:hidden;text-overflow:ellipsis}.eline.clk{cursor:pointer}.eline{flex-wrap:wrap;row-gap:4px;white-space:normal}.eline>span:last-child{overflow:visible}.eline.stp{background:var(--badbg);border-left:4px solid var(--bad)}.elt tr.stp td{background:var(--badbg)}.elt tr.stp td:first-child{box-shadow:inset 4px 0 0 var(--bad)}.elt td,.elt th{padding:7px 8px;vertical-align:top}.elt tr.clk{cursor:pointer}.delstop{background:none;border:0;padding:2px 4px;font-size:14px;line-height:1;cursor:pointer;opacity:.7;min-height:0;min-width:0}.delstop:hover{opacity:1}.elt td,.elt th{white-space:nowrap}.elt .stt{font-size:11px}.elt .edi{font-size:13px;color:var(--mut);cursor:help}.elt td .chip{margin-left:4px}.elt th{white-space:nowrap}.eline .gap,td .gap{margin-left:auto;font-size:12px;color:var(--mut)}td .gap{display:block;margin:0}.eline.clk:hover{background:var(--panel2)}
 .sumrow{display:flex;justify-content:space-between;gap:12px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:16px}.sumrow b.mono{white-space:nowrap}.sumrow.sub{padding-left:22px;font-size:14px;color:var(--mut)}
 #rmDlg h2{font-size:22px}#rmDlg .fld .ir input,#rmDlg .fld .ir select{font-size:16px!important;min-height:42px!important;padding-top:4px;padding-bottom:4px}#rmDlg .fld .fl,#rmDlg .l{font-size:13px}#rmDlg .fld .ir i{font-size:13px}#rmDlg .rmh{margin:12px 0 6px;font-size:14px}#rmDlg .dlg{padding:18px}#rmDlg .btn.big{min-height:48px;font-size:17px}#rmKindSel{font-size:20px;min-height:54px}label.l:has(#rmKindSel){font-size:15px}
+#rawSec .hint{display:none}#rawSec .fields{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}#rawSec fieldset.grp{padding:8px 10px 10px;margin:0 0 8px}#rawSec legend{font-size:13px;padding:0 6px}#rawSec .fld .fl{font-size:13px}#rawSec .fld .ir input{font-size:17px!important;min-height:42px!important}#rawSec .fld .ir i{font-size:12px}#rawSec .btn.big{min-height:46px;font-size:16px}
+.rawsec{margin-top:22px!important;padding-top:16px!important;border-top:2px solid var(--line)!important}
 .rmc{padding:10px 12px;border:1px solid var(--line);border-radius:10px;display:grid;gap:2px}.rmg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rmres{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.rmres.g5{grid-template-columns:repeat(5,minmax(0,1fr))}@media (max-width:560px){.rmres.g5{grid-template-columns:repeat(3,minmax(0,1fr))}}.rmh{margin:16px 0 8px;font-size:16px;text-transform:uppercase}#rmMat .btn{min-width:130px}@media (max-width:560px){.rmg2{grid-template-columns:1fr}}
 .opsel{min-height:40px;font-size:15px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);max-width:190px}
 .labgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.labcol{display:flex;flex-direction:column;gap:16px;min-width:0}.labh{margin:0;padding:10px 14px;border-radius:10px;font-size:20px;text-transform:uppercase;background:var(--okbg);border:1px solid var(--ok)}#lc_lab_spa .labh{background:var(--warnbg);border-color:var(--warn)}.labcol td,.labcol th{white-space:normal}.labcol .status{margin:0 0 12px}.labfs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.labfs .fld{min-width:0}@media (max-width:720px){.labgrid{grid-template-columns:1fr}}
@@ -1130,12 +1132,13 @@ function applyWindow(){
   const msg=$('#winMsg'),fs=$('#fset'),btn=$('#fSave'),row=$('#lockRow');if(!msg)return;
   const pm=perm();
   msg.className='status '+(pm.cls||'');msg.textContent=pm.msg;
-  if(fs)fs.disabled=!pm.can;if(btn)btn.disabled=!pm.can;
+  if(fs)fs.disabled=!pm.can;if(btn)btn.disabled=!pm.can;{const rs0=$('#rawSec');if(rs0)rs0.disabled=!pm.can;}
   let anyLocked=false;
   if(pm.can)a.params.forEach(p=>{if(!p.win)return;const inp=ctl(p.id);if(!inp)return;const lab=inp.closest('.fld'),md=fieldMode(p),h=$('.hint',lab);
-    inp.disabled=(md==='locked');lab.classList.toggle('locked',md==='locked');lab.classList.toggle('lead',md==='leader');if(md==='locked')anyLocked=true;
-    if(h&&!lab.classList.contains('need'))h.textContent=md==='locked'?'Opens '+winText(p.win):md==='leader'?'Open for shift leader (optional)':'Open now until '+winText([[0,p.win.find(w=>nowMin()>=w[0]&&nowMin()<w[1])[1]]]).replace(/^[^–]*–/,'')+' · '+winText(p.win);});
+    inp.disabled=(md==='locked');lab.classList.toggle('locked',md==='locked');lab.classList.toggle('lead',md==='leader');if(md==='locked')anyLocked=true;});
   $$('fieldset.grp').forEach(g=>{const fl=$$('.fld',g);g.style.display=fl.length&&fl.every(x=>x.classList.contains('locked'))?'none':'';});
+  {const rn=$('#rawNote'),wp0=a.params.find(p=>p.win);if(rn&&wp0){const m0=nowMin(),cw=wp0.win.find(w=>m0>=w[0]&&m0<w[1]);rn.textContent=cw?'Open now until '+t12(cw[1])+' · windows '+winText(wp0.win):'Outside the window · open for the shift leader only (optional) · windows '+winText(wp0.win);}}
+  {const rs=$('#rawSec');if(rs){const fl=$$('.fld',rs);rs.style.display=fl.length&&fl.every(x=>x.classList.contains('locked'))?'none':'';}}
   if(row){row.innerHTML=((!pm.can&&pm.lockable)||anyLocked)&&!adminEff()&&!leaderActive()?'<button type="button" class="btn" id="unlockBtn">Shift leader: unlock</button>':(unlockOn()?'<span class="chip warn">Unlocked by '+esc(S.unlock.name)+' · locks in <span id="lockLeft">'+Math.ceil((S.unlock.exp-Date.now())/1000)+'s</span></span> <button type="button" class="btn sm" id="lockBtn">Lock now</button>':'');const ub=$('#unlockBtn',row);if(ub)ub.onclick=unlockLeader;const lb=$('#lockBtn',row);if(lb)lb.onclick=lockNow;}
   paintEntryBar();
 }
@@ -1194,8 +1197,10 @@ function renderForm(fromSnap){
   const groups=[];a.params.filter(p=>!smHidden(a,p)).forEach(p=>{let g=groups.find(x=>x.n===p.group);if(!g){g={n:p.group,ps:[]};groups.push(g);}g.ps.push(p);});
   let html='<div id="winMsg" class="status"></div><div class="row" id="navRow">'+(timed&&!hasCard(a)?'':'<h2 style="margin:0;flex:1">Data entry · '+(timed?(S.editKey?'edit entry':'new entry'):hh(S.hour)+' – '+hh((S.hour+1)%24))+' <span class="muted small" style="font-weight:400">'+esc(a.name)+'</span></h2><button type="button" class="btn cyan" id="eCancel">Cancel</button>')+'<span id="lockRow" style="display:contents"></span><span class="shiftbox" id="fShift"><b>'+esc(shiftLabel(timed?nowH():S.hour))+'</b></span></div><fieldset id="fset" class="plain">';
   html+='<div class="status">Every reading must be filled before you can save.'+(a.noStatus?'':' If the line is stopped, press Stopped and the readings can stay blank.')+'</div>';
+  let rawH='';
   groups.forEach(g=>{
-    html+='<fieldset class="grp"><legend>'+esc(g.n||'Readings')+'</legend><div class="fields">'+g.ps.map(p=>fieldHTML(p,fv(a,p,e))).join('')+'</div></fieldset>';
+    const gh='<fieldset class="grp"><legend>'+esc(g.n||'Readings')+'</legend><div class="fields">'+g.ps.map(p=>fieldHTML(p,fv(a,p,e))).join('')+'</div></fieldset>';
+    if(isPack(a)&&g.ps.some(p=>p.win))rawH+=gh;else html+=gh;
   });
   const run=!e||e.run!==false;
   if(isPack(a)){
@@ -1214,8 +1219,10 @@ function renderForm(fromSnap){
    '<label class="l">Stopped at<input type="time" id="fStopAt" value="'+esc(e&&e.stopAt||'')+'"></label><label class="l">Started again at<input type="time" id="fStartAt" value="'+esc(e&&e.startAt||'')+'"></label></div></fieldset>';
   html+='<div class="fields"><label class="l" style="grid-column:1/-1">Notes<textarea id="fNote" placeholder="Anything unusual">'+esc(e&&e.note||'')+'</textarea></label></div></fieldset>'+
    (S.canWrite?'':'<div class="status">You can view this logbook but not save readings. Ask the plant manager for contributor access.</div>')+
-   '<div class="row"><button class="btn pri big" type="submit" id="fSave">'+(timed?'Save entry':'Save '+hh(S.hour)+' reading')+'</button><span class="status" id="eState"></span></div>';
+   '<div class="row"><button class="btn pri big" type="submit" id="fSave">'+(isPack(a)?'Save production':timed?'Save entry':'Save '+hh(S.hour)+' reading')+'</button><span class="status" id="eState"></span></div>'+
+   (rawH?'<fieldset class="plain rawsec" id="rawSec"><h3 style="margin:0 0 2px">Raw material, film and carton</h3><div class="muted small" id="rawNote" style="margin-bottom:8px"></div>'+rawH+'<div class="row"><button type="button" class="btn pri big" id="fSaveRaw">Save raw materials</button><span class="status" id="eStateRaw"></span></div></fieldset>':'');
   f.innerHTML=html;
+  {const rb=$('#fSaveRaw');if(rb)rb.onclick=()=>saveEntry('raw');}
   {const cb=$('#eCancel');if(cb)cb.onclick=closeEntry;}
   if(isPack(a)&&$('#stopBtn')){
     const sb=$('#stopBtn'),bx=$('#stopBox'),rr=v=>{const r=$('input[name=run][value="'+v+'"]');if(r)r.checked=true;},
@@ -1236,85 +1243,87 @@ function renderForm(fromSnap){
     if(t.dataset&&t.dataset.p&&t.dataset.k==='num'){markField(t);refreshCalcs();}
   };
   f.onchange=ev=>{if(ev.target.name==='run'){$('#stopBox').hidden=ev.target.value==='1';S.dirty=true;}else{S.dirty=true;const fl=ev.target.closest&&ev.target.closest('.fld');if(fl)fl.classList.remove('need');}};
-  f.onsubmit=ev=>{ev.preventDefault();saveEntry();};
+  f.onsubmit=ev=>{ev.preventDefault();saveEntry(isPack(a)?'prod':null);};
   updateEntryState();applyWindow();
 }
 function updateEntryState(){
   const el=$('#eState');if(!el)return;
   const a=area(S.areaId),timed=!!a.timed;
   const e=S.day&&S.day.hours?(timed?(S.editKey?S.day.hours[S.editKey]:null):S.day.hours[String(S.hour)]):null;
+  {const r2=$('#eStateRaw');if(r2){const hasW=e&&e.v&&a.params.some(p=>p.win&&e.v[p.id]!=null);r2.textContent=hasW?'Saved '+(e.at?new Date(e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'')+' by '+(e.by||'?'):'Not saved yet';}}
   if(!timed&&S.date===S.today&&ordH(S.hour)>ordH(nowH()))el.textContent='This hour has not started yet.';
   else el.textContent=e?'Saved '+(e.at?new Date(e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'')+' by '+(e.by||'?')+(e.late?' (late entry)':''):(timed?'New entry, not saved yet':'Not logged yet');
 }
-async function saveEntry(){
+async function saveEntry(part){
   if(!S.db)return toast('No database connection.',true);
-  const a=area(S.areaId),timed=!!a.timed,btn=$('#fSave'),e0=curEntry(a);
+  const a=area(S.areaId),timed=!!a.timed,e0=curEntry(a),pk=isPack(a);
+  part=pk?(part||'prod'):null;
+  const btn=part==='raw'?$('#fSaveRaw'):$('#fSave'),inPart=p=>!pk||(part==='raw'?!!p.win:!p.win);
+  if(part==='prod'&&e0&&e0.ovr){toast('This entry holds raw materials only. Use Save raw materials.',true);return;}
   const pm=perm();if(!pm.can){applyWindow();toast(pm.msg,true);return;}
   refreshCalcs();
-  const run=a.noStatus?true:$('input[name=run]:checked').value==='1';
+  const run=a.noStatus||part==='raw'?true:$('input[name=run]:checked').value==='1';
   const mode=p=>p.win?fieldMode(p):'on';
   if(run){
     const missing=[];
     const prodOpt=isPack(a)&&(unlockOn()||adminEff()||leaderActive());
-    a.params.forEach(p=>{if(smHidden(a,p))return;const inp=ctl(p.id),md=mode(p),bad=md==='on'&&reqd(a,p)&&!(prodOpt&&!p.win)&&(inp.value||'').trim()==='';inp.closest('.fld').classList.toggle('need',bad);if(bad)missing.push(p.label);});
+    a.params.forEach(p=>{if(smHidden(a,p)||!inPart(p))return;const inp=ctl(p.id),md=mode(p),bad=md==='on'&&reqd(a,p)&&!(prodOpt&&!p.win)&&(inp.value||'').trim()==='';inp.closest('.fld').classList.toggle('need',bad);if(bad)missing.push(p.label);});
     if(missing.length){toast(missing.length+' reading'+(missing.length>1?'s':'')+' still empty ('+missing.slice(0,3).join(', ')+(missing.length>3?', …':'')+'). Fill every open reading'+(a.noStatus?'':', or choose Stopped')+'.',true);const f1=$('.fld.need input,.fld.need select');if(f1){f1.focus();f1.scrollIntoView({block:'center',behavior:'smooth'});}return;}
   }
   const v={};let alarms=0,empty=0;
   a.params.forEach(p=>{
     if(smHidden(a,p)){v[p.id]=null;return;}
-    if(mode(p)==='locked'){v[p.id]=(e0&&e0.v&&e0.v[p.id]!=null)?e0.v[p.id]:null;return;}
+    if(!inPart(p)||mode(p)==='locked'){v[p.id]=(e0&&e0.v&&e0.v[p.id]!=null)?e0.v[p.id]:null;return;}
     const raw=ctl(p.id).value;
     if((p.kind||'num')!=='num'){v[p.id]=(raw||'').trim()||null;return;}
     const n=num(raw);v[p.id]=n;if(n==null){if(!p.win&&reqd(a,p))empty++;}else if(pState(p,n)!=='ok')alarms++;});
-  let wPlan=null;
-  if(isPack(a)&&timed&&!S.editKey){
-    const wps=a.params.filter(p=>p.win&&!smHidden(a,p));
-    if(wps.length&&fieldMode(wps[0])==='leader'&&wps.some(p=>v[p.id]!=null)){
-      const slots=packSlots(a),nm=om(nowMin());
-      const tw=S.targetWin&&(unlockOn()||adminEff()||leaderActive())?slots.find(sl=>sl.s===S.targetWin.s):null;
-      const nx=tw||slots.find(sl=>om(sl.s)>nm)||slots[slots.length-1];
-      wPlan={slot:nx,ids:wps.map(p=>p.id)};
-    }
-  }
-  const what=(timed?(e0?'Save changes to this entry in '+a.name+'?':'Save a new entry in '+a.name+' now?'):a.name+' · '+hh(S.hour)+' reading on '+S.date+(e0?' (changes)':''))+(wPlan?' Film, carton and raw material values will be saved in the '+winText([[wPlan.slot.s,wPlan.slot.e]])+' window.':'');
+  if(part==='raw'&&!a.params.some(p=>p.win&&v[p.id]!=null)){toast('Fill at least one raw material or film value.',true);return;}
+  const what=(timed?(e0?'Save changes to this entry in '+a.name+'?':'Save a new entry in '+a.name+' now?'):a.name+' · '+hh(S.hour)+' reading on '+S.date+(e0?' (changes)':''));
+  const whatTxt=part==='raw'?(e0?'Save changes to the raw material, film and carton values in ':'Save the raw material, film and carton values in ')+a.name+'?':(pk?(e0?'Save changes to the production of ':'Save the production of ')+a.name+'?':what);
   let who;
   if(unlockOn()){
-    const okc=await ask({title:'Do you want to save?',msg:what+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;
+    const okc=await ask({title:'Do you want to save?',msg:whatTxt+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;
     who={name:S.unlock.name,id:S.unlock.id,leader:true};
   }else{
-    who=await ask({title:'Do you want to save?',msg:what,pw:true,ok:'Yes, save'});if(!who)return;
+    who=await ask({title:'Do you want to save?',msg:whatTxt,pw:true,ok:'Yes, save'});if(!who)return;
   }
   const e1=curEntry(a);
   if(!authorize(a,e1,who)){applyWindow();toast(e1?'Only the operator who saved this entry (within '+editMin()+' minutes) or a shift leader can change it.':'The entry window is closed. A shift leader can unlock it.',true);return;}
   let key,min;
   if(timed){
     if(S.editKey){key=S.editKey;const c=key.charAt(0);min=c==='s'?Math.floor(Number(key.slice(1))/60):Number(key.slice(1));}
-    else{const d=new Date(),sec=d.getHours()*3600+d.getMinutes()*60+d.getSeconds();key='s'+sec;min=Math.floor(sec/60);}
+    else{
+      const d=new Date(),sec=d.getHours()*3600+d.getMinutes()*60+d.getSeconds();key='s'+sec;min=Math.floor(sec/60);
+      if(part==='raw'){
+        const wps=a.params.filter(p=>p.win),slots=packSlots(a),nm=om(nowMin());
+        const tw=S.targetWin&&(unlockOn()||adminEff()||leaderActive())?slots.find(sl=>sl.s===S.targetWin.s):null;
+        const slot=tw||(fieldMode(wps[0])==='leader'?(slots.find(sl=>om(sl.s)>nm)||slots[slots.length-1]):null);
+        if(slot){key='s'+(slot.s*60+d.getSeconds());min=slot.s;}
+      }
+    }
   }else{key=String(S.hour);min=S.hour*60;}
   const nowIso=new Date().toISOString();
   const base=winBase(a,S.date,S.hour);
   const obj={v,run,down:run?0:Math.max(0,Math.min(timed?720:60,num($('#fDown')?$('#fDown').value:0)||0)),why:run?'':$('#fWhy').value,note:($('#fNote').value||'').trim(),shift:shiftOf(timed?nowH():S.hour),stopAt:run?'':($('#fStopAt')?$('#fStopAt').value:''),startAt:run?'':($('#fStartAt')?$('#fStartAt').value:''),alarms,empty};
   if(e1){obj.by=e1.by;obj.byId=e1.byId||null;obj.at=e1.at;obj.editedAt=nowIso;obj.editedBy=who.name;obj.late=!!e1.late;}
   else{obj.by=who.name;obj.byId=who.id||null;obj.at=nowIso;obj.late=!timed&&!base.open;}
-  let wKey=null,wObj=null;
-  if(wPlan&&!e1){
-    const vw={};a.params.forEach(p=>{vw[p.id]=null;});wPlan.ids.forEach(id=>{vw[id]=v[id];v[id]=null;});
-    wKey='s'+(wPlan.slot.s*60+new Date().getSeconds());
-    wObj={v:vw,run:true,down:0,why:'',note:'',shift:shiftOf(Math.floor(wPlan.slot.s/60)),stopAt:'',startAt:'',alarms:0,empty:0,by:who.name,byId:who.id||null,at:nowIso,late:false,ovr:true};
+  if(part==='raw'){
+    if(e1){obj.run=e1.run!==false;obj.down=e1.down||0;obj.why=e1.why||'';obj.note=e1.note||'';obj.stopAt=e1.stopAt||'';obj.startAt=e1.startAt||'';obj.shift=e1.shift||obj.shift;if(e1.ovr)obj.ovr=true;}
+    else{obj.run=true;obj.down=0;obj.why='';obj.note='';obj.stopAt='';obj.startAt='';obj.alarms=0;obj.empty=0;obj.ovr=true;obj.shift=shiftOf(Math.floor(min/60));obj.late=false;}
   }
+  const keep={};
+  if(pk)$$('#entry [data-p]').forEach(i=>{const q=a.params.find(x=>x.id===i.dataset.p);if(q&&!inPart(q)&&i.value!=='')keep[q.id]=i.value;});
   btn.disabled=true;
   try{
-    const mainEmpty=!!wObj&&!e1&&a.params.every(p=>p.win||p.id==='ptype'||v[p.id]==null)&&!(obj.note)&&run;
-    if(!mainEmpty)await writeEntry(S.areaId,S.date,key,obj,null);
-    if(wObj){await writeEntry(S.areaId,S.date,wKey,wObj,null);const patch={};REGR.forEach(id=>{if(wObj.v[id]!=null)patch[id]=wObj.v[id];});if(Object.keys(patch).length){try{await writeShared(S.date,'s'+wPlan.slot.s,Object.assign(patch,{by:who.name,at:nowIso,from:S.areaId}));}catch(e2){}}}
+    await writeEntry(S.areaId,S.date,key,obj,null);
     if(isPack(a)){const st=slotStartFor(a,min),patch={};REGR.forEach(id=>{if(v[id]!=null)patch[id]=v[id];});if(st!=null&&Object.keys(patch).length){try{await writeShared(S.date,'s'+st,Object.assign(patch,{by:who.name,at:nowIso,from:S.areaId}));}catch(e2){}}}
     if(v.ptype){S.lastPt=S.lastPt||{};S.lastPt[a.id]=v.ptype;try{localStorage.setItem(PT_KEY(a.id),v.ptype);}catch(e3){}}
     S.dirty=false;
     toast((timed?hm(min):hh(S.hour))+(e1?' changed by ':' saved by ')+who.name+(alarms?' · '+alarms+' reading'+(alarms>1?'s':'')+' out of range':''));
     S.unlock=null;S.targetWin=null;
-    if(timed&&!hasCard(a)){S.editKey=null;renderForm();}else{if(timed){S.viewKey=key;S.editKey=null;}closeEntry();}
+    if(timed&&!hasCard(a)){S.editKey=null;renderForm();if(Object.keys(keep).length){Object.keys(keep).forEach(id=>{const c=ctl(id);if(c)c.value=keep[id];});refreshCalcs();S.dirty=true;}}else{if(timed){S.viewKey=key;S.editKey=null;}closeEntry();}
   }catch(e){toast(dbErr(e),true);}
-  btn.disabled=false;applyWindow();
+  if(btn)btn.disabled=false;applyWindow();
 }
 async function writeEntry(areaId,date,key,obj,oldKey){
   const ref=S.db.doc('logs/'+areaId+'_'+date);
