@@ -63,6 +63,7 @@ h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
 #issBadge{font-size:17px;font-weight:800;padding:2px 11px;min-width:28px;text-align:center}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
 .chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--stopbg);color:var(--mut);white-space:nowrap}
+.lnst{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px;font-weight:700;border-width:2px}.lnst i{width:12px;height:12px;border-radius:50%;background:currentColor;display:inline-block}.lnst small{font-weight:500;opacity:.85}.lnst.run{background:var(--okbg);color:var(--ok);border-color:var(--ok)}.lnst.stop{background:var(--warnbg);color:var(--warn);border-color:var(--warn)}.pinmsg .pmb{margin-top:8px;display:flex;gap:8px}.pinmsg{border-left:6px solid var(--warn);background:var(--warnbg);margin:0 0 12px}.l textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
 .chip.ok{background:var(--okbg);color:var(--ok)} .chip.warn{background:var(--warnbg);color:var(--warn)} .chip.bad{background:var(--badbg);color:var(--bad)} .chip.acc{background:var(--accentbg);color:var(--accent)}
 input[type=text],input[type=number],input[type=date],select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 11px;min-height:44px;width:100%}
 textarea{min-height:80px;resize:vertical}
@@ -82,7 +83,7 @@ label.l{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 .hb.stop{background:var(--stopbg);border-color:var(--stop);color:var(--mut)}
 .hb.part{background:var(--panel2);border:2px dashed var(--ok);color:var(--ok)}
 .hb.miss{border-color:var(--bad);color:var(--bad);background:var(--badbg)}
-.hb.future{opacity:.4;cursor:not-allowed}
+.hb.future{opacity:.4;cursor:not-allowed}.hb.off{background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(120,130,125,.2) 5px 10px);border-color:var(--line);color:var(--mut)}.cell.off{background:repeating-linear-gradient(135deg,var(--panel2) 0 4px,var(--line) 4px 8px);border-color:var(--line)}
 .hb.now{box-shadow:0 0 0 3px var(--accentbg)}
 .hb.sel{outline:3px solid var(--accent);outline-offset:1px}
 
@@ -366,6 +367,7 @@ function cellState(doc,date,h,a){
   if(es.length)return worst(es);
   if(future)return 'future';
   if(a&&a.timed)return 'na';
+  if(a&&lineOffAt(a.id,date,h))return 'off';
   if(isToday&&h===nowH())return 'now';
   return 'miss';
 }
@@ -559,6 +561,7 @@ setInterval(()=>{
   if(S.view==='area'){
     const a=area(S.areaId);
     if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;
+    paintLineBox();
     if(a&&!a.timed&&!adminEff()&&!S.dirty&&!S.entryOpen&&S.date===S.today&&S.lastHour!==nowH()){S.hour=nowH();S.lastHour=nowH();refreshStrip();renderForm();}
     else{S.lastHour=nowH();refreshStrip();applyWindow();}
     refreshRecent();paintAreaIssues();
@@ -610,7 +613,7 @@ function renderHome(){
   if(!S.dev){renderGate();return;}
   const vis=S.cfg.areas.filter(canSee);
   const mergeLab=labOK();let labDone=false;
-  const cards=vis.map(a=>mergeLab&&LABS.indexOf(a.id)>=0?(labDone?'':(labDone=true,'<button class="acard" data-a="__lab"><b>Lab Moisture</b><span class="muted">Macaroni and Spaghetti moisture readings, side by side</span></button><button class="acard" data-a="__rm"><b>Flour &amp; semolina tests</b><span class="muted">Gluten, ash, moisture, color, spots and granulation of raw material</span></button>')):'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>').join('');
+  const cards=vis.map(a=>mergeLab&&LABS.indexOf(a.id)>=0?(labDone?'':(labDone=true,'<button class="acard" data-a="__lab"><b>Lab Moisture</b><span class="muted">Macaroni and Spaghetti moisture readings, side by side</span></button><button class="acard" data-a="__rm"><b>Flour &amp; semolina tests</b><span class="muted">Gluten, ash, moisture, color, spots and granulation of raw material</span></button>')):'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(isLineTog(a)&&lineOpen(a.id)?' <span class="chip warn">not running</span>':'')+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>').join('');
   const sub=adminEff()?'Admin: every area and the Control room.':'Signed in as: '+placeName(S.dev.place)+(S.acct&&S.acct.email?' ('+S.acct.email+')':'')+'.';
   $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
@@ -625,9 +628,9 @@ const labOK=()=>LABS.every(id=>canSee(area(id)));
 function renderLab(){
   S.lab={docs:{},edit:{},dirty:{}};
   $('#main').innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Lab Moisture · timed entries</h2><div class="muted small">The time is recorded automatically when you save · <span id="labWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:190px">Date<input type="date" id="labDt" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+'</div></div>'+
-   '<div class="labgrid">'+LABS.map(id=>'<section class="labcol" id="lc_'+id+'"><h3 class="labh">'+LAB_T[id]+'</h3><div class="card" id="lf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="lr_'+id+'" class="tscroll"></div></div></section>').join('')+'</div>';
+   '<div id="pinMsg"></div><div class="labgrid">'+LABS.map(id=>'<section class="labcol" id="lc_'+id+'"><h3 class="labh">'+LAB_T[id]+'</h3><div class="card" id="lf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="lr_'+id+'" class="tscroll"></div></div></section>').join('')+'</div>';
   const dt=$('#labDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.date=v;S.lab.edit={};S.lab.dirty={};subLab();};
-  LABS.forEach(id=>paintLabForm(id));subLab();
+  LABS.forEach(id=>paintLabForm(id));subLab();paintPinMsg();
 }
 function subLab(){
   const w=$('#labWhen');if(w)w.textContent=S.date;
@@ -701,7 +704,8 @@ function renderRm(){
   S.rm={kind:S.rm&&S.rm.kind||'batch',edit:null,rows:null};
   $('#main').innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Flour &amp; semolina tests</h2><div class="muted small">Test every batch received, or a sample sent by a supplier.</div></div></div>'+
    '<div class="row" style="margin-top:12px;align-items:flex-end"><label class="l" style="min-width:240px;margin:0">Test type<select id="rmKindSel">'+Object.keys(RM_K).map(k=>'<option value="'+k+'"'+(S.rm.kind===k?' selected':'')+'>'+RM_K[k]+'</option>').join('')+'</select></label><button type="button" class="btn pri big" id="rmEnter">Enter data</button></div></div>'+
-   '<div class="card"><h3 id="rmListH"></h3><div id="rmList" class="tscroll"></div></div>';
+   '<div id="pinMsg"></div><div class="card"><h3 id="rmListH"></h3><div id="rmList" class="tscroll"></div></div>';
+  paintPinMsg();
   $('#rmKindSel').onchange=e=>{S.rm.kind=e.target.value;paintRmList();};
   $('#rmEnter').onclick=openRmChoose;
   loadRm();
@@ -806,6 +810,117 @@ async function rmSave(){
   }catch(er2){toast(dbErr(er2),true);sb.disabled=false;}
 }
 
+/* ---------- line not running (macaroni / spaghetti) ---------- */
+const LINE_TOG=['macaroni','spaghetti','boiler'];
+const isLineTog=a=>!!a&&LINE_TOG.indexOf(a.id)>=0;
+function lineOffAt(id,date,h){const L=S.lines&&S.lines[id];if(!L||!L.length)return false;const t=entTime(date,h*60);return L.some(p=>{const f=Date.parse(p.from);return t>=f&&(!p.to||t<Date.parse(p.to));});}
+const lineOpen=id=>((S.lines&&S.lines[id])||[]).find(p=>!p.to)||null;
+function lineRefresh(){
+  try{
+    if(S.view==='area'){paintLineBox();refreshStrip();}
+    else if(S.view==='home'&&S.dev)renderHome();
+    else if(S.view==='summary')paintSummary();
+    else if(S.view==='admin'&&S.tab==='overview')paintTab();
+  }catch(e){}
+}
+const LINE_EDIT_MIN=20;
+function lineLast(id){let best=null;((S.lines&&S.lines[id])||[]).forEach(p=>{const t=Math.max(Date.parse(p.at||0)||0,Date.parse(p.toAt||0)||0);if(!best||t>best.t)best={p:p,t:t};});return best;}
+function lineEditLeft(id){const l=lineLast(id);return l?LINE_EDIT_MIN*60e3-(Date.now()-l.t):0;}
+function paintLineBox(){
+  const el=$('#lineCtl');if(!el)return;
+  const a=area(S.areaId);if(!isLineTog(a)){el.innerHTML='';return;}
+  const o=lineOpen(a.id),left=lineEditLeft(a.id),can=!!lineLast(a.id)&&(adminEff()||left>0);
+  const h=(o?'<button type="button" class="btn lnst stop" id="lineTg"><i></i>Stopped<small>since '+esc(dlbl(o.from))+'</small></button>':'<button type="button" class="btn lnst run" id="lineTg"><i></i>Running</button>')+(can?'<button type="button" class="btn sm" id="lineEd">Edit'+(left>0?' · '+left5(left)+' left':'')+'</button>':'');
+  if(el.dataset.h===h)return;el.dataset.h=h;el.innerHTML=h;
+  const b1=$('#lineTg');if(b1)b1.onclick=()=>lineDlg(a.id,!!lineOpen(a.id));
+  const b3=$('#lineEd');if(b3)b3.onclick=()=>lineEdit(a.id);
+}
+const locDT=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,16);};
+async function lineWrite(offs){await S.db.doc('logs/lines_status').set({offs:offs});S.lines=offs;}
+function lineDlg(id,restart){
+  const a=area(id),o=lineOpen(id);
+  const w=rmOvl('lineDlg','<h2 style="margin:0 0 6px">'+(restart?'Line is running again':'Line stopped')+' · '+esc(a.name)+'</h2><p class="muted">'+(restart?'Enter the time it started. Hourly readings are expected again from this time. ':'Enter the time it stopped. ')+'</p><p class="muted">'+(restart?'You can edit this for '+LINE_EDIT_MIN+' minutes after saving.':'From this time, hours without a reading are not counted as missed and are not shown red. Press the green/amber button again when production restarts. You can edit this for '+LINE_EDIT_MIN+' minutes after saving.')+'</p>'+
+    '<label class="l">'+(restart?'Running again from':'Not running since')+'<input type="datetime-local" id="lnT" value="'+locDT(new Date())+'" max="'+locDT(new Date())+'" min="'+locDT(restart&&o?new Date(o.from):new Date(Date.now()-14*864e5))+'"></label>'+
+    '<div class="row" style="margin-top:12px"><button type="button" class="btn big cyan" id="lnX">Cancel</button><button type="button" class="btn pri big" id="lnOk">Continue</button></div>');
+  $('#lnX').onclick=()=>w.remove();
+  $('#lnOk').onclick=async()=>{
+    const v=$('#lnT').value;if(!v){toast('Choose the time.',true);return;}
+    const t=new Date(v);if(isNaN(t)||t.getTime()>Date.now()+60000){toast('The time cannot be in the future.',true);return;}
+    if(restart&&o&&t.getTime()<Date.parse(o.from)){toast('That is before the line stopped.',true);return;}
+    const who=await ask({title:restart?'Line started again?':'Mark the line as not running?',msg:a.name+' · '+(restart?'running again from ':'not running since ')+dlbl(t.toISOString())+'. Shift leader or admin only.',pw:true,leaderOnly:true,ok:'Yes, save'});if(!who)return;
+    try{
+      const offs=JSON.parse(JSON.stringify(S.lines||{}));offs[id]=offs[id]||[];
+      if(restart){const op=offs[id].find(p=>!p.to);if(!op){toast('The line is already running.',true);w.remove();return;}op.to=t.toISOString();op.toBy=who.name;op.toAt=new Date().toISOString();}
+      else{if(offs[id].some(p=>!p.to)){toast('The line is already marked not running.',true);w.remove();return;}offs[id].push({from:t.toISOString(),to:null,by:who.name,at:new Date().toISOString()});}
+      await lineWrite(offs);w.remove();toast(restart?a.name+' is running again.':a.name+' marked as not running.');lineRefresh();
+    }catch(e){toast(dbErr(e),true);}
+  };
+}
+function lineEdit(id){
+  const a=area(id),lastP=lineLast(id);let L=((S.lines&&S.lines[id])||[]).map((p,i)=>({p:p,i:i})).sort((x,y)=>x.p.from<y.p.from?1:-1).slice(0,8);
+  if(!adminEff())L=L.filter(x=>lastP&&x.p===lastP.p);
+  const mx=locDT(new Date());
+  const w=rmOvl('lineEd','<h2 style="margin:0 0 6px">Edit not-running times · '+esc(a.name)+'</h2><p class="muted">Fix a wrong date or time, or remove a period. Leave “Running again from” empty if the line is still stopped.</p>'+
+    L.map((x,k)=>'<div class="card slim" style="margin:8px 0" data-k="'+k+'"><div class="row" style="flex-wrap:wrap"><label class="l" style="flex:1;min-width:200px">Not running since<input type="datetime-local" class="lf" value="'+locDT(x.p.from)+'" max="'+mx+'"></label><label class="l" style="flex:1;min-width:200px">Running again from<input type="datetime-local" class="lt" value="'+(x.p.to?locDT(x.p.to):'')+'" max="'+mx+'"></label></div><label class="row small" style="margin-top:6px;gap:8px"><input type="checkbox" class="ld"> Remove this period</label></div>').join('')+
+    '<div class="row" style="margin-top:12px"><button type="button" class="btn big cyan" id="leX">Cancel</button><button type="button" class="btn pri big" id="leOk">Continue</button></div>');
+  $('#leX').onclick=()=>w.remove();
+  $('#leOk').onclick=async()=>{
+    const offs=JSON.parse(JSON.stringify(S.lines||{}));const keep=[];let open=0;
+    for(const row of $$('[data-k]',w)){
+      const x=L[+row.dataset.k];if($('.ld',row).checked)continue;
+      const f=$('.lf',row).value,t=$('.lt',row).value;if(!f){toast('Enter the time it stopped.',true);return;}
+      const fd=new Date(f),td=t?new Date(t):null;
+      if(fd.getTime()>Date.now()+60000||(td&&td.getTime()>Date.now()+60000)){toast('A time cannot be in the future.',true);return;}
+      if(td&&td<=fd){toast('Running again must be after it stopped.',true);return;}
+      if(!td)open++;
+      keep.push({i:x.i,v:Object.assign({},x.p,{from:fd.toISOString(),to:td?td.toISOString():null})});
+    }
+    if(open>1){toast('Only one period can still be stopped.',true);return;}
+    const who=await ask({title:'Save the changes?',msg:a.name+' · not-running times. Shift leader or admin only.',pw:true,leaderOnly:true,ok:'Yes, save'});if(!who)return;
+    try{
+      const all=offs[id]||[];const ids=L.map(x=>x.i);
+      const rest=all.filter((p,i)=>ids.indexOf(i)<0);
+      const next=rest.concat(keep.map(k=>Object.assign(k.v,{editedBy:who.name,editedAt:new Date().toISOString()})));
+      if(next.filter(p=>!p.to).length>1){toast('Only one period can still be stopped.',true);return;}
+      offs[id]=next;await lineWrite(offs);w.remove();toast('Saved.');lineRefresh();
+    }catch(e){toast(dbErr(e),true);}
+  };
+}
+/* ---------- admin messages pinned on cards ---------- */
+const msgTargets=()=>{const o=[];S.cfg.areas.forEach(a=>{if(LABS.indexOf(a.id)>=0){if(!o.some(x=>x.id==='__lab'))o.push({id:'__lab',name:'Lab Moisture',ids:LABS});}else o.push({id:a.id,name:a.name,ids:[a.id]});});o.push({id:'__rm',name:'Flour & semolina tests',ids:['__rm']});return o;};
+const msgsFor=ids=>(S.amsgs||[]).filter(m=>(m.to||[]).some(t=>ids.indexOf(t)>=0)).sort((a,b)=>a.at<b.at?1:-1);
+function pinHTML(ids){const l=msgsFor(ids);return l.map(m=>'<section class="card slim pinmsg"><div class="muted small">📌 Message from admin · '+esc(dlbl(m.at))+(m.editedAt?' · edited':'')+'</div><div style="white-space:pre-wrap;font-weight:600;margin-top:4px">'+esc(m.text)+'</div>'+(adminEff()?'<div class="pmb"><button type="button" class="btn sm" data-pe="'+esc(m.id)+'">Edit</button><button type="button" class="btn sm" data-pr="'+esc(m.id)+'">Remove</button></div>':'')+'</section>').join('');}
+async function msgRemove(id){const ok=await ask({title:'Remove this message?',msg:'It disappears from every card it was pinned on.',ok:'Yes, remove'});if(!ok)return;try{await msgWrite((S.amsgs||[]).filter(m=>m.id!==id));toast('Message removed.');msgRefresh();}catch(e){toast(dbErr(e),true);}}
+function paintPinMsg(){
+  const el=$('#pinMsg');if(!el)return;
+  let ids=[];if(S.view==='area')ids=[S.areaId];else if(S.view==='lab')ids=LABS;else if(S.view==='rm')ids=['__rm'];
+  el.innerHTML=pinHTML(ids);
+  $$('[data-pe]',el).forEach(b=>b.onclick=()=>msgDlg((S.amsgs||[]).find(m=>m.id===b.dataset.pe)));
+  $$('[data-pr]',el).forEach(b=>b.onclick=()=>msgRemove(b.dataset.pr));
+}
+function msgRefresh(){try{paintPinMsg();if(S.view==='admin'&&S.tab==='notices')paintTab();}catch(e){}}
+async function msgWrite(list){await S.db.doc('logs/admin_msgs').set({msgs:list});S.amsgs=list;}
+function msgDlg(em){
+  const T=msgTargets();
+  const w=rmOvl('msgDlg','<h2 style="margin:0 0 6px">'+(em?'Edit message':'Send a message to cards')+'</h2><p class="muted">The message is pinned at the top of each selected card until you remove it.</p>'+
+    '<label class="l">Message<textarea id="mgT" rows="3" maxlength="400" style="width:100%"></textarea></label>'+
+    '<div class="row" style="margin:8px 0"><b>Send to</b><button type="button" class="btn sm" id="mgAll">Select all</button><button type="button" class="btn sm" id="mgNone">Clear</button></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+T.map(t=>'<label class="row small" style="gap:8px;margin:0"><input type="checkbox" class="mgC" value="'+esc(t.id)+'"'+(em&&t.ids.some(i=>(em.to||[]).indexOf(i)>=0)?' checked':'')+'> '+esc(t.name)+'</label>').join('')+'</div>'+
+    '<div class="row" style="margin-top:14px"><button type="button" class="btn big cyan" id="mgX">Cancel</button><button type="button" class="btn pri big" id="mgOk">'+(em?'Save':'Send')+'</button></div>');
+  if(em)$('#mgT').value=em.text;
+  $('#mgX').onclick=()=>w.remove();
+  $('#mgAll').onclick=()=>$$('.mgC',w).forEach(c=>c.checked=true);$('#mgNone').onclick=()=>$$('.mgC',w).forEach(c=>c.checked=false);
+  $('#mgOk').onclick=async()=>{
+    const text=$('#mgT').value.trim();if(!text){toast('Write the message.',true);return;}
+    const sel=$$('.mgC',w).filter(c=>c.checked).map(c=>c.value);if(!sel.length){toast('Select at least one card.',true);return;}
+    const to=[];sel.forEach(v=>{const t=T.find(x=>x.id===v);(t?t.ids:[v]).forEach(i=>{if(to.indexOf(i)<0)to.push(i);});});
+    try{const nm=sel.map(v=>(T.find(x=>x.id===v)||{}).name);
+      if(em){await msgWrite((S.amsgs||[]).map(x=>x.id===em.id?Object.assign({},x,{to:to,toNames:nm,text:text,editedAt:new Date().toISOString()}):x));w.remove();toast('Message saved.');msgRefresh();return;}
+      const m={id:'m'+Date.now(),to:to,toNames:nm,text:text,by:'Admin',at:new Date().toISOString()};
+      await msgWrite([m].concat(S.amsgs||[]).slice(0,30));w.remove();toast('Message sent.');msgRefresh();}catch(e){toast(dbErr(e),true);}
+  };
+}
+
 /* ---------- summary room ---------- */
 function sumDate(){return S.sumDay==='yday'?addDays(S.today,-1):(S.sumDay&&S.sumDay.length===10?S.sumDay:S.today);}
 function sumShifts(){return S.cfg.shifts.slice().sort((a,b)=>ordH(a.start)-ordH(b.start));}
@@ -875,7 +990,7 @@ function paintSummary(){
       else return;
     }else{
       const done={};all.forEach(x=>{done[x.h]=1;});
-      HRS().forEach((h,k)=>{if(k<=lastDue&&inR(h*60)&&!done[h])ms.push(hh(h));});
+      HRS().forEach((h,k)=>{if(k<=lastDue&&inR(h*60)&&!done[h]&&!lineOffAt(a.id,date,h))ms.push(hh(h));});
     }
     miss+=row(lbl,ms.length?'<span class="chip bad">'+ms.length+' missed</span> <span class="muted small">'+esc(ms.join(', '))+'</span>':'<span class="chip ok">none missed</span>');
   });
@@ -893,11 +1008,11 @@ function paintSummary(){
 function renderArea(){
   const a=area(S.areaId);if(!a){go('home');return;}
   S.rd='today';
-  const legend=a.timed?'':'<div class="strip" id="strip" style="margin-top:12px"></div><div class="legend"><span><i style="background:var(--okbg);border-color:var(--ok)"></i>Logged</span><span><i style="background:var(--warnbg);border-color:var(--warn)"></i>Out of range</span><span><i style="background:var(--stopbg);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span></div>';
+  const legend=a.timed?'':'<div class="strip" id="strip" style="margin-top:12px"></div><div class="legend"><span><i style="background:var(--okbg);border-color:var(--ok)"></i>Logged</span><span><i style="background:var(--warnbg);border-color:var(--warn)"></i>Out of range</span><span><i style="background:var(--stopbg);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span><span><i style="background:repeating-linear-gradient(135deg,transparent 0 3px,var(--line) 3px 6px);border-color:var(--line)"></i>Line not running</span></div>';
   $('#main').innerHTML=
-   '<div class="card"><div class="row" style="justify-content:space-between"><div><h2>'+esc(a.name)+' · '+(a.timed?'timed entries':'hourly reading')+'</h2><div class="muted small" id="whenLine"></div></div>'+
+   '<div class="card"><div class="row" style="justify-content:space-between"><div><div class="row" style="gap:12px;flex-wrap:wrap"><h2>'+esc(a.name)+' · '+(a.timed?'timed entries':'hourly reading')+'</h2>'+(isLineTog(a)?'<span class="row" id="lineCtl" style="gap:8px;flex-wrap:wrap"></span>':'')+'</div><div class="muted small" id="whenLine"></div></div>'+
    '<div class="row">'+(adminEff()?'<label class="l" style="width:190px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+(a.timed&&adminEff()?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
-   noticeBoxHTML(a)+
+   '<div id="pinMsg"></div>'+noticeBoxHTML(a)+
    (isPack(a)?'<div id="slotBar"></div>':'')+
    (!hasCard(a)?'':'<section class="card" id="hourCard"><div class="ebar" id="eBar"></div><div id="hourView"></div></section>')+
    '<form class="card'+(hasCard(a)?' emodal':'')+'" id="entry" autocomplete="off" novalidate></form>'+
@@ -906,6 +1021,7 @@ function renderArea(){
   if($('#fDate'))$('#fDate').onchange=e=>{const v=e.target.value;if(!v)return;S.date=v;S.day=null;S.editKey=null;if(v===S.today&&ordH(S.hour)>ordH(nowH()))S.hour=nowH();S.dirty=false;subDay();refreshStrip();renderForm();refreshRecent();};
   if(a.timed&&adminEff())$('#newEntry').onclick=()=>{S.editKey=null;S.dirty=false;if(hasCard(a)){S.entryOpen=true;$('#entry').classList.add('open');}renderForm();window.scrollTo({top:0,behavior:'smooth'});};
   $('#isOpen').onclick=()=>openIssModal(null);
+  paintLineBox();paintPinMsg();
   if(PACK_FROM[a.id])paintNotices();
   if(PRESS_TO_PACK[a.id])paintSent();
   subAreaIssues();subDay();refreshStrip();renderForm();refreshRecent();
@@ -954,7 +1070,7 @@ function refreshStrip(){
   let html='';
   for(const h of HRS()){
     const st=cellState(S.day,S.date,h,a);
-    html+='<button type="button" class="hb '+st+(st==='now'?' now':'')+(h===sel?' sel':'')+'" data-h="'+h+'"'+(st==='future'?' disabled':'')+' aria-label="'+hh(h)+' '+st+'">'+pad(h)+'<small>'+(st==='done'?'logged':st==='alarm'?'alarm':st==='stop'?'stopped':st==='part'?'partial':st==='miss'?'missed':st==='now'?'now':'')+'</small></button>';
+    html+='<button type="button" class="hb '+st+(st==='now'?' now':'')+(h===sel?' sel':'')+'" data-h="'+h+'"'+(st==='future'?' disabled':'')+' aria-label="'+hh(h)+' '+st+'">'+pad(h)+'<small>'+(st==='done'?'logged':st==='alarm'?'alarm':st==='stop'?'stopped':st==='part'?'partial':st==='miss'?'missed':st==='off'?'line off':st==='now'?'now':'')+'</small></button>';
   }
   el.innerHTML=html;
   $$('.hb',el).forEach(b=>b.onclick=()=>{S.hour=Number(b.dataset.h);S.dirty=false;refreshStrip();renderForm();});
@@ -972,7 +1088,7 @@ function hourViewHTML(a){
   const ent=a.timed&&vk?entries(S.day).find(x=>x.k===vk):null;
   const head=a.timed?'<h2 style="margin:0 0 6px">'+(ent?hm(ent.min):'–')+' <span class="muted small" style="font-weight:400">'+esc(ent?shiftOf(ent.h):shiftOf(nowH()))+' · '+S.date+'</span></h2>':'<h2 style="margin:0 0 6px">'+hh(h)+' – '+hh((h+1)%24)+' <span class="muted small" style="font-weight:400">'+esc(shiftOf(h))+' · '+S.date+'</span></h2>';
   if(a.timed&&!e)return head+'<div class="empty">No entries yet for this date. Press Data entry to add one.</div>';
-  if(!e){const st=cellState(S.day,S.date,h,a);return head+'<div class="empty">'+(st==='future'?'This hour has not started yet.':st==='miss'?'No reading was logged for this hour (missed).':'No reading logged yet for this hour. Press Data entry to fill it.')+'</div>';}
+  if(!e){const st=cellState(S.day,S.date,h,a);return head+'<div class="empty">'+(st==='future'?'This hour has not started yet.':st==='off'?'The line was not running in this hour.':st==='miss'?'No reading was logged for this hour (missed).':'No reading logged yet for this hour. Press Data entry to fill it.')+'</div>';}
   const tm=e.at?new Date(e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'';
   const et=e.editedAt?new Date(e.editedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'';
   const info='<div class="row small" style="gap:10px;margin:0 0 12px">Filled by <b>'+esc(e.by)+'</b>'+(tm?' at '+tm:'')+(e.editedBy?'<span class="chip">✎ edited by '+esc(e.editedBy)+(et?' '+et:'')+'</span>':'')+(e.late?'<span class="chip warn">Late entry</span>':'')+(!a.noStatus&&e.run===false?'<span class="chip bad">Stopped '+(e.down||0)+' min'+(e.why?' · '+esc(e.why):'')+'</span>':'')+(e.alarms?'<span class="chip warn">'+e.alarms+' out of range</span>':'')+(e.note?'<span class="muted">“'+esc(e.note)+'”</span>':'')+'</div>';
@@ -1491,7 +1607,8 @@ const TABS=[['overview','Overview'],['trends','Trends & export'],['maint','Maint
 const MTABS=[['issues','Requests'],['maint','Preventive'],['parts','Spare parts'],['done','Recent maintenance done']];
 function renderAdmin(){
   if(!adminEff()){go('home');return;}
-  $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='devices'?' <span class="chip ok" id="devBadge" hidden></span>':'')+'</button>').join('')+'</div><div id="tab"></div>';
+  $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='devices'?' <span class="chip ok" id="devBadge" hidden></span>':'')+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="msgBtn" type="button" style="align-self:center">Send message</button></div><div id="tab"></div>';
+  $('#msgBtn').onclick=()=>msgDlg();
   $$('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;S.setupEditing=false;$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));buildTab();});
   subAdmin();buildTab();paintDevBadge();paintLowBadge();
 }
@@ -1593,7 +1710,10 @@ function paintDevices(){
 function paintNtTab(){
   const el=$('#ntBody');if(!el)return;
   const nl=S.notices.slice().sort((a,b)=>(a.ts<b.ts?1:-1));
-  el.innerHTML='<section class="card"><h2>Press to packaging messages <span class="muted small" style="font-weight:400">last 24 hours</span></h2>'+(nl.length?nl.map(n=>{const open=ntOpen(n),pk=area(PRESS_TO_PACK[n.from]),fa=area(n.from);
+  const am=S.amsgs||[];
+  const adm='<section class="card"><div class="row" style="justify-content:space-between"><h2>Admin messages pinned on cards</h2><button type="button" class="btn pri sm" id="msgNew">Send message</button></div>'+(am.length?am.map(m=>'<div class="ntsent" style="margin:8px 0 0"><div style="white-space:pre-wrap"><b>'+esc(m.text)+'</b></div><div class="muted small">'+esc(dlbl(m.at))+' · to '+esc((m.toNames||m.to||[]).join(', '))+'</div><button type="button" class="btn sm" data-mdel="'+esc(m.id)+'" style="margin-top:6px">Remove</button> <button type="button" class="btn sm" data-medit="'+esc(m.id)+'" style="margin-top:6px">Edit</button></div>').join(''):'<div class="empty">No messages pinned.</div>')+'</section>';
+  setTimeout(()=>{const nb=$('#msgNew');if(nb)nb.onclick=()=>msgDlg();$$('[data-medit]').forEach(b=>b.onclick=()=>msgDlg((S.amsgs||[]).find(m=>m.id===b.dataset.medit)));$$('[data-mdel]').forEach(b=>b.onclick=async()=>{try{await msgWrite((S.amsgs||[]).filter(m=>m.id!==b.dataset.mdel));toast('Message removed.');msgRefresh();}catch(e){toast(dbErr(e),true);}});},0);
+  el.innerHTML=adm+'<section class="card"><h2>Press to packaging messages <span class="muted small" style="font-weight:400">last 24 hours</span></h2>'+(nl.length?nl.map(n=>{const open=ntOpen(n),pk=area(PRESS_TO_PACK[n.from]),fa=area(n.from);
     return '<div class="ntsent'+(open?'':' done')+'" style="margin:8px 0 0">'+esc(dlbl(n.ts))+' · '+esc(fa?fa.name:n.from)+' → '+esc(pk?pk.name:'Packaging')+' · '+esc(ntDetail(n))+(n.edited?' · edited':'')+ntSeenArr(n)+'</div>';}).join(''):'<div class="empty">No messages in the last 24 hours.</div>')+'</section>';
 }
 const ntUnseen=n=>ntOpen(n)&&(!n.seenAt||(n.editedAt&&n.seenAt<n.editedAt));
@@ -1808,7 +1928,7 @@ function dayStats(a,date){
   const lastDue=date<S.today?23:(date===S.today?ordH(nowH())-1:-1);
   let logged=0,missed=0,run=0,down=0,alarms=0,due=0;
   HRS().forEach((h,k)=>{const e=hrs[h];if(e){logged++;if(e.run===false)down+=(e.down||0);else run++;alarms+=e.alarms||0;}
-    if(k<=lastDue){due++;if(!e)missed++;}});
+    if(k<=lastDue){if(!e&&lineOffAt(a.id,date,h))return;due++;if(!e)missed++;}});
   return {logged,missed,run,down,alarms,due};
 }
 function paintOverview(){
@@ -1833,7 +1953,7 @@ function paintOverview(){
     const x=st[i];
     html+='<div class="hrow"><span class="hname">'+esc(a.name)+'</span><div class="hcells">'+cells+'</div><span class="hst">'+(x.timed?x.logged:x.logged+'/'+(x.due||'–'))+'</span><span class="hst'+(x.run?'':' dim')+'">'+x.run+'</span><span class="hst'+(x.down?' stp':' dim')+'">'+(x.down?x.down:'–')+'</span><span class="hst'+(x.missed?' bad':' dim')+'">'+(x.missed?x.missed:'–')+'</span></div>';
   });
-  html+='</div></div><div class="legend"><span><i style="background:var(--ok);border-color:var(--ok)"></i>Logged</span><span><i style="background:var(--warn);border-color:var(--warn)"></i>Out of range</span><span><i style="background:var(--stop);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--okbg);border-style:dashed;border-color:var(--ok)"></i>Partial</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span><span><i></i>Not due (timed areas: lab, RO, packaging)</span></div></section>';
+  html+='</div></div><div class="legend"><span><i style="background:var(--ok);border-color:var(--ok)"></i>Logged</span><span><i style="background:var(--warn);border-color:var(--warn)"></i>Out of range</span><span><i style="background:var(--stop);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--okbg);border-style:dashed;border-color:var(--ok)"></i>Partial</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span><span><i style="background:repeating-linear-gradient(135deg,var(--panel2) 0 3px,var(--line) 3px 6px);border-color:var(--line)"></i>Line not running</span><span><i></i>Not due (timed areas: lab, RO, packaging)</span></div></section>';
   html+=detailHTML();
   html+='<section class="card"><h3>Watch list · last 24 hours</h3>'+watchHTML()+'</section>';
   body.innerHTML=html;
@@ -2473,7 +2593,7 @@ async function clearTest(){
   const sel=$$('input[data-c]').filter(x=>x.checked).map(x=>x.dataset.c);if(!sel.length){toast('Tick at least one item.',true);return;}
   const names={logs:'readings',notices:'messages',issues:'requests',hist:'history records'},cols={logs:'logs',notices:'notices',issues:'issues',hist:'maint_history'},msg=$('#clrMsg');
   msg.textContent='Counting…';const found={};let total=0;
-  try{for(const k of sel){if(!cols[k])continue;const snap=await S.db.collection(cols[k]).get();found[k]=snap.docs;total+=snap.docs.length;}}catch(e){msg.textContent=dbErr(e);return;}
+  try{for(const k of sel){if(!cols[k])continue;const snap=await S.db.collection(cols[k]).get();found[k]=snap.docs.filter(d=>d.id!=='lines_status'&&d.id!=='admin_msgs');total+=found[k].length;}}catch(e){msg.textContent=dbErr(e);return;}
   const parts=Object.keys(found).map(k=>found[k].length+' '+names[k]);if(sel.indexOf('tasks')>=0)parts.push('restart '+S.tasks.length+' maintenance schedule items');
   msg.textContent='';
   if(!await ask({title:'Clear test data?',msg:'This will permanently delete: '+parts.join(', ')+'.',ok:'Yes, continue'}))return;
@@ -2672,6 +2792,8 @@ async function boot(){
     const j=JSON.stringify(c);if(j===S.cfgJ&&S.cfgLoaded)return;
     S.cfg=c;S.cfgJ=j;S.cfgLoaded=true;onCfg();
   },e=>toast(dbErr(e),true));
+  S.db.doc('logs/lines_status').onSnapshot(snap=>{S.lines=snap.exists&&snap.data().offs?snap.data().offs:{};lineRefresh();},e=>{});
+  S.db.doc('logs/admin_msgs').onSnapshot(snap=>{S.amsgs=snap.exists&&snap.data().msgs?snap.data().msgs:[];msgRefresh();},e=>{});
   S.db.doc('config/operators').onSnapshot(snap=>{
     const d=snap.exists?snap.data():null;S.ops=d&&Array.isArray(d.list)?d.list:[];
     if(S.view==='admin'&&S.tab==='setup'&&!S.setupEditing)buildTab();
