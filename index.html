@@ -554,6 +554,7 @@ async function peerStatus(){
 }
 setInterval(()=>{
   try{checkArrivals();}catch(e){}
+  try{msgAlertCheck();paintPinMsg();if(S.view==='admin'&&S.tab==='notices'&&!$('#msgDlg'))paintTab();}catch(e){}
   if(S.dev&&S.acct&&NEED_APPROVAL(S.dev.place)&&!approvalOk()&&!S.dirty){S.dev=null;S.gate='approve';unsub('notices');S.view='home';renderTop();renderHome();return;}
   const t=new Date(),c=$('#clock');if(c)c.innerHTML='<span>'+topDate(t)+'</span><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span>';
   const d=pdate(t);
@@ -888,13 +889,38 @@ function lineEdit(id){
 }
 /* ---------- admin messages pinned on cards ---------- */
 const msgTargets=()=>{const o=[];S.cfg.areas.forEach(a=>{if(LABS.indexOf(a.id)>=0){if(!o.some(x=>x.id==='__lab'))o.push({id:'__lab',name:'Lab Moisture',ids:LABS});}else o.push({id:a.id,name:a.name,ids:[a.id]});});o.push({id:'__rm',name:'Flour & semolina tests',ids:['__rm']});return o;};
-const msgsFor=ids=>(S.amsgs||[]).filter(m=>(m.to||[]).some(t=>ids.indexOf(t)>=0)).sort((a,b)=>a.at<b.at?1:-1);
-function pinHTML(ids){const l=msgsFor(ids);return l.map(m=>'<section class="card slim pinmsg"><div class="muted small">📌 Message from admin · '+esc(dlbl(m.at))+(m.editedAt?' · edited':'')+'</div><div style="white-space:pre-wrap;font-weight:600;margin-top:4px">'+esc(m.text)+'</div>'+(adminEff()?'<div class="pmb"><button type="button" class="btn sm" data-pe="'+esc(m.id)+'">Edit</button><button type="button" class="btn sm" data-pr="'+esc(m.id)+'">Remove</button></div>':'')+'</section>').join('');}
+const msgActive=(m,now)=>{now=now||Date.now();return (!m.from||now>=Date.parse(m.from))&&(!m.until||now<Date.parse(m.until));};
+const hmT=t=>{const d=new Date(t);return pad(d.getHours())+':'+pad(d.getMinutes());};
+function msgWhen(m){const w=m.win||{};if(!m.from&&!m.until)return 'until removed';
+  if(w.mode==='mins')return 'for '+w.mins+' min · until '+hmT(m.until);
+  if(w.mode==='range')return 'from '+hmT(m.from)+' to '+hmT(m.until);
+  return 'until '+hmT(m.until);}
+function msgState(m){const n=Date.now();if(m.from&&n<Date.parse(m.from))return 'scheduled';if(m.until&&n>=Date.parse(m.until))return 'ended';return 'showing';}
+const msgsFor=ids=>(S.amsgs||[]).filter(m=>msgActive(m)&&(m.to||[]).some(t=>ids.indexOf(t)>=0)).sort((a,b)=>a.at<b.at?1:-1);
+function msgRelevant(m){return (m.to||[]).some(t=>{const a=area(t);return a?canSee(a):(t==='__rm'&&S.dev&&(S.dev.place==='lab'||S.dev.place==='all'));});}
+function msgAlertCheck(initial){
+  if(!S.dev||adminEff())return;
+  S.mAl=S.mAl||{};
+  (S.amsgs||[]).forEach(m=>{
+    if(S.mAl[m.id]===m.at+'|'+(m.editedAt||'')||!msgActive(m))return;
+    S.mAl[m.id]=m.at+'|'+(m.editedAt||'');
+    if(initial||!msgRelevant(m))return;
+    showBar('<span class="tx">📌 Message from admin: '+esc(m.text)+'</span>');
+  });
+}
+function msgTimes(w,now){
+  const base=new Date(now);const at=t=>{const [h,m]=t.split(':').map(Number);const d=new Date(base);d.setHours(h,m,0,0);return d;};
+  if(w.mode==='mins'){return {from:new Date(now).toISOString(),until:new Date(now+w.mins*60000).toISOString()};}
+  if(w.mode==='until'){let u=at(w.t2);if(u.getTime()<=now)u=new Date(u.getTime()+864e5);return {from:new Date(now).toISOString(),until:u.toISOString()};}
+  if(w.mode==='range'){let f=at(w.t1),u=at(w.t2);if(u<=f)u=new Date(u.getTime()+864e5);if(u.getTime()<=now){f=new Date(f.getTime()+864e5);u=new Date(u.getTime()+864e5);}return {from:f.toISOString(),until:u.toISOString()};}
+  return {from:null,until:null};
+}
+function pinHTML(ids){const l=msgsFor(ids);return l.map(m=>'<section class="card slim pinmsg"><div class="muted small">📌 Message from admin · '+esc(dlbl(m.at))+' · '+esc(msgWhen(m))+(m.editedAt?' · edited':'')+'</div><div style="white-space:pre-wrap;font-weight:600;margin-top:4px">'+esc(m.text)+'</div>'+(adminEff()?'<div class="pmb"><button type="button" class="btn sm" data-pe="'+esc(m.id)+'">Edit</button><button type="button" class="btn sm" data-pr="'+esc(m.id)+'">Remove</button></div>':'')+'</section>').join('');}
 async function msgRemove(id){const ok=await ask({title:'Remove this message?',msg:'It disappears from every card it was pinned on.',ok:'Yes, remove'});if(!ok)return;try{await msgWrite((S.amsgs||[]).filter(m=>m.id!==id));toast('Message removed.');msgRefresh();}catch(e){toast(dbErr(e),true);}}
 function paintPinMsg(){
   const el=$('#pinMsg');if(!el)return;
   let ids=[];if(S.view==='area')ids=[S.areaId];else if(S.view==='lab')ids=LABS;else if(S.view==='rm')ids=['__rm'];
-  el.innerHTML=pinHTML(ids);
+  const ph=pinHTML(ids);if(el.dataset.h===ph)return;el.dataset.h=ph;el.innerHTML=ph;
   $$('[data-pe]',el).forEach(b=>b.onclick=()=>msgDlg((S.amsgs||[]).find(m=>m.id===b.dataset.pe)));
   $$('[data-pr]',el).forEach(b=>b.onclick=()=>msgRemove(b.dataset.pr));
 }
@@ -902,21 +928,30 @@ function msgRefresh(){try{paintPinMsg();if(S.view==='admin'&&S.tab==='notices')p
 async function msgWrite(list){await S.db.doc('logs/admin_msgs').set({msgs:list});S.amsgs=list;}
 function msgDlg(em){
   const T=msgTargets();
-  const w=rmOvl('msgDlg','<h2 style="margin:0 0 6px">'+(em?'Edit message':'Send a message to cards')+'</h2><p class="muted">The message is pinned at the top of each selected card until you remove it.</p>'+
+  const w=rmOvl('msgDlg','<h2 style="margin:0 0 6px">'+(em?'Edit message':'Send a message to cards')+'</h2><p class="muted">The message is pinned at the top of each selected card for the time you choose below.</p>'+
     '<label class="l">Message<textarea id="mgT" rows="3" maxlength="400" style="width:100%"></textarea></label>'+
+    '<div class="row" style="align-items:flex-end;flex-wrap:wrap;margin-top:8px"><label class="l" style="min-width:210px;margin:0">Show it<select id="mgMode"><option value="always">Until I remove it</option><option value="mins">For a number of minutes</option><option value="until">Until a time</option><option value="range">From – to times</option></select></label>'+
+    '<label class="l" style="width:130px;margin:0" id="mgWm">Minutes<input type="number" id="mgM" min="1" max="1440" value="30"></label><label class="l" style="width:150px;margin:0" id="mgW1">From<input type="time" id="mgT1"></label><label class="l" style="width:150px;margin:0" id="mgW2">Until<input type="time" id="mgT2"></label></div>'+
     '<div class="row" style="margin:8px 0"><b>Send to</b><button type="button" class="btn sm" id="mgAll">Select all</button><button type="button" class="btn sm" id="mgNone">Clear</button></div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+T.map(t=>'<label class="row small" style="gap:8px;margin:0"><input type="checkbox" class="mgC" value="'+esc(t.id)+'"'+(em&&t.ids.some(i=>(em.to||[]).indexOf(i)>=0)?' checked':'')+'> '+esc(t.name)+'</label>').join('')+'</div>'+
     '<div class="row" style="margin-top:14px"><button type="button" class="btn big cyan" id="mgX">Cancel</button><button type="button" class="btn pri big" id="mgOk">'+(em?'Save':'Send')+'</button></div>');
   if(em)$('#mgT').value=em.text;
+  const ew=(em&&em.win)||{mode:'always'};$('#mgMode').value=ew.mode||'always';if(ew.mins)$('#mgM').value=ew.mins;if(ew.t1)$('#mgT1').value=ew.t1;if(ew.t2)$('#mgT2').value=ew.t2;
+  const mm=()=>{const v=$('#mgMode').value;$('#mgWm').style.display=v==='mins'?'':'none';$('#mgW1').style.display=v==='range'?'':'none';$('#mgW2').style.display=v==='until'||v==='range'?'':'none';};$('#mgMode').onchange=mm;mm();
   $('#mgX').onclick=()=>w.remove();
   $('#mgAll').onclick=()=>$$('.mgC',w).forEach(c=>c.checked=true);$('#mgNone').onclick=()=>$$('.mgC',w).forEach(c=>c.checked=false);
   $('#mgOk').onclick=async()=>{
     const text=$('#mgT').value.trim();if(!text){toast('Write the message.',true);return;}
     const sel=$$('.mgC',w).filter(c=>c.checked).map(c=>c.value);if(!sel.length){toast('Select at least one card.',true);return;}
+    const mode=$('#mgMode').value,win={mode:mode};
+    if(mode==='mins'){win.mins=Math.round(Number($('#mgM').value));if(!(win.mins>=1)){toast('Enter the minutes.',true);return;}}
+    if(mode==='until'){win.t2=$('#mgT2').value;if(!win.t2){toast('Choose the time.',true);return;}}
+    if(mode==='range'){win.t1=$('#mgT1').value;win.t2=$('#mgT2').value;if(!win.t1||!win.t2){toast('Choose both times.',true);return;}}
+    const tm=msgTimes(win,Date.now());
     const to=[];sel.forEach(v=>{const t=T.find(x=>x.id===v);(t?t.ids:[v]).forEach(i=>{if(to.indexOf(i)<0)to.push(i);});});
     try{const nm=sel.map(v=>(T.find(x=>x.id===v)||{}).name);
-      if(em){await msgWrite((S.amsgs||[]).map(x=>x.id===em.id?Object.assign({},x,{to:to,toNames:nm,text:text,editedAt:new Date().toISOString()}):x));w.remove();toast('Message saved.');msgRefresh();return;}
-      const m={id:'m'+Date.now(),to:to,toNames:nm,text:text,by:'Admin',at:new Date().toISOString()};
+      if(em){await msgWrite((S.amsgs||[]).map(x=>x.id===em.id?Object.assign({},x,{to:to,toNames:nm,text:text,win:win,from:tm.from,until:tm.until,editedAt:new Date().toISOString()}):x));w.remove();toast('Message saved.');msgRefresh();return;}
+      const m={id:'m'+Date.now(),to:to,toNames:nm,text:text,win:win,from:tm.from,until:tm.until,by:'Admin',at:new Date().toISOString()};
       await msgWrite([m].concat(S.amsgs||[]).slice(0,30));w.remove();toast('Message sent.');msgRefresh();}catch(e){toast(dbErr(e),true);}
   };
 }
@@ -1643,7 +1678,11 @@ function notifyIssues(snap){
 }
 const ago=ts=>{const m=Math.max(0,Math.round((Date.now()-new Date(ts).getTime())/60000));return m<60?m+' min':m<1440?Math.floor(m/60)+' h '+(m%60)+' min':Math.floor(m/1440)+' days';};
 /* ---- press to packaging notices ---- */
-function showBar(html){const el=$('#alertBar');if(!el)return;el.innerHTML=html+'<button type="button" id="alertOk">OK</button>';el.hidden=false;$('#alertOk').onclick=()=>{el.hidden=true;};if(soundOn())beep();}
+function wakeScreen(){
+  try{if(window.fully){if(typeof fully.stopScreensaver==='function')fully.stopScreensaver();if(typeof fully.turnScreenOn==='function')fully.turnScreenOn();if(typeof fully.bringToForeground==='function')fully.bringToForeground();}}catch(e){}
+  try{if(navigator.wakeLock&&navigator.wakeLock.request)navigator.wakeLock.request('screen').then(l=>setTimeout(()=>{try{l.release();}catch(e){}},60000)).catch(()=>{});}catch(e){}
+}
+function showBar(html){const el=$('#alertBar');if(!el)return;wakeScreen();el.innerHTML=html+'<button type="button" id="alertOk">OK</button>';el.hidden=false;$('#alertOk').onclick=()=>{el.hidden=true;};if(soundOn())beep();}
 const fmt12=d=>{d=new Date(d);return pad(d.getHours())+':'+pad(d.getMinutes());};
 const NT_REASONS=['DI change','Power interruption','Breakdown','Product change','Start as new','Other'],NT_STOP=['DI change','Power interruption','Breakdown'];
 const ntWhen=v=>(v&&!isNaN(new Date(v)))?fmt12(v):'?';
@@ -1711,7 +1750,7 @@ function paintNtTab(){
   const el=$('#ntBody');if(!el)return;
   const nl=S.notices.slice().sort((a,b)=>(a.ts<b.ts?1:-1));
   const am=S.amsgs||[];
-  const adm='<section class="card"><div class="row" style="justify-content:space-between"><h2>Admin messages pinned on cards</h2><button type="button" class="btn pri sm" id="msgNew">Send message</button></div>'+(am.length?am.map(m=>'<div class="ntsent" style="margin:8px 0 0"><div style="white-space:pre-wrap"><b>'+esc(m.text)+'</b></div><div class="muted small">'+esc(dlbl(m.at))+' · to '+esc((m.toNames||m.to||[]).join(', '))+'</div><button type="button" class="btn sm" data-mdel="'+esc(m.id)+'" style="margin-top:6px">Remove</button> <button type="button" class="btn sm" data-medit="'+esc(m.id)+'" style="margin-top:6px">Edit</button></div>').join(''):'<div class="empty">No messages pinned.</div>')+'</section>';
+  const adm='<section class="card"><div class="row" style="justify-content:space-between"><h2>Admin messages pinned on cards</h2><button type="button" class="btn pri sm" id="msgNew">Send message</button></div>'+(am.length?am.map(m=>'<div class="ntsent" style="margin:8px 0 0"><div style="white-space:pre-wrap"><b>'+esc(m.text)+'</b></div><div class="muted small">'+esc(dlbl(m.at))+' · '+esc(msgWhen(m))+' · <b>'+esc(msgState(m))+'</b> · to '+esc((m.toNames||m.to||[]).join(', '))+'</div><button type="button" class="btn sm" data-mdel="'+esc(m.id)+'" style="margin-top:6px">Remove</button> <button type="button" class="btn sm" data-medit="'+esc(m.id)+'" style="margin-top:6px">Edit</button></div>').join(''):'<div class="empty">No messages pinned.</div>')+'</section>';
   setTimeout(()=>{const nb=$('#msgNew');if(nb)nb.onclick=()=>msgDlg();$$('[data-medit]').forEach(b=>b.onclick=()=>msgDlg((S.amsgs||[]).find(m=>m.id===b.dataset.medit)));$$('[data-mdel]').forEach(b=>b.onclick=async()=>{try{await msgWrite((S.amsgs||[]).filter(m=>m.id!==b.dataset.mdel));toast('Message removed.');msgRefresh();}catch(e){toast(dbErr(e),true);}});},0);
   el.innerHTML=adm+'<section class="card"><h2>Press to packaging messages <span class="muted small" style="font-weight:400">last 24 hours</span></h2>'+(nl.length?nl.map(n=>{const open=ntOpen(n),pk=area(PRESS_TO_PACK[n.from]),fa=area(n.from);
     return '<div class="ntsent'+(open?'':' done')+'" style="margin:8px 0 0">'+esc(dlbl(n.ts))+' · '+esc(fa?fa.name:n.from)+' → '+esc(pk?pk.name:'Packaging')+' · '+esc(ntDetail(n))+(n.edited?' · edited':'')+ntSeenArr(n)+'</div>';}).join(''):'<div class="empty">No messages in the last 24 hours.</div>')+'</section>';
@@ -1731,7 +1770,7 @@ function paintNtBlock(){
    '<div class="ntb-b"><div class="ntb-big">'+esc(fa?fa.name:n.from)+' stopped '+esc(n.stopFrom||'?')+' – '+esc(n.stopTo||'?')+'</div><div>'+esc((n.reason||'')+(n.details?': '+n.details:''))+'</div><div class="ntb-arr">Product arrives at packaging: <b>'+esc(ntWhen(n.arriveAt))+'</b></div><div class="muted small">Sent by '+esc(n.by||'')+' at '+esc(ntWhen(n.ts))+'</div></div>'+
    '<button type="button" class="btn pri big" id="ntbOk">OK, I have read it</button></div>';
   document.body.appendChild(w);
-  if(soundOn())beep();
+  wakeScreen();if(soundOn())beep();
   $('#ntbOk',w).onclick=async()=>{
     w.style.display='none';
     const who=await ask({title:'Confirm you read it',msg:ntText(n),pw:true,ok:'Confirm'});
@@ -2793,7 +2832,7 @@ async function boot(){
     S.cfg=c;S.cfgJ=j;S.cfgLoaded=true;onCfg();
   },e=>toast(dbErr(e),true));
   S.db.doc('logs/lines_status').onSnapshot(snap=>{S.lines=snap.exists&&snap.data().offs?snap.data().offs:{};lineRefresh();},e=>{});
-  S.db.doc('logs/admin_msgs').onSnapshot(snap=>{S.amsgs=snap.exists&&snap.data().msgs?snap.data().msgs:[];msgRefresh();},e=>{});
+  S.db.doc('logs/admin_msgs').onSnapshot(snap=>{const first=!S.amInit;S.amInit=true;S.amsgs=snap.exists&&snap.data().msgs?snap.data().msgs:[];msgAlertCheck(first);msgRefresh();},e=>{});
   S.db.doc('config/operators').onSnapshot(snap=>{
     const d=snap.exists?snap.data():null;S.ops=d&&Array.isArray(d.list)?d.list:[];
     if(S.view==='admin'&&S.tab==='setup'&&!S.setupEditing)buildTab();
