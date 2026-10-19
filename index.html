@@ -432,7 +432,7 @@ async function evalGate(){
   if(!a.role)return stop('norole');
   if(LOCKED_ROLE(a.role)&&!S.sessionOk){if(!await acquireSession())return stop('refused');}
   if(NEED_APPROVAL(a.role)&&!approvalOk())return stop('approve');
-  S.gate=null;S.dev={place:a.role,at:new Date().toISOString()};S.unlock=null;S.dirty=false;
+  S.gate=null;S.dev={place:a.role,at:new Date().toISOString()};S.unlock=null;S.mLeader=false;S.dirty=false;
   unsub('notices');ensureNoticeSub();beat();renderTop();restoreView();
 }
 async function doSignOut(){
@@ -509,7 +509,7 @@ function renderTop(){
    '<div class="stk2"><span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'No database')+'</span></span>'+
    '<span class="batt" id="batt" hidden></span></div>'+
    '<div class="stk2"><span class="clock" id="clock"><span>'+topDate(t)+'</span><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span></span></div>'+
-   '<button class="bbtn" id="langBtn" data-nolang type="button" title="'+(LANG==='fr'?'Switch to English':'Passer en français')+'">'+(LANG==='fr'?'🌐 EN':'🌐 FR')+'</button>'+(S.dev&&S.view!=='home'&&(S.view!=='mplace'||adminEff())?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+(S.acct?'<button class="bbtn" id="signOut">Sign out</button>':'')+'</header>';
+   '<button class="bbtn" id="langBtn" data-nolang type="button" title="'+(LANG==='fr'?'Switch to English':'Passer en français')+'">'+(LANG==='fr'?'🌐 EN':'🌐 FR')+'</button>'+(S.dev&&S.view!=='home'&&(S.view!=='mplace'||adminEff()||S.mLeader)?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+(S.acct?'<button class="bbtn" id="signOut">Sign out</button>':'')+'</header>';
   const gh=$('#goHome');if(gh)gh.onclick=()=>go('home');
   paintBatt();setBH();
   const so=$('#signOut');if(so)so.onclick=askSignOut;
@@ -587,7 +587,8 @@ function go(view,areaId,tab){
   if(view==='lab'&&!labOK())view='home';
   if(view==='rm'&&!labOK())view='home';
   if(view==='home'&&S.dev&&S.dev.place==='maint')view='mplace';
-  if(view==='mplace'&&!(S.dev&&S.dev.place==='maint')&&!adminEff())view='home';
+  if(view==='mplace'&&!(S.dev&&S.dev.place==='maint')&&!adminEff()&&!S.mLeader)view='home';
+  if(view!=='mplace')S.mLeader=false;
   if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done'&&S.tab!=='parts')S.tab='issues';
   unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');if(view!=='rm')S.rm=null;S.opsDraft=null;S.acctDraft=null;
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
@@ -620,8 +621,8 @@ function renderHome(){
   $('#main').innerHTML='<div><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
    (vis.length||adminEff()?'':'<div class="empty">No areas are set up for this place.</div>')+
-   '<div class="areas">'+cards+(S.dev.place==='all'?'<button class="acard sum" data-a="__ops"><b>Operators and passwords</b><span>Add, remove or change operator passwords</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()?'<button class="acard sum" data-a="__maint"><b>Maintenance</b><span>Requests, preventive maintenance, recent maintenance done</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
-  $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__lab')go('lab');else if(a==='__rm')go('rm');else if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else if(a==='__ops')go('ops');else if(a==='__maint')go('mplace');else go('area',a);});
+   '<div class="areas">'+cards+(S.dev.place==='all'?'<button class="acard sum" data-a="__ops"><b>Operators and passwords</b><span>Add, remove or change operator passwords</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()||['press','pack','lab'].indexOf(S.dev.place)>=0?'<button class="acard sum" data-a="__maint"><b>Maintenance</b><span>Requests, preventive maintenance, recent maintenance done'+(adminEff()?'':' · shift leader password needed')+'</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
+  $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__lab')go('lab');else if(a==='__rm')go('rm');else if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else if(a==='__ops')go('ops');else if(a==='__maint'){if(adminEff()){go('mplace');return;}ask({title:'Maintenance',msg:'A shift leader password is needed to open Maintenance.',pw:true,leaderOnly:true,ok:'Open'}).then(w=>{if(w){S.mLeader=true;go('mplace');}});}else go('area',a);});
 }
 
 /* ---------- merged laboratory (Macaroni left, Spaghetti right) ---------- */
@@ -1649,7 +1650,7 @@ function renderAdmin(){
   subAdmin();buildTab();paintDevBadge();paintLowBadge();
 }
 function renderMplace(){
-  if(!(S.dev&&S.dev.place==='maint')&&!adminEff()){go('home');return;}
+  if(!(S.dev&&S.dev.place==='maint')&&!adminEff()&&!S.mLeader){go('home');return;}
   $('#main').innerHTML='<div class="tabs" role="tablist">'+MTABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="sndBtn" type="button" style="align-self:center"></button></div><div id="tab"></div>';
   $$('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));buildTab();});
   const sb=$('#sndBtn');const paintSnd=()=>{sb.textContent=soundOn()?'Sound: on':'Sound: off';};paintSnd();
