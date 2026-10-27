@@ -207,7 +207,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .fixin{min-width:170px;flex:1}
 .ntline{display:flex;gap:12px;align-items:center;background:var(--bad);color:#fff;padding:8px 12px;border-radius:8px;margin-bottom:8px;font-weight:600}
 .ntline .tx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ntline .btn{background:#fff;color:var(--bad);border-color:#fff;white-space:nowrap}
-.ntline.due{outline:3px solid #fff3;}
+.ntline.due{outline:3px solid #fff3;}.pkcol .ntline{flex-wrap:wrap}.pkcol .ntline .tx{white-space:normal;overflow:visible}.rawban{display:block;width:auto;max-width:100%;text-align:left;margin:0 0 8px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:transparent!important;font-weight:600;font-size:13px;line-height:1.3;cursor:pointer}.rawban:before{content:'';display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;margin-right:8px}.rawban{color:var(--muted,#8a9aa0)}.rawban.ok{border-color:var(--ok);color:var(--ok)}.rawban.warn{border-color:#d9a21b;color:#d9a21b}.rawban.bad{border-color:var(--bad);color:var(--bad)}.rawban.none{display:none}.pkmsg{border:0;background:transparent;font-size:16px;padding:0 4px;cursor:pointer}
 .ntblk{width:min(440px,94vw);padding:0;overflow:hidden;border:3px solid var(--bad)}
 .ntb-h{display:flex;gap:12px;align-items:center;background:var(--bad);color:#fff;padding:12px 16px;font-size:20px}
 .ntb-ico{display:inline-flex;width:38px;height:38px;border-radius:50%;background:#fff;color:var(--bad);align-items:center;justify-content:center;font:800 24px var(--f-d)}
@@ -245,7 +245,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .rawcell.reg{background:rgba(106,154,106,.16);border-left-color:#6a9a6a}
 .rawcell.rawpair .fld{padding:0}
 .shbox{border:1px solid var(--line);border-radius:10px;margin:0 0 12px;overflow:hidden;background:var(--panel2,transparent)}.shbox:nth-of-type(odd){border-left:4px solid #4fa3d9}.shbox:nth-of-type(even){border-left:4px solid #e8a93d}.shhd{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--panel,#0000);border-bottom:1px solid var(--line)}.shbox table{margin:0}
-.pkgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.pkcol{min-width:0}.pkcol .rawcell{margin-bottom:8px}.pkpair{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pkpair .rawcell{padding:6px}.pkpair .fld input,.pkpair .fld select{font-size:15px}.pkt .chip{font-size:10px;padding:1px 6px}.pkby{font-size:10px;font-weight:600}.pkdf{font-size:10px;color:var(--muted,#667);font-family:inherit}.pknew{margin-left:8px;padding:2px 8px;min-height:0;height:26px;font-size:11px;text-transform:none;letter-spacing:0}.pkt td,.pkt th{padding:6px 4px;font-size:13px}
+.pkgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.pkcol{min-width:0}.pkcol .rawcell{margin-bottom:8px}.pkpair{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pkpair .rawcell{padding:6px}.pkpair .fld input,.pkpair .fld select{font-size:15px}.pkt .chip{font-size:10px;padding:1px 6px}.pkby{font-size:10px;font-weight:600}.pkdf{font-size:12px;color:var(--muted,#667);font-family:inherit}.pknew{background:#fff!important;color:#1d1400!important;border:2px solid #1d1400!important;font-weight:700;margin-left:8px;padding:2px 8px;min-height:0;height:26px;font-size:11px;text-transform:none;letter-spacing:0}.pkt td,.pkt th{padding:6px 4px;font-size:13px}
 .rawh.mac{background:#e8a93d;color:#1d1400;border-color:#e8a93d}
 .rawh.spa{background:#4fa3d9;color:#001522;border-color:#4fa3d9}
 .rawh .chip{background:rgba(0,0,0,.2);color:inherit;border-color:rgba(0,0,0,.35)}
@@ -532,7 +532,7 @@ function renderGate(){
     let op=null,seq=0;const ready=()=>{$('#pcGo').disabled=!op;};
     const p=$('#pcPw');
     if(p){p.oninput=async()=>{const my=++seq;op=null;ready();const w=$('#pcWho');w.textContent='';w.className='who';if(!p.value)return;const f=await findOperator(p.value);if(my!==seq)return;
-      if(f&&f.leader){op=f;w.textContent=f.name+' (shift leader)';w.className='who ok';}else if(f){w.textContent='Not a shift leader password';w.className='who bad';}else if(p.value.length>=4){w.textContent='Password not recognised';w.className='who bad';}ready();};p.focus();}
+      if(f&&f.leader){op=f;w.textContent=f.name+' (shift leader)';w.className='who ok';}else if(f){w.textContent='Not a shift leader password';w.className='who bad';}else if(p.value.length>=5){w.textContent='Password not recognised';w.className='who bad';}ready();};p.focus();}
     const go1=()=>{if($('#pcGo').disabled)return;lsSet('plant.appr',JSON.stringify({uid:a.uid,by:op.name,until:nextShiftMs()}));evalGate();};
     $('#pcGo').onclick=go1;$('#main').onkeydown=e=>{if(e.key==='Enter')go1();};
     out();return;
@@ -628,6 +628,7 @@ setInterval(()=>{
   if(S.view==='rm'&&S.rm&&S.rm.rows&&!$('#rmDlg'))paintRmList();
   if(S.view==='raw'&&S.raw){if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;paintRawStatus();if(rawReady()&&!$('#dlg'))paintRawLock();}
   if(S.view==='home')paintRawCard();
+  if(S.view==='packm')paintRawBan();
   if(S.view==='packm'&&S.pk&&!$('#dlg')&&!$('#pkStop'))PKL.forEach(id=>{if(!S.pk.dirty[id]){paintPkList(id);const m=$('#pkf_'+id+' [data-pm]'),e=S.pk.docs[id]?pkEntry(id):null;if(m&&e){const l=editLeft(e);m.className='status '+(l>0?'ok':'bad');m.textContent=l>0?'Saved by '+e.by+'. You can change it for '+left5(l)+' more.':'Saved by '+e.by+'. Locked: only a shift leader can change it now.';}}});
   if(S.view==='lab'&&S.lab){if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;if(S.date!==S.today&&!adminEff()){S.date=S.today;S.lab.edit={};S.lab.dirty={};subLab();}LABS.forEach(id=>{if(!S.lab.dirty[id])paintLabList(id);});}
   if(S.view==='admin'&&(S.tab==='overview'||S.tab==='devices'))paintTab();
@@ -708,12 +709,13 @@ const pkBrand=t=>String(t==null?'–':t).replace(/^(MACARONI|SPAGHETTI)\s*-\s*/,
 function renderPk(){
   S.pk={date:S.today,docs:{pack_mac:null,pack_spa:null},edit:{pack_mac:null,pack_spa:null},dirty:{pack_mac:false,pack_spa:false}};
   $('#main').innerHTML='<div class="card hcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="eyebrow">Production</div><h2>Packaging</h2><div class="muted small">Cartons and production type · time saved automatically · <span id="pkWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="pkDt" value="'+S.pk.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="pkTog"><button type="button" class="btn sm pri" data-d="today">Today</button><button type="button" class="btn sm" data-d="yday">Yesterday</button></div>')+'</div></div>'+
-   '<div id="pinMsg"></div><div class="pkgrid">'+PKL.map(id=>'<section class="pkcol" id="pkc_'+id+'"><h3 class="rawh '+pkCls(id)+'">'+RAW_T[id]+'</h3><div id="pkn_'+id+'"></div><div class="card" id="pkf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="pkr_'+id+'" class="tscroll"></div></div><div id="pkm_'+id+'"></div></section>').join('')+'</div>'+
+   '<button type="button" class="rawban none" id="rawBan"></button><div id="pinMsg"></div><div class="pkgrid">'+PKL.map(id=>'<section class="pkcol" id="pkc_'+id+'"><h3 class="rawh '+pkCls(id)+'">'+RAW_T[id]+'</h3><div id="pkn_'+id+'"></div><div class="card" id="pkf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="pkr_'+id+'" class="tscroll"></div></div><div id="pkm_'+id+'"></div></section>').join('')+'</div>'+
    '<section class="card slim" id="issueBox"><button type="button" class="btn big" id="isOpen" style="width:100%">Report a problem to maintenance</button></section>';
   const dt=$('#pkDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.pk.date=v;pkReset();subPk();};
   $$('#pkTog button').forEach(b=>b.onclick=()=>{const v=b.dataset.d==='yday'?addDays(S.today,-1):S.today;if(S.pk.date===v)return;S.pk.date=v;$$('#pkTog button').forEach(x=>x.classList.toggle('pri',x===b));pkReset();subPk();});
   $('#isOpen').onclick=()=>openIssModal(null);
-  PKL.forEach(id=>paintPkForm(id));subPk();paintPinMsg();paintPkNotices();
+  $('#rawBan').onclick=()=>go('raw');
+  PKL.forEach(id=>paintPkForm(id));subPk();paintPinMsg();paintPkNotices();paintRawBan();
 }
 const pkRo=()=>!adminEff()&&S.pk.date!==S.today;
 function pkReset(){S.pk.docs={pack_mac:null,pack_spa:null};S.pk.edit={pack_mac:null,pack_spa:null};S.pk.dirty={pack_mac:false,pack_spa:false};PKL.forEach(id=>{paintPkForm(id);paintPkList(id);});}
@@ -721,6 +723,14 @@ function subPk(){
   const w=$('#pkWhen');if(w)w.textContent='production day '+S.pk.date;
   if(!S.db){PKL.forEach(id=>{S.pk.docs[id]={hours:{}};paintPkList(id);});return;}
   PKL.forEach((id,i)=>resub(i?'pkS':'pkM',()=>S.db.doc('logs/'+id+'_'+S.pk.date).onSnapshot(snap=>{S.pk.docs[id]=snap.exists?snap.data():{hours:{}};paintPkList(id);if(!S.pk.dirty[id])paintPkForm(id);},e=>toast(dbErr(e),true))));
+}
+function paintRawBan(){
+  const el=$('#rawBan');if(!el)return;
+  const inf=rawInfo(S.today);
+  if(!inf){el.className='rawban none';return;}
+  if(inf.open)el.textContent='Raw materials open · closes in '+inf.left+' min ('+t12(inf.sl.e)+')';
+  else el.textContent='Raw materials closed · opens in '+durTxt(inf.wait)+' ('+t12(inf.sl.s)+')';
+  el.className='rawban '+(inf.open?(inf.left<=15?'bad':'ok'):(inf.wait<=40?'warn':''));
 }
 function pkEntry(id){const k=S.pk.edit[id],d=S.pk.docs[id];return k&&d&&d.hours&&d.hours[k]?d.hours[k]:null;}
 function pkLastType(id){
@@ -759,6 +769,7 @@ function pkStopDlg(id,e){
     $('#psOk').onclick=()=>{if(!TT($('#psA').value)||!TT($('#psB').value)){toast('Enter the time stopped and the time started again (24h, like 15:30).',true);return;}calc();const o={stopAt:$('#psA').value,startAt:$('#psB').value,down:Math.max(0,Math.min(720,Number($('#psD').value)||0)),why:$('#psW').value,note:($('#psN').value||'').trim()};w.remove();res(o);};
   });
 }
+const pkKeyMin=k=>k.charAt(0)==='s'?Math.floor(Number(k.slice(1))/60):Number(k.slice(1))*60;
 function paintPkList(id){
   const el=$('#pkr_'+id);if(!el||!S.pk)return;
   const d=S.pk.docs[id];
@@ -769,13 +780,17 @@ function paintPkList(id){
   let tot=0;
   const rows=es.map(x=>{const e=x.e,v=e.v||{},gp=gaps[x.k]!=null?gapTxt(gaps[x.k]):'';
     const by='<b class="pkby">'+esc(String(e.by||'').split(' ')[0])+'</b>'+(e.editedBy?' <span class="edi" title="Edited by '+esc(e.editedBy)+'">✎</span>':'')+chip(e);
-    const nt=e.note?' <span class="edi" title="'+esc(e.note)+'">✉</span>':'';
+    const nt=e.note?' <button type="button" class="pkmsg" data-note="'+esc(x.k)+'" aria-label="Read comment">✉</button>':'';
     const canE=!ro&&(adminEff()||leaderActive()||unlockOn()||editLeft(e)>0);const cls=(canE?'clk':'')+(e.run===false?' stp':'')+(S.pk.edit[id]===x.k?' sel':'');
-    if(e.run===false)return '<tr class="'+cls+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <div class="mono stt">'+esc(stopTimes(e))+'</div>'+nt+'</td><td>'+by+(ro?'':((editLeft(e)>0||adminEff()||leaderActive()||unlockOn())?'<button type="button" class="delstop" data-k="'+esc(x.k)+'" aria-label="Delete stoppage record">🗑</button>':''))+'</td></tr>';
+    if(e.run===false)return '<tr class="'+cls+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <span class="mono stt">'+esc(stopTimes(e))+'</span>'+nt+'</td><td>'+by+(ro?'':((editLeft(e)>0||adminEff()||leaderActive()||unlockOn())?'<button type="button" class="delstop" data-k="'+esc(x.k)+'" aria-label="Delete stoppage record">🗑</button>':''))+'</td><td class="n"></td></tr>';
     const c=num(v.pallets);if(c!=null)tot+=c;
-    return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+(gp?'<div class="pkdf">'+gp+'</div>':'')+'</td><td class="mono">'+(c==null?'–':fmtN(c))+'</td><td>'+esc(pkBrand(v.ptype))+nt+'</td><td>'+by+(!ro&&gapShort(gaps[x.k])?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" aria-label="Delete reading" title="'+esc(gp)+'">🗑</button>':'')+'</td></tr>';}).join('');
-  el.innerHTML='<table class="elt pkt"><thead><tr><th>Time</th><th>Cartons</th><th>Type</th><th>By</th></tr></thead><tbody>'+rows+'<tr class="tt"><td>Total</td><td class="mono"><b>'+fmtN(tot)+'</b></td><td colspan="2"></td></tr></tbody></table>'+(ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to change it.</p>');
+    return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(c==null?'–':fmtN(c))+'</td><td>'+esc(pkBrand(v.ptype))+nt+'</td><td>'+by+(!ro&&gapShort(gaps[x.k])?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" aria-label="Delete reading" title="'+esc(gp)+'">🗑</button>':'')+'</td><td class="n pkdf">'+gp+'</td></tr>';}).join('');
+  el.innerHTML='<table class="elt pkt" style="white-space:nowrap"><thead><tr><th>Time</th><th>Cartons</th><th>Type</th><th>By</th><th class="n">Diff</th></tr></thead><tbody>'+rows+'<tr class="tt"><td>Total</td><td class="mono"><b>'+fmtN(tot)+'</b></td><td colspan="3"></td></tr></tbody></table>'+(ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to change it.</p>');
   el.querySelectorAll('.delstop').forEach(b=>b.onclick=ev=>{ev.stopPropagation();(b.classList.contains('delgap')?pkDelGap:pkDelStop)(id,b.dataset.k);});
+  el.querySelectorAll('.pkmsg').forEach(b=>b.onclick=ev=>{ev.stopPropagation();const e=d.hours[b.dataset.note];if(!e)return;
+    const old=$('#pkNote');if(old)old.remove();const w=document.createElement('div');w.id='pkNote';w.className='ovl';
+    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:420px"><h2>Comment · '+esc(RAW_T[id])+'</h2><div class="muted small">'+esc(hm(pkKeyMin(b.dataset.note)))+' · '+esc(e.by||'')+'</div><p style="white-space:pre-wrap;font-size:18px;margin:10px 0 0">'+esc(e.note)+'</p></div>';
+    document.body.appendChild(w);w.onclick=()=>w.remove();setTimeout(()=>{if(w.parentNode)w.remove();},3000);});
   $$('tr.clk',el).forEach(r=>r.onclick=async()=>{S.pk.edit[id]=r.dataset.k;S.pk.dirty[id]=false;paintPkForm(id);paintPkList(id);const e=d.hours[r.dataset.k];if(e&&e.run===false){const sv=await pkStopDlg(id,e);if(sv)pkSave(id,sv);}});
 }
 async function pkDelStop(id,key){
@@ -1349,7 +1364,7 @@ function pinHTML(ids){const l=msgsFor(ids);return l.map(m=>'<section class="card
 async function msgRemove(id){const ok=await ask({title:'Remove this message?',msg:'It disappears from every card it was pinned on.',ok:'Yes, remove'});if(!ok)return;try{await msgWrite((S.amsgs||[]).filter(m=>m.id!==id));toast('Message removed.');msgRefresh();}catch(e){toast(dbErr(e),true);}}
 function paintPinMsg(){
   const el=$('#pinMsg');if(!el)return;
-  let ids=[];if(S.view==='area')ids=[S.areaId];else if(S.view==='lab')ids=LABS;else if(S.view==='rm')ids=['__rm'];
+  let ids=[];if(S.view==='area')ids=[S.areaId];else if(S.view==='lab')ids=LABS;else if(S.view==='rm')ids=['__rm'];else if(S.view==='packm'||S.view==='raw')ids=PKL;
   const ph=pinHTML(ids);if(el.dataset.h===ph)return;el.dataset.h=ph;el.innerHTML=ph;
   $$('[data-pe]',el).forEach(b=>b.onclick=()=>msgDlg((S.amsgs||[]).find(m=>m.id===b.dataset.pe)));
   $$('[data-pr]',el).forEach(b=>b.onclick=()=>msgRemove(b.dataset.pr));
@@ -1637,7 +1652,7 @@ function ask(o){
       if(noOps){const n=$('#dName');n.oninput=()=>{$('#dYes').disabled=!n.value.trim();};n.focus();}
       else{const p=$('#dPw');let seq=0;p.oninput=async()=>{const my=++seq;op=null;$('#dYes').disabled=true;const who=$('#dWho');who.textContent='';who.className='who';if(!p.value)return;const f=await findOperator(p.value);if(my!==seq)return;
         if(f&&o.leaderOnly&&!f.leader){who.textContent='Not a shift leader password';who.className='who bad';}
-        else if(f){op=f;who.textContent='Signed in as '+f.name+(f.leader?' (shift leader)':f.labHead?' (lab head)':'');who.className='who ok';$('#dYes').disabled=false;}else if(p.value.length>=4){who.textContent='Password not recognised';who.className='who bad';}};p.focus();}
+        else if(f){op=f;who.textContent='Signed in as '+f.name+(f.leader?' (shift leader)':f.labHead?' (lab head)':'');who.className='who ok';$('#dYes').disabled=false;}else if(p.value.length>=5){who.textContent='Password not recognised';who.className='who bad';}};p.focus();}
     }else $('#dYes').focus();
   });
 }
@@ -2154,7 +2169,7 @@ function showBar(html){const el=$('#alertBar');if(!el)return;wakeScreen();el.inn
 const fmt12=d=>{d=new Date(d);return pad(d.getHours())+':'+pad(d.getMinutes());};
 const NT_REASONS=['DI change','Power interruption','Breakdown','Product change','Start as new','Other'],NT_STOP=['DI change','Power interruption','Breakdown'];
 const ntWhen=v=>(v&&!isNaN(new Date(v)))?fmt12(v):'?';
-const ntDetail=n=>{if(!n.arriveAt)return n.text||'';const rt=(n.reason||'')+(n.details?': '+n.details:''),st=(n.stopFrom&&n.stopTo)?'stopped '+n.stopFrom+'–'+n.stopTo:(n.stopTo?'started '+n.stopTo:'');return (n.stick?'stick '+n.stick+' · ':'')+(st?st+' ('+rt+')':rt)+' · arrives '+ntWhen(n.arriveAt);};
+const ntDetail=n=>{if(!n.arriveAt)return n.text||'';const rt=(n.reason||'')+(n.details?': '+n.details:''),st=(n.stopFrom&&n.stopTo)?'stopped '+n.stopFrom+'–'+n.stopTo:(n.stopTo?'started '+n.stopTo:'');return (n.stick?'stick '+n.stick+(n.stickD!=null?' ('+(n.stickD>0?'+':'')+n.stickD+')':'')+' · ':'')+(st?st+' ('+rt+')':rt)+' · arrives '+ntWhen(n.arriveAt);};
 const ntText=n=>{const fa=area(n.from);return (fa?fa.name:n.from)+(n.arriveAt?' ':': ')+ntDetail(n);};
 const ntLine=n=>esc(ntText(n));
 const ntOpen=n=>n.status==='open';
@@ -2277,6 +2292,8 @@ function checkArrivals(){
     S.arrAl[n.id]=n.arriveAt;
     showBar('<span class="tx">'+(p==='press'?'Arrival time reached at packaging: ':'Arrival time reached — product from press: ')+ntLine(n)+'</span>');
   });
+  /* keep sounding every minute while a due notice is still not marked as arrived */
+  if(S.dev.place!=='press'&&soundOn()&&S.notices.some(n=>ntOpen(n)&&n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now())&&Date.now()-(S.arrRep||0)>=60000){if(S.arrRep){wakeScreen();beep();}S.arrRep=Date.now();}
   paintNoticeUI();
 }
 function noticeBoxHTML(a){
@@ -2310,6 +2327,10 @@ function paintSent(){
   const mh=$('#msgHist');if(mh)mh.innerHTML=hist.length?'<section class="card slim"><h3>Messages sent to packaging · arrived</h3>'+hist.map(row).join('')+'</section>':'';
   $$('button[data-ne]',el).forEach(b=>b.onclick=()=>startNtEdit(b.dataset.ne));
 }
+function stickPrev(exId,beforeTs){
+  const l=S.notices.filter(x=>x.from===S.areaId&&x.id!==exId&&x.stick!=null&&x.stick!==''&&!isNaN(Number(x.stick))&&(!beforeTs||x.ts<beforeTs)).sort((a,b)=>(a.ts<b.ts?1:-1));
+  return l.length?l[0]:null;
+}
 function openNtModal(id){
   const old=$('#ntDlg');if(old)old.remove();
   const n=id?S.notices.find(x=>x.id===id):null;
@@ -2319,13 +2340,15 @@ function openNtModal(id){
   const tdOn=!!(n&&n.stopFrom&&n.stopTo&&NT_STOP.indexOf(n.reason)<0);
   w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:560px"><h2>'+(n?'Edit the message to packaging':'Notify the packaging team')+'</h2>'+
    '<div class="ntrow"><label class="l">Reason<select id="ntWhy" style="width:190px">'+NT_REASONS.map(r=>'<option'+(n&&n.reason===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></label>'+
-   (S.areaId==='macaroni'?'':'<label class="l">Stick number (required)<input type="text" id="ntStick" inputmode="numeric" maxlength="8" value="'+esc(n&&n.stick||'')+'"></label>')+'</div>'+
+   (S.areaId==='macaroni'?'':'<label class="l">Stick number (required)<input type="text" id="ntStick" inputmode="numeric" maxlength="8" value="'+esc(n&&n.stick||'')+'"><span class="small" id="ntStickD" style="font-weight:700"></span></label>')+'</div>'+
    '<label class="chkl" id="ntTdW" style="display:flex;gap:12px;align-items:center"><input type="checkbox" id="ntTd"'+(tdOn?' checked':'')+' style="width:24px;height:24px"><span>Enable time duration</span></label>'+
    '<div class="ntrow"><label class="l" id="ntFromW">Stopped at<input type="time" id="ntFrom" value="'+esc(n&&n.stopFrom||'')+'"></label><label class="l" id="ntToW">Started at<input type="time" id="ntTo" value="'+esc(n&&n.stopTo||'')+'"></label>'+
    '<label class="l">Product arrives at<input type="time" id="ntArr" value="'+(d&&!isNaN(d)?pad(d.getHours())+':'+pad(d.getMinutes()):'')+'"></label></div>'+
    '<label class="l">More details (optional)<input type="text" id="ntTx" value="'+esc(n&&n.details||'')+'"></label>'+
    '<div class="row" style="margin-top:6px"><button type="button" class="btn big cyan" id="ntCancel">Cancel</button><button type="button" class="btn pri big" id="ntSend">'+(n?'Save changes':'Notify packaging')+'</button></div></div>';
   document.body.appendChild(w);
+  {const si=$('#ntStick',w);if(si){const pv=stickPrev(n&&n.id,n&&n.ts),upd=()=>{const el=$('#ntStickD',w),v=Number(si.value);if(!pv||si.value===''||isNaN(v)){el.textContent=pv?'last: '+pv.stick:'';return;}const d=v-Number(pv.stick);el.textContent=(d>0?'+':'')+d+' since last (stick '+pv.stick+')';el.style.color=d<0?'var(--bad)':'var(--ok)';};si.oninput=upd;upd();}}
+  
   $('#ntCancel').onclick=endNtEdit;$('#ntSend').onclick=sendNotice;ntSync();$('#ntWhy').onchange=ntSync;$('#ntTd').onchange=ntSync;
 }
 function ntSync(){
@@ -2360,7 +2383,7 @@ async function sendNotice(){
       await S.db.doc('notices/'+editing.id).update({stopFrom:f,stopTo:t,stick:stick,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),edited:true,editedBy:who.name,editedAt:new Date().toISOString()});
       endNtEdit();toast('Message updated.');
     }else{
-      const doc={from:S.areaId,to:to,stopFrom:f,stopTo:t,stick:stick,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),by:who.name,ts:new Date().toISOString(),status:'open'};
+      const sp=stick?stickPrev(null,null):null,sd=sp?Number(stick)-Number(sp.stick):null;const doc={from:S.areaId,to:to,stopFrom:f,stopTo:t,stick:stick,stickD:(sd==null||isNaN(sd))?null:sd,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),by:who.name,ts:new Date().toISOString(),status:'open'};
       await S.db.collection('notices').add(doc);endNtEdit();toast('Packaging team notified.');
     }
     if(warn.length)showBar('<span class="tx">NO CONNECTION: '+esc(warn.join(' and '))+'. Go to the packaging team and tell them about the stop yourself.</span>');
@@ -2747,7 +2770,8 @@ function prRawTable(a,es,rg,slots,ids,title,tot){
     return '<tr><td class="pl">'+esc(p.label)+' <span class="pu2">'+esc(p.unit)+'</span></td>'+slots.map(sl=>{const v=prSlotVal(a,es,rg,sl,p.id),b=slotBrand(es,sl,p);return '<td>'+(v==null?'':esc(fmtN(v))+(b?'<div class="brn">'+esc(b)+'</div>':''))+'</td>';}).join('')+(tot?'<td class="tc">'+(sum==null?'':esc(fmtN(sum)))+'</td>':'')+'</tr>';}).join('');
   return '<table class="prg prr">'+head+'<tbody>'+body+'</tbody></table>';
 }
-function prPack(date,docs,rg){
+function prPack(date,docs,rg,shift){
+  const night=shift==='night',sm=night?'night':'day';
   const am=area('pack_mac'),as=area('pack_spa'),em=entries(docs[0]),es=entries(docs[1]);
   const ran=[em,es].map(l=>l.some(x=>x.e&&x.e.v&&x.e.v.pallets!=null));
   const anyV=l=>l.some(x=>x.e&&x.e.v&&Object.keys(x.e.v).some(k=>x.e.v[k]!=null&&x.e.v[k]!==''));
@@ -2757,17 +2781,18 @@ function prPack(date,docs,rg){
   if(!ran[0]&&!ran[1]&&!hasR)return '';
   const mid=['regr_used','regr_prod'],side=['film_waste','film_waste2','scotch','dmg_carton','flour','semolina'],nt={label:'Night total',slots:nsl};
   const nm=a=>a.name.replace(/^Packaging · /,'');
-  let prod,raw;
-  if(ran[0]&&ran[1]){
-    prod=[prPackSide(am,em,'both',nm(am)),prPackSide(as,es,'both',nm(as))];
-    raw=[prRawTable(am,em,rg,slots,side,nm(am),nt),prRawTable(am,em,rg,slots,mid,'Regrinding',nt),prRawTable(as,es,rg,slots,side,nm(as),nt)];
+  const ssl=night?nsl:dsl,tt=night?{label:'Total',slots:nsl}:null,sn=night?'Night shift':'Day shift';
+  let prod,raw,two=ran[0]&&ran[1];
+  if(two){
+    prod=[prPackSide(am,em,sm,nm(am)+' · '+sn),prPackSide(as,es,sm,nm(as)+' · '+sn)];
+    raw=[prRawTable(am,em,rg,ssl,side,nm(am),tt),prRawTable(am,em,rg,ssl,mid,'Regrinding',null),prRawTable(as,es,rg,ssl,side,nm(as),tt)];
   }else{
     const a=ran[0]||!ran[1]?am:as,e=a===am?em:es;
-    prod=[prPackSide(a,e,'day',nm(a)+' · Day shift'),prPackSide(a,e,'night',nm(a)+' · Night shift')];
-    raw=[prRawTable(a,e,rg,dsl,side,nm(a)+' · Day',null),prRawTable(a,e,rg,slots,mid,'Regrinding',nt),prRawTable(a,e,rg,nsl,side,nm(a)+' · Night',{label:'Total',slots:nsl})];
+    prod=[prPackSide(a,e,sm,nm(a)+' · '+sn)];
+    raw=[prRawTable(a,e,rg,ssl,side,nm(a),tt),prRawTable(a,e,rg,ssl,mid,'Regrinding',null)];
   }
-  return '<section class="prsheet pp">'+prHead('Packaging',date,'24 hours · day and night')+
-   '<div class="prtwo">'+prod.map(x=>'<div>'+x+'</div>').join('')+'</div>'+
+  return '<section class="prsheet pp">'+prHead('Packaging',date,night?'Night shift · 19:00 – 07:00':'Day shift · 07:00 – 19:00')+
+   '<div class="prtwo"'+(two?'':' style="grid-template-columns:1fr"')+'>'+prod.map(x=>'<div>'+x+'</div>').join('')+'</div>'+
    '<h2 class="prs wide">Raw materials and wastage</h2><div class="prraw n'+(ran[0]&&ran[1]?'4':'x')+'">'+raw.map(x=>'<div>'+x+'</div>').join('')+'</div>'+prFoot()+'</section>';
 }
 async function prBuild(type,dates,shiftSel){
@@ -2778,14 +2803,14 @@ async function prBuild(type,dates,shiftSel){
     if(type==='boiler'){return prBoiler(area('boiler'),date,await get('boiler_'+date));}
     if(type==='ro'){return prRO(area('ro'),date,await get('ro_'+date));}
     if(type==='lab'){return prLab(date,await Promise.all([get('lab_mac_'+date),get('lab_spa_'+date)]));}
-    if(type==='pack'){const ds=await Promise.all([get('pack_mac_'+date),get('pack_spa_'+date),get('regr_'+date)]);return prPack(date,ds,ds[2]);}
+    if(type==='pack'){const ds=await Promise.all([get('pack_mac_'+date),get('pack_spa_'+date),get('regr_'+date)]);return want.map(n=>prPack(date,ds,ds[2],n?'night':'day')).join('');}
     return '';}));
   return out.join('');
 }
 function printDlg(){
   if(!canPrint())return;
   const old=$('#dlg');if(old)old.remove();
-  const id=S.areaId||'',cur=S.view==='area'?(id==='macaroni'||id==='spaghetti'||id==='boiler'||id==='ro'?id:id.indexOf('pack_')===0?'pack':id.indexOf('lab_')===0?'lab':'macaroni'):S.view==='lab'?'lab':'macaroni';
+  const id=S.areaId||'',cur=S.view==='area'?(id==='macaroni'||id==='spaghetti'||id==='boiler'||id==='ro'?id:id.indexOf('pack_')===0?'pack':id.indexOf('lab_')===0?'lab':'macaroni'):S.view==='lab'?'lab':(S.view==='packm'||S.view==='raw')?'pack':'macaroni';
   const w=document.createElement('div');w.id='dlg';w.className='ovl';
   const dt=(S.view==='area'||S.view==='lab')&&S.date?S.date:S.today;
   w.innerHTML='<div class="dlg prdlg" role="dialog" aria-modal="true"><h2>Print logbook</h2><div class="muted small">One area at a time. Press, Boiler and RO print on A4 landscape; Packaging and Laboratory on A4 portrait.</div>'+
@@ -2799,7 +2824,9 @@ function printDlg(){
   const load=async()=>{
     const my=++seq,type=$('#pr_t').value,box=$('#pr_p');let f=$('#pr_d').value,t=$('#pr_e').value;
     $('#pr_go').disabled=true;html='';
-    $('#pr_sw').style.display=(type==='macaroni'||type==='spaghetti')?'':'none';
+    const ps=$('#pr_s'),isPk=type==='pack',md=isPk?'pk':'ln';
+    if(ps.dataset.md!==md){ps.dataset.md=md;ps.innerHTML=isPk?'<option value="both">Day and night (2 pages)</option><option value="day">Day shift (07:00 – 19:00)</option><option value="night">Night shift (19:00 – 07:00)</option>':'<option value="both">Day and night</option><option value="day">Day only</option><option value="night">Night only</option>';ps.value='both';}
+    $('#pr_sw').style.display=(type==='macaroni'||type==='spaghetti'||isPk)?'':'none';
     const rng=type==='ro';$('#pr_ew').style.display=rng?'':'none';$('#pr_dl').textContent=rng?'From (production day)':'Production day';
     if(!f){box.innerHTML='<div class="muted small">Choose a day.</div>';return;}
     if(!rng)t=f;else if(!t||t<f){t=f;$('#pr_e').value=t;}
@@ -3002,7 +3029,7 @@ function stockDlg(o){
     document.addEventListener('keydown',onKey);
     w.oninput=async e=>{$('#sd_err').hidden=true;
       if(e.target.id==='sd_pw'){const my=++seq,p=e.target.value;op=null;ready();const wh=$('#sd_who');wh.textContent='';wh.className='who';if(!p)return;const f=await findOperator(p);if(my!==seq)return;
-        if(f){op=f;wh.textContent='Signed in as '+f.name;wh.className='who ok';}else if(p.length>=4){wh.textContent='Password not recognised';wh.className='who bad';}}
+        if(f){op=f;wh.textContent='Signed in as '+f.name;wh.className='who ok';}else if(p.length>=5){wh.textContent='Password not recognised';wh.className='who bad';}}
       ready();};
     w.onchange=ready;
     $('#sd_no').onclick=()=>done(null);
@@ -3373,7 +3400,7 @@ function opDlg(o){
     w.oninput=async e=>{
       $('#od_err').hidden=true;
       if(e.target.id==='od_lead'){const my=++seq,p=e.target.value;lead=null;ready();const who=$('#od_who');who.textContent='';who.className='who';if(!p)return;const f=await findOperator(p);if(my!==seq)return;
-        if(f&&f.leader){lead=f;who.textContent=f.name+' (shift leader)';who.className='who ok';}else if(f){who.textContent='Not a shift leader password';who.className='who bad';}else if(p.length>=4){who.textContent='Password not recognised';who.className='who bad';}}
+        if(f&&f.leader){lead=f;who.textContent=f.name+' (shift leader)';who.className='who ok';}else if(f){who.textContent='Not a shift leader password';who.className='who bad';}else if(p.length>=5){who.textContent='Password not recognised';who.className='who bad';}}
       ready();
     };
     w.onclick=e=>{const t=e.target.closest&&e.target.closest('.pwt');if(!t)return;const inp=t.previousElementSibling,show=inp.type==='password';inp.type=show?'text':'password';t.textContent=show?'Hide':'Show';inp.focus();};
