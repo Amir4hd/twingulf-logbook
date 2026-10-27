@@ -231,6 +231,27 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .mx th.sl{text-align:center;font-size:12px;white-space:nowrap}.mx th.sl.warn{background:var(--warnbg)}.mx th.sl.bad{background:var(--badbg)}.mx th.sl.ok{background:var(--okbg)}.mx td.n{text-align:right}
 @keyframes blk{50%{opacity:.55}}.blink{animation:blk 1.2s infinite}
 .ntsent.done{background:var(--panel2);color:var(--mut);border-left-color:var(--line)}.ntsent.due{background:var(--badbg);color:var(--bad);border-left-color:var(--bad);font-weight:600}
+.prbtn{white-space:nowrap}
+.prdlg{max-width:1000px;width:100%}.prdlg .prctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.prprev{background:#d9d9d9;padding:12px;border-radius:8px;max-height:50vh;overflow:auto}
+.prsheet{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;padding:14px 16px;margin:0 auto 12px;max-width:none;zoom:.62;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.prsheet.pl{width:1050px}.prsheet.pp{width:730px;zoom:.8}
+.prsheet h1{font-size:18px;margin:0}.prsheet .prp{font-size:12px}.prsheet .prh{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:8px;gap:12px}.prsheet .prh>div:last-child{font-size:12px;text-align:right}
+.prsheet table{border-collapse:collapse;width:100%;table-layout:fixed;margin-bottom:8px;font-size:10.5px}
+.prsheet th,.prsheet td{border:1px solid #000;padding:2px 3px;text-align:center;overflow:hidden;vertical-align:middle;white-space:nowrap}
+.prsheet th.pl,.prsheet td.pl{text-align:left;font-weight:600;white-space:normal}.prsheet td.pu{font-size:9px;color:#333}.prsheet .sh{font-weight:400;font-size:8.5px}
+.prsheet th.bnd{background:#d0d0d0;font-size:11px}.prsheet .sep{border-left:3px solid #000}
+.prsheet td.op{font-size:9px}.prsheet td.nn{font-size:8.5px;text-align:left}
+.prsheet tr.pg td{background:#e6e6e6;font-weight:700;text-align:left;font-size:9.5px;text-transform:uppercase}
+.prsheet td.x{font-weight:800;text-decoration:underline}.prsheet td.em{color:#555;font-style:italic}
+.prsheet .brn{font-size:7.5px;font-weight:400;line-height:1}.prsheet td.tc{font-weight:700;background:#f0f0f0}.prsheet tr.tt td{font-weight:700;background:#f0f0f0}
+.prsheet .prsig{display:flex;gap:30px;margin-top:16px;font-size:12px}.prsheet .prsig div{flex:1;border-top:1px solid #000;padding-top:4px}
+.prsheet .prlg{font-size:9.5px;margin-top:2px}
+.prsheet .prtwo{display:grid;grid-template-columns:1fr 1fr;gap:14px}.prsheet h2.prs{font-size:14px;margin:4px 0;text-align:center;border:1px solid #000;background:#eee;padding:3px}
+.prsheet .prraw{display:grid;gap:10px;grid-template-columns:1.1fr .8fr 1.1fr}.prsheet .prraw.n4,.prsheet .prraw.nx{grid-template-columns:1fr 1fr 1fr}.prsheet .prraw table{font-size:9px}.prsheet .prraw table{font-size:10px}.prsheet .prraw th{white-space:normal;font-size:9px;padding:2px 1px}.prsheet .prraw th.sl{width:40px}.prsheet .pu2{font-size:8.5px;color:#333;font-weight:400}.prsheet .prraw tbody td{height:24px}
+.prsheet table.prl tbody td{height:22px}
+#prRoot{display:none}
+@media print{html,body{background:#fff!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important}body>*:not(#prRoot){display:none!important}#prRoot{display:block!important}#prRoot .prsheet{zoom:1;width:100%;box-shadow:none;margin:0;padding:0;break-after:page;page-break-after:always}#prRoot .prsheet:last-child{break-after:auto;page-break-after:auto}#prRoot table{page-break-inside:avoid}#prRoot .prsheet td.x,#prRoot .prsheet tr.pg td,#prRoot .prsheet th.bnd,#prRoot .prsheet h2.prs{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 
 <div id="top"></div>
@@ -276,7 +297,10 @@ const REASONS=['Planned stop','Breakdown','Cleaning / changeover','Material shor
 
 /* ---------- standard setup (used until the admin saves their own in Setup) ---------- */
 const PACK_WIN=[[390,450],[870,930],[1350,1410]];
-const WIN_IDS=['film_waste','scotch','dmg_carton','flour','semolina','regr_used','regr_prod'];
+const WIN_IDS=['film_waste','film_brand','film_waste2','film_brand2','scotch','dmg_carton','flour','semolina','regr_used','regr_prod'];
+const FILM_BRAND={film_waste:'film_brand',film_waste2:'film_brand2'};
+function slotBrand(es,sl,p){const k=FILM_BRAND[p.id];if(!k)return '';const o=[];es.forEach(x=>{if(x.min>=sl.s&&x.min<sl.e&&x.e&&x.e.v&&x.e.v[k]&&num(x.e.v[p.id])!=null&&o.indexOf(x.e.v[k])<0)o.push(x.e.v[k]);});return o.join(', ');}
+const slotBrandHtml=(es,sl,p)=>{const b=slotBrand(es,sl,p);return b?'<div class="muted small">'+esc(b)+'</div>':'';};
 function N(id,label,unit,group,o){o=o||{};const p={id:id,label:label,unit:unit||'',min:null,max:null,group:group||'',total:!!o.total,kind:o.kind||'num',calc:o.calc||'',options:o.options||[]};if(WIN_IDS.indexOf(id)>=0&&o.pack)p.win=PACK_WIN;if(o.opt)p.opt=true;if(o.sm)p.sm=true;return p;}
 const BRANDS=['AL-TAJ','AL-AMERA','KHAYR','FAMI','HADHIMO','LUIGI','MAIDA'];
 function migrateCfg(c){
@@ -291,6 +315,7 @@ function migrateCfg(c){
   if(a.id==='ro'){if(!a.params.some(p=>p.id==='ro_comp_hm'))a.params.push(N('ro_comp_hm','RO compressor hour meter','h','Hour meters',{opt:true,sm:true}));if(a.equipment.indexOf('RO compressor')<0)a.equipment.push('RO compressor');}
   if(a.id==='macaroni'||a.id==='spaghetti')a.noStatus=true;
   if(a.id==='pack_mac'||a.id==='pack_spa'){const pre=a.id==='pack_mac'?'MACARONI':'SPAGHETTI';a.params.forEach(p=>{if(p.id==='ptype'&&(p.kind||'text')==='text'){p.kind='select';p.label='Production type';p.options=BRANDS.map(b=>pre+' - '+b);}});}
+  if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='film_brand')){const i=a.params.findIndex(p=>p.id==='film_waste');if(i>=0)a.params.splice(i+1,0,N('film_brand','Film brand','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}),N('film_waste2','Film wastage 2','kg','Film and carton wastage',{total:true,opt:true}),N('film_brand2','Film brand 2','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}));}
   if(String(a.id).indexOf('pack_')===0){a.params.forEach(p=>{if(['flour','semolina','regr_used','regr_prod'].indexOf(p.id)>=0&&p.unit==='cartons')p.unit='kg';});a.params=a.params.filter(p=>p.id!=='pallet_times');a.params.forEach(p=>{if(p.id==='pallets'){p.label='Cartons completed';p.unit='cartons';}});a.params.forEach(p=>{if(WIN_IDS.indexOf(p.id)>=0)p.win=PACK_WIN;});}});return c;}
 const C_='°C',H_='%RH';
 function sensors(list){return list.map(c=>{const t=c.slice(-1);if(t==='T'||t==='H')return N('s'+c.toLowerCase(),c+(t==='T'?' temp':' humidity'),t==='T'?C_:H_,'Dryer temperature & humidity');return N('s'+c,'Motor '+c+' speed','Hz','Dryer motor speeds');});}
@@ -515,8 +540,9 @@ function renderTop(){
    '<div class="stk2"><span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'No database')+'</span></span>'+
    '<span class="batt" id="batt" hidden></span></div>'+
    '<div class="stk2"><span class="clock" id="clock"><span>'+topDate(t)+'</span><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span></span></div>'+
-   '<button class="bbtn" id="langBtn" data-nolang type="button" title="'+(LANG==='fr'?'Switch to English':'Passer en français')+'">'+(LANG==='fr'?'🌐 EN':'🌐 FR')+'</button>'+(S.dev&&S.view!=='home'&&(S.view!=='mplace'||adminEff()||S.dev.place==='all')?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+(S.acct?'<button class="bbtn" id="signOut">Sign out</button>':'')+'</header>';
+   '<button class="bbtn" id="langBtn" data-nolang type="button" title="'+(LANG==='fr'?'Switch to English':'Passer en français')+'">'+(LANG==='fr'?'🌐 EN':'🌐 FR')+'</button>'+(canPrint()?'<button class="bbtn prbtn" id="prBtn" type="button">🖨 Print</button>':'')+(S.dev&&S.view!=='home'&&(S.view!=='mplace'||adminEff()||S.dev.place==='all')?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+(S.acct?'<button class="bbtn" id="signOut">Sign out</button>':'')+'</header>';
   const gh=$('#goHome');if(gh)gh.onclick=()=>go('home');
+  const pb=$('#prBtn');if(pb)pb.onclick=()=>printDlg();
   paintBatt();setBH();
   const so=$('#signOut');if(so)so.onclick=askSignOut;
 }
@@ -1003,7 +1029,7 @@ function paintSummary(){
     es.forEach(x=>{const v=num(x.e.v&&x.e.v.pallets);if(v!=null){tot+=v;const k=abbr(x.e.v.ptype==null||x.e.v.ptype===''?'Not set':x.e.v.ptype);by[k]=(by[k]||0)+v;}});
     prod+=row(a.name,fmtN(tot)+' cartons')+Object.keys(by).sort().map(k=>row(k,fmtN(by[k])+' cartons',true)).join('');
     raw+='<div class="rawbox rb-'+(a.id==='pack_spa'?'spa':'mac')+'"><h3 style="margin:0 0 2px">'+esc(a.name)+'</h3>';
-    a.params.filter(p=>p.win&&REGR.indexOf(p.id)<0).forEach(p=>{const t=sumP(a,p.id);raw+=row(p.label,(t==null?'–':fmtN(t))+' <span class="muted">'+esc(p.unit)+'</span>');});
+    a.params.filter(p=>p.win&&REGR.indexOf(p.id)<0&&(p.kind||'num')==='num').forEach(p=>{const t=sumP(a,p.id);if(p.opt&&t==null)return;const bk=FILM_BRAND[p.id],bl=[];if(bk)fe(L[a.id+'_'+date]).forEach(x=>{const b=x.e.v&&x.e.v[bk];if(b&&num(x.e.v[p.id])!=null&&bl.indexOf(b)<0)bl.push(b);});raw+=row(p.label+(bl.length?' · '+bl.join(', '):''),(t==null?'–':fmtN(t))+' <span class="muted">'+esc(p.unit)+'</span>');});
     raw+='</div>';
   });
   const rg=L['regr_'+date],rt={};REGR.forEach(id=>{let t=null;if(rg&&rg.slots)Object.keys(rg.slots).forEach(k=>{if(!inR(Number(k.slice(1))))return;const v=num(rg.slots[k][id]);if(v!=null)t=(t||0)+v;});rt[id]=t;});
@@ -1585,7 +1611,7 @@ function refreshPack(a){
   if(el2){
     const cellSum=(sl,p)=>{if(REGR.indexOf(p.id)>=0&&R.regr&&R.regr.slots){const sv=sharedVal(R.regr,sl.s,p.id);if(sv!=null)return sv;}
       let t=null;all.forEach(x=>{if(x.min>=sl.s&&x.min<sl.e){const v=num(x.e.v&&x.e.v[p.id]);if(v!=null)t=Math.max(t||0,0)+v;}});return REGR.indexOf(p.id)>=0&&t!=null?t:t;};
-    el2.innerHTML='<table class="mx"><thead><tr><th></th>'+slots.map((sl,i)=>'<th class="sl '+info[i].cls+'" data-s="'+sl.s+'" style="'+(info[i].st==='done'||Lx0?'cursor:pointer':'')+'">'+winText([[sl.s,sl.e]])+'<div class="chip '+info[i].cls+'" style="margin-top:4px">'+esc(info[i].txt)+'</div></th>').join('')+'<th class="n">Day total</th></tr></thead><tbody>'+wps.map(p=>{let tot=null;const cs=slots.map(sl=>{const v=cellSum(sl,p);if(v!=null)tot=(tot||0)+v;const nod=v==null&&!hasWin(sl);return '<td class="n mono'+(nod&&!Lx0?' nocl':'')+'" data-s="'+sl.s+'" style="'+(nod&&!Lx0?'':'cursor:pointer')+'">'+(v==null?'<span class="muted">–</span>':fmtN(v))+'</td>';}).join('');
+    el2.innerHTML='<table class="mx"><thead><tr><th></th>'+slots.map((sl,i)=>'<th class="sl '+info[i].cls+'" data-s="'+sl.s+'" style="'+(info[i].st==='done'||Lx0?'cursor:pointer':'')+'">'+winText([[sl.s,sl.e]])+'<div class="chip '+info[i].cls+'" style="margin-top:4px">'+esc(info[i].txt)+'</div></th>').join('')+'<th class="n">Day total</th></tr></thead><tbody>'+wps.filter(p=>(p.kind||'num')==='num').map(p=>{let tot=null;const cs=slots.map(sl=>{const v=cellSum(sl,p);if(v!=null)tot=(tot||0)+v;const nod=v==null&&!hasWin(sl);return '<td class="n mono'+(nod&&!Lx0?' nocl':'')+'" data-s="'+sl.s+'" style="'+(nod&&!Lx0?'':'cursor:pointer')+'">'+(v==null?'<span class="muted">–</span>':fmtN(v)+slotBrandHtml(all,sl,p))+'</td>';}).join('');
       return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+'</span></td>'+cs+'<td class="n mono"><b>'+(tot==null?'–':fmtN(tot))+'</b></td></tr>';}).join('')+'</tbody></table><p class="muted small">Filled in three times a day. Regrinding is one shared value for macaroni and spaghetti: fill it on either page and it appears on both.'+(R.ro?'':' Tap a window to open its entry (a shift leader can change it).')+'</p>';
     if(!R.ro)$$('[data-s]',el2).forEach(c=>c.onclick=()=>{const st=Number(c.dataset.s),sl=slots.find(q=>q.s===st);const hit=all.filter(x=>x.min>=sl.s&&x.min<sl.e&&x.e&&x.e.v&&wps.some(p=>x.e.v[p.id]!=null)).pop();
       if(!hit){if(!(unlockOn()||adminEff()||leaderActive()))return;S.editKey=null;S.targetWin={s:sl.s,until:S.unlock?S.unlock.exp:0};S.dirty=false;renderForm();window.scrollTo({top:0,behavior:'smooth'});toast('Fill film, carton and raw material for '+winText([[sl.s,sl.e]])+', then save.');return;}
@@ -2068,7 +2094,7 @@ function ovPackHTML(date){
     const slots=packSlots(a),wps=a.params.filter(p=>p.win),info=slots.map(sl=>packSlotInfo(a,date,all,sl));
     const cellSum=(sl,p)=>{if(REGR.indexOf(p.id)>=0&&rg&&rg.slots){const sv=sharedVal(rg,sl.s,p.id);if(sv!=null)return sv;}
       let t=null;all.forEach(x=>{if(x.min>=sl.s&&x.min<sl.e){const v=num(x.e.v&&x.e.v[p.id]);if(v!=null)t=(t||0)+v;}});return t;};
-    const right='<div class="tscroll"><table class="mx"><thead><tr><th></th>'+slots.map((sl,i)=>'<th class="sl '+info[i].cls+'">'+winText([[sl.s,sl.e]])+'<div class="chip '+info[i].cls+'" style="margin-top:4px">'+esc(info[i].txt)+'</div></th>').join('')+'<th class="n">Day total</th></tr></thead><tbody>'+wps.map(p=>{let tot=null;const cs=slots.map(sl=>{const v=cellSum(sl,p);if(v!=null)tot=(tot||0)+v;return '<td class="n mono">'+(v==null?'<span class="muted">–</span>':fmtN(v))+'</td>';}).join('');
+    const right='<div class="tscroll"><table class="mx"><thead><tr><th></th>'+slots.map((sl,i)=>'<th class="sl '+info[i].cls+'">'+winText([[sl.s,sl.e]])+'<div class="chip '+info[i].cls+'" style="margin-top:4px">'+esc(info[i].txt)+'</div></th>').join('')+'<th class="n">Day total</th></tr></thead><tbody>'+wps.filter(p=>(p.kind||'num')==='num').map(p=>{let tot=null;const cs=slots.map(sl=>{const v=cellSum(sl,p);if(v!=null)tot=(tot||0)+v;return '<td class="n mono">'+(v==null?'<span class="muted">–</span>':fmtN(v)+slotBrandHtml(all,sl,p))+'</td>';}).join('');
       return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+'</span></td>'+cs+'<td class="n mono"><b>'+(tot==null?'–':fmtN(tot))+'</b></td></tr>';}).join('')+'</tbody></table></div>';
     return '<div class="split"><section class="card"><h3>'+esc(a.name)+' · entries on '+date+'</h3>'+left+'</section><section class="card"><h3>'+esc(a.name)+' · film, carton &amp; raw material</h3>'+right+'</section></div>';
   }).join('');
@@ -2213,6 +2239,178 @@ async function exportCsv(){
     await dl.save({filename:ar.id+'_'+f+'_to_'+t+'.csv',data:'﻿'+rows.join('\r\n')});
     msg.textContent=n+' rows exported.';
   }catch(e){msg.textContent=(e&&e.code==='declined')?'Download cancelled.':dbErr(e);}
+}
+
+/* ---- print (shift leaders and admin only) ---- */
+const shortShift=n=>String(n||'').replace(/^shift\s*/i,'');
+const canPrint=()=>!!(S.dev&&(S.dev.place==='all'||adminEff()));
+const PR_TYPES=[['macaroni','Macaroni line','l'],['spaghetti','Spaghetti line','l'],['boiler','Boiler & Chiller','l'],['pack','Packaging','p'],['lab','Laboratory','p'],['ro','Reverse Osmosis','l']];
+function prShifts(){const d0=dayStart();return {d0:d0,d1:(d0+12)%24};}
+function prHours(night){const q=prShifts(),o=[];if(!night){for(let h=q.d0;h!==q.d1;h=(h+1)%24)o.push(h);}else{for(let h=q.d1;h!==q.d0;h=(h+1)%24)o.push(h);}return o;}
+const prIsDay=h=>{const q=prShifts();return ((h-q.d0+24)%24)<12;};
+const prName=night=>night?'Night shift ('+hh(prShifts().d1)+' to '+hh(prShifts().d0)+')':'Day shift ('+hh(prShifts().d0)+' to '+hh(prShifts().d1)+')';
+function prHead(title,date,sub){
+  const by=(S.acct&&S.acct.email?S.acct.email.split('@')[0]:'')||(adminEff()?'Admin':'Shift leader'),t=new Date();
+  return '<div class="prh"><div style="text-align:left"><div class="prp">'+esc(S.cfg.plantName||'')+'</div><h1>'+esc(title)+'</h1></div><div>Production day: <b>'+esc(date)+'</b><br>'+esc(sub||'')+'<br>Printed '+esc(ymd(t)+' '+hm(t.getHours()*60+t.getMinutes()))+' by '+esc(by)+'</div></div>';
+}
+const prFoot=(sig)=>'<div class="prlg">▲ above the limit · ▼ below the limit (bold, underlined) · * corrected afterwards · L late entry</div>'+(sig===false?'':'<div class="prsig"><div>Operator</div><div>Shift leader</div><div>Lab / Manager</div></div>');
+function prVal(p,x,zone,sep){
+  const v=x&&x.v?x.v[p.id]:null;if(v==null||v==='')return '<td'+(sep?' class="sep"':'')+'></td>';
+  if(p.kind==='text'||p.kind==='time'||p.kind==='select')return '<td'+(sep?' class="sep"':'')+'>'+esc(v)+'</td>';
+  const st=pState(p,v,zone),bad=st==='high'||st==='low',cl=(bad?'x ':'')+(sep?'sep':'');
+  return '<td'+(cl?' class="'+cl.trim()+'"':'')+'>'+esc(fmtN(num(v)))+(st==='high'?' ▲':st==='low'?' ▼':'')+'</td>';
+}
+/* cols: [{head,sub,e,band?}] ; e is the saved entry or null */
+function prGrid(a,cols,o){
+  o=o||{};const zp=a.params.find(p=>p.id==='zone'&&p.kind==='select'),n=cols.length;
+  let t='<table class="prg"><colgroup><col style="width:'+(o.lw||190)+'px"><col style="width:40px">'+cols.map(()=>'<col>').join('')+'</colgroup><thead>';
+  if(o.bands)t+='<tr><th class="pl" colspan="2"></th>'+o.bands.map(b=>'<th colspan="'+b[1]+'" class="bnd">'+esc(b[0])+'</th>').join('')+'</tr>';
+  t+='<tr><th class="pl">Time</th><th></th>'+cols.map(c=>'<th'+(c.sep?' class="sep"':'')+'>'+esc(c.head)+(c.sub?'<div class="sh">'+esc(c.sub)+'</div>':'')+'</th>').join('')+'</tr>';
+  t+='<tr><td class="pl">Operator</td><td></td>'+cols.map(c=>'<td class="op'+(c.sep?' sep':'')+'">'+esc(c.e&&c.e.by?String(c.e.by).split(' ')[0]:'')+'</td>').join('')+'</tr>';
+  if(cols.some(c=>c.e&&c.e.run===false))t+='<tr><td class="pl">Line status</td><td></td>'+cols.map(c=>'<td class="op'+(c.sep?' sep':'')+'">'+(c.e&&c.e.run===false?'Stopped':'')+'</td>').join('')+'</tr>';
+  t+='</thead><tbody>';let grp=null;
+  a.params.forEach(p=>{
+    if(p.group&&p.group!==grp){grp=p.group;t+='<tr class="pg"><td colspan="'+(n+2)+'">'+esc(grp)+'</td></tr>';}
+    t+='<tr><td class="pl">'+esc(p.label)+'</td><td class="pu">'+esc(p.unit)+'</td>'+cols.map(c=>prVal(p,c.e,zp&&c.e&&c.e.v?c.e.v.zone:undefined,c.sep)).join('')+'</tr>';});
+  if(cols.some(c=>c.e&&(c.e.note||c.e.why||c.e.edited||c.e.late)))t+='<tr class="nt"><td class="pl">Notes</td><td></td>'+cols.map(c=>'<td class="nn'+(c.sep?' sep':'')+'">'+esc(c.e?[c.e.late?'L':'',c.e.edited?'*':'',c.e.why||'',c.e.note||''].filter(Boolean).join(' '):'')+'</td>').join('')+'</tr>';
+  return t+'</tbody></table>';
+}
+function prHourCols(es,hours,short){
+  const m={};es.forEach(x=>{m[x.h]=x.e;});
+  return hours.map(h=>({head:short?pad(h):pad(h)+':00',sub:shortShift(shiftOf(h)),e:m[h]||null}));
+}
+function prLine(a,date,doc,night){
+  const es=entries(doc),hs=prHours(night);
+  if(!es.some(x=>hs.indexOf(x.h)>=0))return '';
+  return '<section class="prsheet pl">'+prHead(a.name,date,prName(night))+prGrid(a,prHourCols(es,hs))+prFoot()+'</section>';
+}
+function prBoiler(a,date,doc){
+  const es=entries(doc);if(!es.length)return '';
+  const dh=prHours(false),nh=prHours(true),cols=prHourCols(es,dh.concat(nh),true);cols[dh.length].sep=true;
+  return '<section class="prsheet pl">'+prHead(a.name,date,'24 hours · day and night')+prGrid(a,cols,{bands:[[prName(false),dh.length],[prName(true),nh.length]],lw:210})+prFoot()+'</section>';
+}
+function prRO(a,date,doc){
+  const es=entries(doc);if(!es.length)return '';
+  const cols=es.map(x=>({head:hm(x.min),sub:shortShift(shiftOf(x.h)),e:x.e}));
+  return '<section class="prsheet pl">'+prHead(a.name,date,'All readings of the day')+prGrid(a,cols,{lw:230})+prFoot()+'</section>';
+}
+const prOp=e=>esc(String((e&&e.by)||'').split(' ')[0]);
+function prBands(mode){return mode==='day'?[false]:mode==='night'?[true]:[false,true];}
+function prLabSide(a,es,mode,title){
+  const rp=a.params.find(p=>p.id==='result')||{};
+  const blk=night=>{const r=es.filter(x=>prIsDay(x.h)!==night);
+    return (mode==='both'?'<tr class="pg"><td colspan="4">'+esc(prName(night))+'</td></tr>':'')+(r.length?r.map(x=>{const v=x.e.v||{},st=pState(rp,v.result,v.zone);return '<tr><td>'+hm(x.min)+'</td><td>'+esc(v.zone||'')+'</td><td'+(st==='high'||st==='low'?' class="x"':'')+'>'+(v.result==null?'':esc(fmtN(num(v.result)))+(st==='high'?' ▲':st==='low'?' ▼':''))+'</td><td class="op">'+prOp(x.e)+'</td></tr>';}).join(''):'<tr><td colspan="4" class="em">No readings</td></tr>');};
+  return '<h2 class="prs">'+esc(title)+'</h2><table class="prg prl"><thead><tr><th style="width:18%">Time</th><th>Zone</th><th style="width:26%">Moisture %</th><th style="width:24%">Operator</th></tr></thead><tbody>'+prBands(mode).map(blk).join('')+'</tbody></table>';
+}
+function prLab(date,docs){
+  const es=docs.map(d=>entries(d)),ran=es.map(l=>l.length>0);if(!ran[0]&&!ran[1])return '';
+  const nm=n=>area(n).name.replace(/^Lab · /,'');
+  let sides;
+  if(ran[0]&&ran[1])sides=[prLabSide(area('lab_mac'),es[0],'both',nm('lab_mac')),prLabSide(area('lab_spa'),es[1],'both',nm('lab_spa'))];
+  else{const i=ran[0]?0:1,a=area(i?'lab_spa':'lab_mac');sides=[prLabSide(a,es[i],'day',nm(a.id)+' · Day shift'),prLabSide(a,es[i],'night',nm(a.id)+' · Night shift')];}
+  return '<section class="prsheet pp">'+prHead('Laboratory · Moisture',date,'24 hours · day and night')+'<div class="prtwo">'+sides.map(x=>'<div>'+x+'</div>').join('')+'</div>'+prFoot()+'</section>';
+}
+const prIsProd=x=>x.e&&(x.e.run===false||(x.e.v&&(x.e.v.pallets!=null||x.e.v.ptype)));
+function prPackSide(a,es,mode,title){
+  const cols=5;
+  const blk=night=>{
+    const rows=es.filter(x=>prIsDay(x.h)!==night&&prIsProd(x));let tot=0;
+    const body=rows.length?rows.map(x=>{const v=x.e.v||{};if(x.e.run===false)return '<tr><td>'+hm(x.min)+'</td><td colspan="2">Stopped'+(x.e.down?' · '+esc(x.e.down)+' min':'')+'</td><td class="op">'+prOp(x.e)+'</td></tr>';const c=num(v.pallets);if(c!=null)tot+=c;return '<tr><td>'+hm(x.min)+'</td><td>'+(c==null?'':esc(fmtN(c)))+'</td><td>'+esc(v.ptype||'')+'</td><td class="op">'+prOp(x.e)+'</td></tr>';}).join(''):'<tr><td colspan="4" class="em">No production</td></tr>';
+    return {html:(mode==='both'?'<tr class="pg"><td colspan="4">'+esc(prName(night))+'</td></tr>':'')+body+'<tr class="tt"><td>Total</td><td>'+(rows.length?esc(fmtN(tot)):'')+'</td><td colspan="2"></td></tr>',tot:tot};};
+  const bs=prBands(mode).map(blk);
+  return '<h2 class="prs">'+esc(title)+'</h2><table class="prg prl"><thead><tr><th style="width:18%">Time</th><th style="width:24%">Cartons</th><th>Type</th><th style="width:24%">Operator</th></tr></thead><tbody>'+bs.map(x=>x.html).join('')+(bs.length>1?'<tr class="tt"><td>24 h</td><td>'+esc(fmtN(bs[0].tot+bs[1].tot))+'</td><td colspan="2"></td></tr>':'')+'</tbody></table>';
+}
+function prSlotVal(a,es,rg,sl,id){
+  if(REGR.indexOf(id)>=0){const sv=sharedVal(rg,sl.s,id);if(sv!=null)return sv;}
+  let t=null;es.forEach(x=>{if(x.min>=sl.s&&x.min<sl.e){const v=num(x.e.v&&x.e.v[id]);if(v!=null)t=(t||0)+v;}});return t;
+}
+/* tot: {label,slots} adds one summed column */
+function prRawTable(a,es,rg,slots,ids,title,tot){
+  const ps=ids.map(id=>a.params.find(p=>p.id===id)).filter(Boolean);
+  const head='<thead><tr><th>'+esc(title)+'</th>'+slots.map(sl=>'<th class="sl">'+hm(Math.round((sl.s+sl.e)/2/30)*30)+'</th>').join('')+(tot?'<th class="sl">'+esc(tot.label)+'</th>':'')+'</tr></thead>';
+  const body=ps.map(p=>{let sum=null;tot&&tot.slots.forEach(sl=>{const v=prSlotVal(a,es,rg,sl,p.id);if(v!=null)sum=(sum||0)+v;});
+    return '<tr><td class="pl">'+esc(p.label)+' <span class="pu2">'+esc(p.unit)+'</span></td>'+slots.map(sl=>{const v=prSlotVal(a,es,rg,sl,p.id),b=slotBrand(es,sl,p);return '<td>'+(v==null?'':esc(fmtN(v))+(b?'<div class="brn">'+esc(b)+'</div>':''))+'</td>';}).join('')+(tot?'<td class="tc">'+(sum==null?'':esc(fmtN(sum)))+'</td>':'')+'</tr>';}).join('');
+  return '<table class="prg prr">'+head+'<tbody>'+body+'</tbody></table>';
+}
+function prPack(date,docs,rg){
+  const am=area('pack_mac'),as=area('pack_spa'),em=entries(docs[0]),es=entries(docs[1]);
+  const ran=[em,es].map(l=>l.some(x=>x.e&&x.e.v&&x.e.v.pallets!=null));
+  const anyV=l=>l.some(x=>x.e&&x.e.v&&Object.keys(x.e.v).some(k=>x.e.v[k]!=null&&x.e.v[k]!==''));
+  if(!ran[0]&&!ran[1]){ran[0]=anyV(em);ran[1]=anyV(es);}
+  const slots=packSlots(am),dsl=slots.filter(sl=>prIsDay(Math.floor(sl.s/60))),nsl=slots.filter(sl=>!prIsDay(Math.floor(sl.s/60)));
+  const hasR=[[am,em],[as,es]].some(q=>slots.some(sl=>['film_waste','film_waste2','scotch','dmg_carton','flour','semolina'].some(id=>prSlotVal(q[0],q[1],rg,sl,id)!=null)))||slots.some(sl=>REGR.some(id=>prSlotVal(am,em,rg,sl,id)!=null));
+  if(!ran[0]&&!ran[1]&&!hasR)return '';
+  const mid=['regr_used','regr_prod'],side=['film_waste','film_waste2','scotch','dmg_carton','flour','semolina'],nt={label:'Night total',slots:nsl};
+  const nm=a=>a.name.replace(/^Packaging · /,'');
+  let prod,raw;
+  if(ran[0]&&ran[1]){
+    prod=[prPackSide(am,em,'both',nm(am)),prPackSide(as,es,'both',nm(as))];
+    raw=[prRawTable(am,em,rg,slots,side,nm(am),nt),prRawTable(am,em,rg,slots,mid,'Regrinding',nt),prRawTable(as,es,rg,slots,side,nm(as),nt)];
+  }else{
+    const a=ran[0]||!ran[1]?am:as,e=a===am?em:es;
+    prod=[prPackSide(a,e,'day',nm(a)+' · Day shift'),prPackSide(a,e,'night',nm(a)+' · Night shift')];
+    raw=[prRawTable(a,e,rg,dsl,side,nm(a)+' · Day',null),prRawTable(a,e,rg,slots,mid,'Regrinding',nt),prRawTable(a,e,rg,nsl,side,nm(a)+' · Night',{label:'Total',slots:nsl})];
+  }
+  return '<section class="prsheet pp">'+prHead('Packaging',date,'24 hours · day and night')+
+   '<div class="prtwo">'+prod.map(x=>'<div>'+x+'</div>').join('')+'</div>'+
+   '<h2 class="prs wide">Raw materials and wastage</h2><div class="prraw n'+(ran[0]&&ran[1]?'4':'x')+'">'+raw.map(x=>'<div>'+x+'</div>').join('')+'</div>'+prFoot()+'</section>';
+}
+async function prBuild(type,dates,shiftSel){
+  const get=async id=>{if(!S.db)return {hours:{}};const sn=await S.db.doc('logs/'+id).get();return sn.exists?sn.data():{hours:{}};};
+  const want=[];if(shiftSel!=='night')want.push(false);if(shiftSel!=='day')want.push(true);
+  const out=await Promise.all(dates.map(async date=>{
+    if(type==='macaroni'||type==='spaghetti'){const a=area(type),d=await get(a.id+'_'+date);return want.map(n=>prLine(a,date,d,n)).join('');}
+    if(type==='boiler'){return prBoiler(area('boiler'),date,await get('boiler_'+date));}
+    if(type==='ro'){return prRO(area('ro'),date,await get('ro_'+date));}
+    if(type==='lab'){return prLab(date,await Promise.all([get('lab_mac_'+date),get('lab_spa_'+date)]));}
+    if(type==='pack'){const ds=await Promise.all([get('pack_mac_'+date),get('pack_spa_'+date),get('regr_'+date)]);return prPack(date,ds,ds[2]);}
+    return '';}));
+  return out.join('');
+}
+function printDlg(){
+  if(!canPrint())return;
+  const old=$('#dlg');if(old)old.remove();
+  const id=S.areaId||'',cur=S.view==='area'?(id==='macaroni'||id==='spaghetti'||id==='boiler'||id==='ro'?id:id.indexOf('pack_')===0?'pack':id.indexOf('lab_')===0?'lab':'macaroni'):S.view==='lab'?'lab':'macaroni';
+  const w=document.createElement('div');w.id='dlg';w.className='ovl';
+  const dt=(S.view==='area'||S.view==='lab')&&S.date?S.date:S.today;
+  w.innerHTML='<div class="dlg prdlg" role="dialog" aria-modal="true"><h2>Print logbook</h2><div class="muted small">One area at a time. Press, Boiler and RO print on A4 landscape; Packaging and Laboratory on A4 portrait.</div>'+
+   '<div class="prctl"><label class="l" style="grid-column:1/-1">What to print<select id="pr_t">'+PR_TYPES.map(t=>'<option value="'+t[0]+'">'+esc(t[1])+'</option>').join('')+'</select></label>'+
+   '<label class="l"><span id="pr_dl">Production day</span><input type="date" id="pr_d" value="'+esc(dt)+'"></label><label class="l" id="pr_ew">To (up to 10 days)<input type="date" id="pr_e" value="'+esc(dt)+'"></label>'+
+   '<label class="l" id="pr_sw">Shift<select id="pr_s"><option value="both">Day and night</option><option value="day">Day only</option><option value="night">Night only</option></select></label></div>'+
+   '<div class="muted small" id="pr_i"></div><div class="prprev" id="pr_p"><div class="muted small">Loading…</div></div>'+
+   '<div class="row"><button type="button" class="btn big" id="pr_x">Close</button><button type="button" class="btn pri big" id="pr_go" disabled>🖨 Print</button></div></div>';
+  document.body.appendChild(w);$('#pr_t').value=cur;
+  let seq=0,html='';
+  const load=async()=>{
+    const my=++seq,type=$('#pr_t').value,box=$('#pr_p');let f=$('#pr_d').value,t=$('#pr_e').value;
+    $('#pr_go').disabled=true;html='';
+    $('#pr_sw').style.display=(type==='macaroni'||type==='spaghetti')?'':'none';
+    const rng=type==='ro';$('#pr_ew').style.display=rng?'':'none';$('#pr_dl').textContent=rng?'From (production day)':'Production day';
+    if(!f){box.innerHTML='<div class="muted small">Choose a day.</div>';return;}
+    if(!rng)t=f;else if(!t||t<f){t=f;$('#pr_e').value=t;}
+    let note='';if(daysBetween(f,t)>9){t=addDays(f,9);$('#pr_e').value=t;note='Up to 10 days can be printed at once.';}
+    $('#pr_i').textContent=note;
+    const dates=[];for(let d=f;d<=t;d=addDays(d,1))dates.push(d);
+    box.innerHTML='<div class="muted small">Loading…</div>';
+    try{
+      const h=await prBuild(type,dates,$('#pr_s').value);
+      if(my!==seq||!$('#pr_p'))return;
+      if(!h){box.innerHTML='<div class="muted small">No readings recorded for this selection.</div>';return;}
+      html=h;box.innerHTML=h;$('#pr_go').disabled=false;
+    }catch(e){if(my===seq)box.innerHTML='<div class="muted small">'+esc(dbErr(e))+'</div>';}
+  };
+  ['pr_t','pr_d','pr_e','pr_s'].forEach(k=>{$('#'+k).onchange=load;});
+  $('#pr_x').onclick=()=>w.remove();
+  $('#pr_go').onclick=()=>{
+    let r=$('#prRoot');if(!r){r=document.createElement('div');r.id='prRoot';document.body.appendChild(r);}
+    r.innerHTML=html;
+    let pst=$('#prPage');if(!pst){pst=document.createElement('style');pst.id='prPage';document.head.appendChild(pst);}
+    pst.textContent='@page{size:A4 '+(PR_TYPES.find(q=>q[0]===$('#pr_t').value)||['','','l'])[2].replace('l','landscape').replace('p','portrait')+';margin:8mm}';
+    const clean=()=>{r.innerHTML='';window.removeEventListener('afterprint',clean);};
+    window.addEventListener('afterprint',clean);
+    try{window.print();}catch(e){toast('Printing is not available here.',true);}
+  };
+  load();
 }
 
 /* ---- maintenance ---- */
