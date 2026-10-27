@@ -231,6 +231,28 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .mx th.sl{text-align:center;font-size:12px;white-space:nowrap}.mx th.sl.warn{background:var(--warnbg)}.mx th.sl.bad{background:var(--badbg)}.mx th.sl.ok{background:var(--okbg)}.mx td.n{text-align:right}
 @keyframes blk{50%{opacity:.55}}.blink{animation:blk 1.2s infinite}
 .ntsent.done{background:var(--panel2);color:var(--mut);border-left-color:var(--line)}.ntsent.due{background:var(--badbg);color:var(--bad);border-left-color:var(--bad);font-weight:600}
+.rawchips{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:0 0 12px}
+.rawchip{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:64px;padding:10px 14px;border:2px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;cursor:pointer;text-align:left}
+.rawchip.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.rawchip b{font-size:18px}
+.rawgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;align-items:start}
+.rawpair{display:flex;gap:8px;min-width:0}.rawpair .fld{flex:1;min-width:0}.rawpair select{font-size:16px!important;padding:0 4px}.rawpair .fld .ir input{font-size:18px}.rawhh{display:flex;align-items:center;justify-content:space-between;gap:10px}.mx td.tcol,.mx th.tcol{font-weight:700;background:var(--panel2)}
+.rawgrid.rawreg{grid-template-columns:1fr 1fr;margin-top:6px}
+.rawgrid:not(.rawreg){background:linear-gradient(var(--mut),var(--mut)) center top/3px 100% no-repeat;column-gap:26px}
+.rawcell{padding:8px 10px 6px;border-radius:8px;border-left:5px solid transparent}
+.rawcell.mac{background:rgba(232,169,61,.13);border-left-color:#e8a93d}
+.rawcell.spa{background:rgba(79,162,217,.13);border-left-color:#4fa3d9}
+.rawcell.reg{background:rgba(106,154,106,.16);border-left-color:#6a9a6a}
+.rawcell.rawpair .fld{padding:0}
+.shbox{border:1px solid var(--line);border-radius:10px;margin:0 0 12px;overflow:hidden;background:var(--panel2,transparent)}.shbox:nth-of-type(odd){border-left:4px solid #4fa3d9}.shbox:nth-of-type(even){border-left:4px solid #e8a93d}.shhd{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--panel,#0000);border-bottom:1px solid var(--line)}.shbox table{margin:0}
+.pkgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.pkcol{min-width:0}.pkcol .rawcell{margin-bottom:8px}.pkpair{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pkpair .rawcell{padding:6px}.pkpair .fld input,.pkpair .fld select{font-size:15px}.pkt .chip{font-size:10px;padding:1px 6px}.pkby{font-size:10px;font-weight:600}.pkdf{font-size:10px;color:var(--muted,#667);font-family:inherit}.pknew{margin-left:8px;padding:2px 8px;min-height:0;height:26px;font-size:11px;text-transform:none;letter-spacing:0}.pkt td,.pkt th{padding:6px 4px;font-size:13px}
+.rawh.mac{background:#e8a93d;color:#1d1400;border-color:#e8a93d}
+.rawh.spa{background:#4fa3d9;color:#001522;border-color:#4fa3d9}
+.rawh .chip{background:rgba(0,0,0,.2);color:inherit;border-color:rgba(0,0,0,.35)}
+.mx th.mac{color:#c98a10;border-bottom:3px solid #e8a93d}.mx th.spa{color:#2f86bd;border-bottom:3px solid #4fa3d9}
+.rawh{font-weight:800;font-size:20px;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px}
+.rawgl{grid-column:1/-1;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:13px;color:var(--mut);border-bottom:1px solid var(--line);padding-top:6px}
+.rawnext{display:block;margin-top:6px;font-weight:700}.rawnext.ok{color:var(--ok)}.rawnext.warn{color:#b8860b}.rawnext.bad{color:var(--bad)}
 .prbtn{white-space:nowrap}
 .prdlg{max-width:1000px;width:100%}.prdlg .prctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 .prprev{background:#d9d9d9;padding:12px;border-radius:8px;max-height:50vh;overflow:auto}
@@ -244,7 +266,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .prsheet td.op{font-size:9px}.prsheet td.nn{font-size:8.5px;text-align:left}
 .prsheet tr.pg td{background:#e6e6e6;font-weight:700;text-align:left;font-size:9.5px;text-transform:uppercase}
 .prsheet td.x{font-weight:800;text-decoration:underline}.prsheet td.em{color:#555;font-style:italic}
-.prsheet .brn{font-size:7.5px;font-weight:400;line-height:1}.prsheet td.tc{font-weight:700;background:#f0f0f0}.prsheet tr.tt td{font-weight:700;background:#f0f0f0}
+.prsheet .brn{font-size:7.5px;font-weight:400;line-height:1}.prsheet .prcap{font-weight:700;font-size:11px;background:#d0d0d0;border:1px solid #000;border-bottom:0;padding:2px 6px}.prsheet.prb table{margin-bottom:6px;font-size:10px}.prsheet.prb td,.prsheet.prb th{padding:1px 3px}.prsheet td.tc{font-weight:700;background:#f0f0f0}.prsheet tr.tt td{font-weight:700;background:#f0f0f0}
 .prsheet .prsig{display:flex;gap:30px;margin-top:16px;font-size:12px}.prsheet .prsig div{flex:1;border-top:1px solid #000;padding-top:4px}
 .prsheet .prlg{font-size:9.5px;margin-top:2px}
 .prsheet .prtwo{display:grid;grid-template-columns:1fr 1fr;gap:14px}.prsheet h2.prs{font-size:14px;margin:4px 0;text-align:center;border:1px solid #000;background:#eee;padding:3px}
@@ -297,8 +319,8 @@ const REASONS=['Planned stop','Breakdown','Cleaning / changeover','Material shor
 
 /* ---------- standard setup (used until the admin saves their own in Setup) ---------- */
 const PACK_WIN=[[390,450],[870,930],[1350,1410]];
-const WIN_IDS=['film_waste','film_brand','film_waste2','film_brand2','scotch','dmg_carton','flour','semolina','regr_used','regr_prod'];
-const FILM_BRAND={film_waste:'film_brand',film_waste2:'film_brand2'};
+const WIN_IDS=['film_waste','film_brand','film_waste2','film_brand2','scotch','scotch_brand','dmg_carton','dmg_brand','flour','semolina','regr_used','regr_prod'];
+const FILM_BRAND={film_waste:'film_brand',film_waste2:'film_brand2',scotch:'scotch_brand',dmg_carton:'dmg_brand'};
 function slotBrand(es,sl,p){const k=FILM_BRAND[p.id];if(!k)return '';const o=[];es.forEach(x=>{if(x.min>=sl.s&&x.min<sl.e&&x.e&&x.e.v&&x.e.v[k]&&num(x.e.v[p.id])!=null&&o.indexOf(x.e.v[k])<0)o.push(x.e.v[k]);});return o.join(', ');}
 const slotBrandHtml=(es,sl,p)=>{const b=slotBrand(es,sl,p);return b?'<div class="muted small">'+esc(b)+'</div>':'';};
 function N(id,label,unit,group,o){o=o||{};const p={id:id,label:label,unit:unit||'',min:null,max:null,group:group||'',total:!!o.total,kind:o.kind||'num',calc:o.calc||'',options:o.options||[]};if(WIN_IDS.indexOf(id)>=0&&o.pack)p.win=PACK_WIN;if(o.opt)p.opt=true;if(o.sm)p.sm=true;return p;}
@@ -316,6 +338,7 @@ function migrateCfg(c){
   if(a.id==='macaroni'||a.id==='spaghetti')a.noStatus=true;
   if(a.id==='pack_mac'||a.id==='pack_spa'){const pre=a.id==='pack_mac'?'MACARONI':'SPAGHETTI';a.params.forEach(p=>{if(p.id==='ptype'&&(p.kind||'text')==='text'){p.kind='select';p.label='Production type';p.options=BRANDS.map(b=>pre+' - '+b);}});}
   if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='film_brand')){const i=a.params.findIndex(p=>p.id==='film_waste');if(i>=0)a.params.splice(i+1,0,N('film_brand','Film brand','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}),N('film_waste2','Film wastage 2','kg','Film and carton wastage',{total:true,opt:true}),N('film_brand2','Film brand 2','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}));}
+  if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='scotch_brand')){const i=a.params.findIndex(p=>p.id==='scotch');if(i>=0)a.params.splice(i+1,0,N('scotch_brand','Scotch brand','','Film and carton wastage',{kind:'select',options:['Transparent'].concat(BRANDS),opt:true}));const j=a.params.findIndex(p=>p.id==='dmg_carton');if(j>=0)a.params.splice(j+1,0,N('dmg_brand','Carton brand','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}));}
   if(String(a.id).indexOf('pack_')===0){a.params.forEach(p=>{if(['flour','semolina','regr_used','regr_prod'].indexOf(p.id)>=0&&p.unit==='cartons')p.unit='kg';});a.params=a.params.filter(p=>p.id!=='pallet_times');a.params.forEach(p=>{if(p.id==='pallets'){p.label='Cartons completed';p.unit='cartons';}});a.params.forEach(p=>{if(WIN_IDS.indexOf(p.id)>=0)p.win=PACK_WIN;});}});return c;}
 const C_='°C',H_='%RH';
 function sensors(list){return list.map(c=>{const t=c.slice(-1);if(t==='T'||t==='H')return N('s'+c.toLowerCase(),c+(t==='T'?' temp':' humidity'),t==='T'?C_:H_,'Dryer temperature & humidity');return N('s'+c,'Motor '+c+' speed','Hz','Dryer motor speeds');});}
@@ -504,7 +527,7 @@ function renderGate(){
   if(g==='approve'){
     const until=fmt12(nextShiftMs());
     card('Shift leader approval','<p class="muted" style="margin:0">'+esc(placeName(a.role))+' tablet is signed in ('+esc(a.email)+'). A shift leader must type their password to start it. The approval lasts until '+esc(until)+', the end of this shift.</p>'+
-     (leaders.length?'<label class="l">Shift leader password<input type="password" id="pcPw" autocomplete="off"></label><div id="pcWho" class="who" aria-live="polite"></div>':'<p class="status warn">No shift leader password exists yet. The admin adds one in Control room, Setup, Operators (tick Leader).</p>')+
+     (leaders.length?'<label class="l">Shift leader password<input type="password" id="pcPw" autocomplete="off" inputmode="numeric"></label><div id="pcWho" class="who" aria-live="polite"></div>':'<p class="status warn">No shift leader password exists yet. The admin adds one in Control room, Setup, Operators (tick Leader).</p>')+
      '<button type="button" class="btn pri big" id="pcGo" disabled>Approve and start</button><button type="button" class="btn" id="gtOut">Sign out</button>');
     let op=null,seq=0;const ready=()=>{$('#pcGo').disabled=!op;};
     const p=$('#pcPw');
@@ -525,6 +548,8 @@ function restoreView(){
   else if(v==='ops'&&S.dev.place==='all')go('ops');
   else if(v==='lab'&&labOK())go('lab');
   else if(v==='rm'&&labOK())go('rm');
+  else if(v==='raw'&&rawOK())go('raw');
+  else if(v==='packm'&&packOK())go('packm');
   else if(v.indexOf('area:')===0&&canSee(area(v.slice(5))))go('area',v.slice(5));
   else go('home');
 }
@@ -533,7 +558,7 @@ function restoreView(){
 function setBH(){const b=document.querySelector('header.bar');if(b)document.documentElement.style.setProperty('--bh',b.offsetHeight+'px');}
 window.addEventListener('resize',()=>setBH());
 function renderTop(){
-  const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':(S.view==='mplace'?'Maintenance':(S.view==='lab'?'Lab Moisture':S.view==='rm'?'Flour & semolina tests':S.view==='summary'?'Summary':(S.view==='ops'?'Operators':''))));
+  const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':(S.view==='mplace'?'Maintenance':(S.view==='lab'?'Lab Moisture':S.view==='rm'?'Flour & semolina tests':S.view==='raw'?'Raw materials':S.view==='packm'?'Packaging':S.view==='summary'?'Summary':(S.view==='ops'?'Operators':''))));
   const t=new Date();
   const sub=[S.dev?placeName(S.dev.place):'',where].filter(Boolean).join(' · ');
   $('#top').innerHTML='<header class="bar"><div class="tl"><span class="brand">'+esc(S.cfg.plantName||'Plant Logbook')+'</span>'+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</div><span class="sp"></span>'+
@@ -601,6 +626,9 @@ setInterval(()=>{
     refreshRecent();paintAreaIssues();
   }
   if(S.view==='rm'&&S.rm&&S.rm.rows&&!$('#rmDlg'))paintRmList();
+  if(S.view==='raw'&&S.raw){if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;paintRawStatus();if(rawReady()&&!$('#dlg'))paintRawLock();}
+  if(S.view==='home')paintRawCard();
+  if(S.view==='packm'&&S.pk&&!$('#dlg')&&!$('#pkStop'))PKL.forEach(id=>{if(!S.pk.dirty[id]){paintPkList(id);const m=$('#pkf_'+id+' [data-pm]'),e=S.pk.docs[id]?pkEntry(id):null;if(m&&e){const l=editLeft(e);m.className='status '+(l>0?'ok':'bad');m.textContent=l>0?'Saved by '+e.by+'. You can change it for '+left5(l)+' more.':'Saved by '+e.by+'. Locked: only a shift leader can change it now.';}}});
   if(S.view==='lab'&&S.lab){if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;if(S.date!==S.today&&!adminEff()){S.date=S.today;S.lab.edit={};S.lab.dirty={};subLab();}LABS.forEach(id=>{if(!S.lab.dirty[id])paintLabList(id);});}
   if(S.view==='admin'&&(S.tab==='overview'||S.tab==='devices'))paintTab();
   if(S.view==='admin')paintDevBadge();
@@ -618,15 +646,20 @@ function go(view,areaId,tab){
   if(view==='area'&&!canSee(area(areaId)))view='home';
   if(view==='lab'&&!labOK())view='home';
   if(view==='rm'&&!labOK())view='home';
+  if(view==='raw'&&!rawOK())view='home';
+  if(view==='area'&&isPack(area(areaId))&&packOK())view='packm';
+  if(view==='packm'&&!packOK())view='home';
   if(view==='home'&&S.dev&&S.dev.place==='maint')view='mplace';
   if(view==='mplace'&&!(S.dev&&S.dev.place==='maint')&&!adminEff()&&S.dev.place!=='all')view='home';
   if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done'&&S.tab!=='parts')S.tab='issues';
-  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');if(view!=='rm')S.rm=null;S.opsDraft=null;S.acctDraft=null;
+  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');unsub('rawM');unsub('rawS');unsub('rawG');unsub('pkM');unsub('pkS');if(view!=='rm')S.rm=null;if(view!=='raw')S.raw=null;if(view!=='packm')S.pk=null;S.opsDraft=null;S.acctDraft=null;
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
   if(tab)S.tab=tab;
   if(view==='area'){S.date=S.today;S.hour=nowH();S.lastHour=nowH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;S.entryOpen=false;lsSet('plant.view','area:'+areaId);}
   if(view==='lab'){S.date=S.today;S.unlock=null;S.areaId=null;lsSet('plant.view','lab');}
   if(view==='rm'){S.unlock=null;S.areaId=null;lsSet('plant.view','rm');}
+  if(view==='raw'){S.unlock=null;S.areaId=null;lsSet('plant.view','raw');}
+  if(view==='packm'){S.unlock=null;S.areaId=null;S.date=S.today;lsSet('plant.view','packm');}
   if(view==='admin'){lsSet('plant.view','admin');}
   if(view==='mplace'){lsSet('plant.view','mplace');}
   if(view==='summary'){lsSet('plant.view','summary');S.sumDay='today';}
@@ -636,6 +669,8 @@ function go(view,areaId,tab){
   if(view==='area')renderArea();
   if(view==='lab')renderLab();
   if(view==='rm')renderRm();
+  if(view==='raw')renderRaw();
+  if(view==='packm')renderPk();
   if(view==='admin')renderAdmin();
   if(view==='mplace')renderMplace();
   if(view==='summary')renderSummary();
@@ -643,17 +678,379 @@ function go(view,areaId,tab){
 }
 
 /* ---------- home ---------- */
+function rawCardHTML(){return '<button class="acard" data-a="__raw"><b>Raw materials</b><span class="muted">Film, carton and raw material for Macaroni and Spaghetti, with shared Regrinding</span><span class="rawnext" id="rawCardInfo"></span></button>';}
+function paintRawCard(){
+  const el=$('#rawCardInfo');if(!el)return;
+  const inf=rawInfo(S.today);
+  if(!inf){el.textContent='';el.className='rawnext';return;}
+  el.className='rawnext '+inf.cls;el.textContent=inf.open?'Open now · '+inf.left+' min left':'Next opening in '+durTxt(inf.wait)+' · '+t12(inf.sl.s);
+}
 function renderHome(){
   if(!S.dev){renderGate();return;}
   const vis=S.cfg.areas.filter(canSee);
   const mergeLab=labOK();let labDone=false;
-  const cards=vis.map(a=>mergeLab&&LABS.indexOf(a.id)>=0?(labDone?'':(labDone=true,'<button class="acard" data-a="__lab"><b>Lab Moisture</b><span class="muted">Macaroni and Spaghetti moisture readings, side by side</span></button><button class="acard" data-a="__rm"><b>Flour &amp; semolina tests</b><span class="muted">Gluten, ash, moisture, color, spots and granulation of raw material</span></button>')):'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(isLineTog(a)&&lineOpen(a.id)?' <span class="chip warn">not running</span>':'')+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>').join('');
+  const mergePk=packOK();let pkDone=false;
+  const cards=vis.map(a=>mergePk&&isPack(a)?(pkDone?'':(pkDone=true,packCardHTML())+(rawOK()?rawCardHTML():'')):mergeLab&&LABS.indexOf(a.id)>=0?(labDone?'':(labDone=true,'<button class="acard" data-a="__lab"><b>Lab Moisture</b><span class="muted">Macaroni and Spaghetti moisture readings, side by side</span></button><button class="acard" data-a="__rm"><b>Flour &amp; semolina tests</b><span class="muted">Gluten, ash, moisture, color, spots and granulation of raw material</span></button>')):'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(isLineTog(a)&&lineOpen(a.id)?' <span class="chip warn">not running</span>':'')+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.filter(p=>!(isPack(a)&&p.win)).length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>'+(!mergePk&&a.id==='pack_spa'&&rawOK()?rawCardHTML():'')).join('');
   const sub=adminEff()?'Admin: every area and the Control room.':'Signed in as: '+placeName(S.dev.place)+(S.acct&&S.acct.email?' ('+S.acct.email+')':'')+'.';
   $('#main').innerHTML='<div'+(adminEff()||S.dev.place==='all'?'':' class="c1w"')+'><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
    (vis.length||adminEff()?'':'<div class="empty">No areas are set up for this place.</div>')+
    '<div class="areas '+(adminEff()||S.dev.place==='all'?'cols2':'cols1')+'">'+cards+(S.dev.place==='all'?'<button class="acard sum" data-a="__ops"><b>Operators and passwords</b><span>Add, remove or change operator passwords</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__maint"><b>Maintenance</b><span>Requests, preventive maintenance, recent maintenance done</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
-  $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__lab')go('lab');else if(a==='__rm')go('rm');else if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else if(a==='__ops')go('ops');else if(a==='__maint')go('mplace');else go('area',a);});
+  $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__lab')go('lab');else if(a==='__rm')go('rm');else if(a==='__raw')go('raw');else if(a==='__pack')go('packm');else if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else if(a==='__ops')go('ops');else if(a==='__maint')go('mplace');else go('area',a);});
+  paintRawCard();
+}
+
+/* ---------- merged packaging (Macaroni left, Spaghetti right) ---------- */
+const PKL=['pack_mac','pack_spa'];
+const packOK=()=>PKL.every(id=>canSee(area(id)));
+const pkCls=aid=>aid==='pack_mac'?'mac':'spa';
+const pkBrand=t=>String(t==null?'–':t).replace(/^(MACARONI|SPAGHETTI)\s*-\s*/,'');
+function renderPk(){
+  S.pk={date:S.today,docs:{pack_mac:null,pack_spa:null},edit:{pack_mac:null,pack_spa:null},dirty:{pack_mac:false,pack_spa:false}};
+  $('#main').innerHTML='<div class="card hcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="eyebrow">Production</div><h2>Packaging</h2><div class="muted small">Cartons and production type · time saved automatically · <span id="pkWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="pkDt" value="'+S.pk.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="pkTog"><button type="button" class="btn sm pri" data-d="today">Today</button><button type="button" class="btn sm" data-d="yday">Yesterday</button></div>')+'</div></div>'+
+   '<div id="pinMsg"></div><div class="pkgrid">'+PKL.map(id=>'<section class="pkcol" id="pkc_'+id+'"><h3 class="rawh '+pkCls(id)+'">'+RAW_T[id]+'</h3><div id="pkn_'+id+'"></div><div class="card" id="pkf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="pkr_'+id+'" class="tscroll"></div></div><div id="pkm_'+id+'"></div></section>').join('')+'</div>'+
+   '<section class="card slim" id="issueBox"><button type="button" class="btn big" id="isOpen" style="width:100%">Report a problem to maintenance</button></section>';
+  const dt=$('#pkDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.pk.date=v;pkReset();subPk();};
+  $$('#pkTog button').forEach(b=>b.onclick=()=>{const v=b.dataset.d==='yday'?addDays(S.today,-1):S.today;if(S.pk.date===v)return;S.pk.date=v;$$('#pkTog button').forEach(x=>x.classList.toggle('pri',x===b));pkReset();subPk();});
+  $('#isOpen').onclick=()=>openIssModal(null);
+  PKL.forEach(id=>paintPkForm(id));subPk();paintPinMsg();paintPkNotices();
+}
+const pkRo=()=>!adminEff()&&S.pk.date!==S.today;
+function pkReset(){S.pk.docs={pack_mac:null,pack_spa:null};S.pk.edit={pack_mac:null,pack_spa:null};S.pk.dirty={pack_mac:false,pack_spa:false};PKL.forEach(id=>{paintPkForm(id);paintPkList(id);});}
+function subPk(){
+  const w=$('#pkWhen');if(w)w.textContent='production day '+S.pk.date;
+  if(!S.db){PKL.forEach(id=>{S.pk.docs[id]={hours:{}};paintPkList(id);});return;}
+  PKL.forEach((id,i)=>resub(i?'pkS':'pkM',()=>S.db.doc('logs/'+id+'_'+S.pk.date).onSnapshot(snap=>{S.pk.docs[id]=snap.exists?snap.data():{hours:{}};paintPkList(id);if(!S.pk.dirty[id])paintPkForm(id);},e=>toast(dbErr(e),true))));
+}
+function pkEntry(id){const k=S.pk.edit[id],d=S.pk.docs[id];return k&&d&&d.hours&&d.hours[k]?d.hours[k]:null;}
+function pkLastType(id){
+  try{const d=S.pk.docs[id],es=d&&d.hours?entries(d).slice().reverse():[];const h=es.find(x=>x.e&&x.e.v&&x.e.v.ptype);if(h)return h.e.v.ptype;}catch(e){}
+  try{if(S.lastPt&&S.lastPt[id])return S.lastPt[id];}catch(e){}
+  try{return localStorage.getItem(PT_KEY(id))||null;}catch(e){return null;}
+}
+function paintPkForm(id){
+  const box=$('#pkf_'+id);if(!box||!S.pk)return;
+  const a=area(id),e=pkEntry(id),v=(e&&e.v)||{},pp=a.params.find(p=>p.id==='pallets'),pt=a.params.find(p=>p.id==='ptype');
+  if(pkRo()){box.innerHTML='<div class="status">Yesterday: read only.</div>';const h0=$('#pkc_'+id+' [data-pn]');if(h0)h0.remove();return;}
+  const ptv=e&&e.run!==false?v.ptype:(e?v.ptype:pkLastType(id));
+  const l=e?editLeft(e):0;
+  box.innerHTML='<div class="pkpair"><div class="rawcell '+pkCls(id)+'">'+rawField(id,pp,v.pallets,false)+'</div><div class="rawcell '+pkCls(id)+'">'+rawField(id,pt,(ptv&&(pt.options||[]).indexOf(ptv)>=0)?ptv:'',false)+'</div></div>'+
+   '<label class="l" style="margin-top:8px">Notes<textarea class="pknote" placeholder="Anything unusual" style="min-height:52px">'+esc(e&&e.run!==false?e.note||'':'')+'</textarea></label><div class="status" data-pm></div>'+
+   '<div class="row" style="flex-wrap:wrap"><button type="button" class="btn pri big" data-ps style="flex:1">'+(e&&e.run!==false?'Save changes':'Save production')+'</button><button type="button" class="btn big stopbtn" data-pst>Stopped</button></div>';
+  $$('option',box).forEach(o=>{const f=o.value;if(f){o.value=f;o.textContent=pkBrand(f);}});
+  const hd=$('#pkc_'+id+' h3.rawh');if(hd){let nb=$('[data-pn]',hd);if(nb)nb.remove();if(e){hd.insertAdjacentHTML('beforeend',' <button type="button" class="btn sm pknew" data-pn>+ New entry</button>');$('[data-pn]',hd).onclick=()=>{S.pk.edit[id]=null;S.pk.dirty[id]=false;paintPkForm(id);paintPkList(id);};}}
+  const m=$('[data-pm]',box);
+  if(e){m.className='status '+(l>0?'ok':'bad');m.textContent=l>0?'Saved by '+e.by+'. You can change it for '+left5(l)+' more.':'Saved by '+e.by+'. Locked: only a shift leader can change it now.';}
+  else m.textContent='Fill the readings and press Save.';
+  box.oninput=box.onchange=ev=>{S.pk.dirty[id]=true;const fl=ev.target.closest&&ev.target.closest('.fld');if(fl)fl.classList.remove('need');};
+  $('[data-ps]',box).onclick=()=>pkSave(id,null);
+  $('[data-pst]',box).onclick=async()=>{const sv=await pkStopDlg(id,e&&e.run===false?e:null);if(sv)pkSave(id,sv);};
+}
+function pkStopDlg(id,e){
+  return new Promise(res=>{
+    const old=$('#pkStop');if(old)old.remove();
+    const w=document.createElement('div');w.id='pkStop';w.className='ovl';
+    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:560px"><h2>Line stopped · '+esc(RAW_T[id])+'</h2><div class="fields"><label class="l">Stopped at<input type="time" id="psA" value="'+esc(e&&e.stopAt||'')+'"></label><label class="l">Started again at<input type="time" id="psB" value="'+esc(e&&e.startAt||'')+'"></label><label class="l">Minutes stopped (automatic)<input type="number" id="psD" readonly tabindex="-1" placeholder="auto" value="'+(e&&e.down!=null?e.down:'')+'"></label><label class="l">Reason<select id="psW">'+REASONS.map(r=>'<option'+(e&&e.why===r?' selected':'')+'>'+r+'</option>').join('')+'</select></label><label class="l" style="grid-column:1/-1">Note<textarea id="psN" placeholder="Anything unusual">'+esc(e&&e.note||'')+'</textarea></label></div><div class="row" style="margin-top:8px;flex-wrap:nowrap"><button type="button" class="btn big cyan" style="flex:1;padding:0 8px" id="psC">Cancel</button><button type="button" class="btn pri big" style="flex:1;padding:0 8px" id="psOk">Done</button></div></div>';
+    document.body.appendChild(w);
+    const TT=x=>/^([01]\d|2[0-3]):[0-5]\d$/.test(x),t=x=>{const q=x.split(':');return Number(q[0])*60+Number(q[1]);};
+    const calc=()=>{const a=$('#psA').value,b=$('#psB').value;if(!TT(a)||!TT(b))return;let d=t(b)-t(a);if(d<0)d+=1440;$('#psD').value=Math.min(d,720);};
+    $('#psA').oninput=calc;$('#psB').oninput=calc;
+    $('#psC').onclick=()=>{w.remove();res(null);};
+    $('#psOk').onclick=()=>{if(!TT($('#psA').value)||!TT($('#psB').value)){toast('Enter the time stopped and the time started again (24h, like 15:30).',true);return;}calc();const o={stopAt:$('#psA').value,startAt:$('#psB').value,down:Math.max(0,Math.min(720,Number($('#psD').value)||0)),why:$('#psW').value,note:($('#psN').value||'').trim()};w.remove();res(o);};
+  });
+}
+function paintPkList(id){
+  const el=$('#pkr_'+id);if(!el||!S.pk)return;
+  const d=S.pk.docs[id];
+  if(d==null){el.innerHTML='<div class="empty">'+(S.db?'Loading…':'No database connection.')+'</div>';return;}
+  const all=entries(d),es=all.filter(x=>!(x.e&&x.e.ovr)).reverse(),gaps=gapOf(all),ro=pkRo();
+  if(!es.length){el.innerHTML='<div class="empty">No entries for '+esc(S.pk.date)+'.</div>';return;}
+  const chip=e=>(!ro&&editLeft(e)>0)?' <span class="chip ok">edit '+left5(editLeft(e))+'</span>':'';
+  let tot=0;
+  const rows=es.map(x=>{const e=x.e,v=e.v||{},gp=gaps[x.k]!=null?gapTxt(gaps[x.k]):'';
+    const by='<b class="pkby">'+esc(String(e.by||'').split(' ')[0])+'</b>'+(e.editedBy?' <span class="edi" title="Edited by '+esc(e.editedBy)+'">✎</span>':'')+chip(e);
+    const nt=e.note?' <span class="edi" title="'+esc(e.note)+'">✉</span>':'';
+    const canE=!ro&&(adminEff()||leaderActive()||unlockOn()||editLeft(e)>0);const cls=(canE?'clk':'')+(e.run===false?' stp':'')+(S.pk.edit[id]===x.k?' sel':'');
+    if(e.run===false)return '<tr class="'+cls+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <div class="mono stt">'+esc(stopTimes(e))+'</div>'+nt+'</td><td>'+by+(ro?'':((editLeft(e)>0||adminEff()||leaderActive()||unlockOn())?'<button type="button" class="delstop" data-k="'+esc(x.k)+'" aria-label="Delete stoppage record">🗑</button>':''))+'</td></tr>';
+    const c=num(v.pallets);if(c!=null)tot+=c;
+    return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+(gp?'<div class="pkdf">'+gp+'</div>':'')+'</td><td class="mono">'+(c==null?'–':fmtN(c))+'</td><td>'+esc(pkBrand(v.ptype))+nt+'</td><td>'+by+(!ro&&gapShort(gaps[x.k])?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" aria-label="Delete reading" title="'+esc(gp)+'">🗑</button>':'')+'</td></tr>';}).join('');
+  el.innerHTML='<table class="elt pkt"><thead><tr><th>Time</th><th>Cartons</th><th>Type</th><th>By</th></tr></thead><tbody>'+rows+'<tr class="tt"><td>Total</td><td class="mono"><b>'+fmtN(tot)+'</b></td><td colspan="2"></td></tr></tbody></table>'+(ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to change it.</p>');
+  el.querySelectorAll('.delstop').forEach(b=>b.onclick=ev=>{ev.stopPropagation();(b.classList.contains('delgap')?pkDelGap:pkDelStop)(id,b.dataset.k);});
+  $$('tr.clk',el).forEach(r=>r.onclick=async()=>{S.pk.edit[id]=r.dataset.k;S.pk.dirty[id]=false;paintPkForm(id);paintPkList(id);const e=d.hours[r.dataset.k];if(e&&e.run===false){const sv=await pkStopDlg(id,e);if(sv)pkSave(id,sv);}});
+}
+async function pkDelStop(id,key){
+  const e=S.pk.docs[id]&&S.pk.docs[id].hours?S.pk.docs[id].hours[key]:null,ov=adminEff()||leaderActive()||unlockOn();
+  if(!ov&&!(e&&editLeft(e)>0)){toast('The delete time has passed. Ask a shift leader.',true);return;}
+  const who=await ask({title:'Delete this stoppage record?',msg:'The stoppage record will be removed from the log. This cannot be undone.',pw:true,ok:'Yes, delete'});if(!who)return;
+  if(!(who.leader||(e&&editLeft(e)>0&&sameP(who,e)))){toast('Only the operator who saved it can delete it, and only within '+editMin()+' minutes.',true);return;}
+  try{await writeEntry(id,S.pk.date,key,null,null);toast('Stoppage record deleted by '+(who.name||'Admin'));}catch(e2){toast(dbErr(e2),true);}
+}
+async function pkDelGap(id,key){
+  const e=S.pk.docs[id]&&S.pk.docs[id].hours?S.pk.docs[id].hours[key]:null;if(!e)return;
+  const who=await ask({title:'Delete this reading?',msg:'This reading was saved very soon after the previous one (possible duplicate). It will be removed from the log. This cannot be undone.',pw:true,ok:'Yes, delete'});if(!who)return;
+  if(!(who.leader||sameP(who,e))){toast('Only a shift leader or the operator who saved it can delete this reading.',true);return;}
+  try{await writeEntry(id,S.pk.date,key,null,null);toast('Reading deleted by '+(who.name||'Admin'));}catch(e2){toast(dbErr(e2),true);}
+}
+async function pkSave(id,stop){
+  if(!S.db)return toast('No database connection.',true);
+  if(pkRo())return toast('Yesterday is read only.',true);
+  const a=area(id),box=$('#pkf_'+id),e0=pkEntry(id),run=!stop;
+  const cin=rawCtl2(box,id,'pallets'),tin=rawCtl2(box,id,'ptype');
+  const n=num(cin.value),ty=(tin.value||'').trim()||null;
+  if(run&&!(adminEff()||leaderActive())){
+    const bad=[];
+    cin.closest('.fld').classList.toggle('need',n==null);if(n==null)bad.push('Cartons completed');
+    tin.closest('.fld').classList.toggle('need',!ty);if(!ty)bad.push('Production type');
+    if(bad.length){toast('Fill: '+bad.join(', ')+'. Or press Stopped if the line is stopped.',true);return;}
+  }
+  const what='Save '+(e0?'changes to ':'')+'the production of '+a.name+'?'+(stop?' (Line stopped '+stop.stopAt+' to '+stop.startAt+')':'');
+  let who;
+  if(unlockOn()){const okc=await ask({title:'Do you want to save?',msg:what+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;who={name:S.unlock.name,id:S.unlock.id,leader:true};}
+  else{who=await ask({title:'Do you want to save?',msg:what,pw:true,ok:'Yes, save'});if(!who)return;}
+  const e1=pkEntry(id);
+  if(e1&&!(adminEff()||leaderActive()||who.leader||(sameP(who,e1)&&editLeft(e1)>0))){toast('Only the operator who saved this entry (within '+editMin()+' minutes) or a shift leader can change it.',true);paintPkForm(id);return;}
+  let key,min;
+  if(S.pk.edit[id]&&e1){key=S.pk.edit[id];min=key.charAt(0)==='s'?Math.floor(Number(key.slice(1))/60):Number(key.slice(1));}
+  else{const d=new Date(),sec=d.getHours()*3600+d.getMinutes()*60+d.getSeconds();key='s'+sec;min=Math.floor(sec/60);}
+  const nowIso=new Date().toISOString();
+  const v=Object.assign({},e1&&e1.v||{});a.params.forEach(p=>{if(!(p.id in v))v[p.id]=null;});
+  v.pallets=n;v.ptype=ty;
+  const alarms=0;
+  const obj=Object.assign({},e1||{},{v:v,run:run,down:run?0:stop.down,why:run?'':stop.why,note:run?($('.pknote',box).value||'').trim():stop.note,shift:shiftOf(nowH()),stopAt:run?'':stop.stopAt,startAt:run?'':stop.startAt,alarms:alarms,empty:0});
+  if(e1){obj.editedAt=nowIso;obj.editedBy=who.name;}
+  else{obj.by=who.name;obj.byId=who.id||null;obj.at=nowIso;obj.late=false;}
+  const sb=$('[data-ps]',box);if(sb)sb.disabled=true;
+  try{
+    await writeEntry(id,S.pk.date,key,obj,null);
+    if(ty){S.lastPt=S.lastPt||{};S.lastPt[id]=ty;try{localStorage.setItem(PT_KEY(id),ty);}catch(e3){}}
+    S.pk.dirty[id]=false;S.pk.edit[id]=null;S.unlock=null;
+    toast(RAW_T[id]+' '+hm(min)+(e1?' changed by ':' saved by ')+who.name);
+    paintPkForm(id);paintPkList(id);
+  }catch(er){toast(dbErr(er),true);if(sb)sb.disabled=false;}
+}
+const rawCtl2=(box,aid,id)=>$('input[data-a="'+aid+'"][data-p="'+id+'"],select[data-a="'+aid+'"][data-p="'+id+'"]',box);
+function paintPkNotices(){
+  if(S.view!=='packm'||!S.pk)return;
+  PKL.forEach(id=>{
+    const el=$('#pkn_'+id);if(!el)return;
+    const list=noticesFor(id);
+    el.innerHTML=list.map(n=>{const due=!!n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now();return '<div class="ntline'+(due?' due':'')+'"><span class="tx">'+(due?'ARRIVAL TIME REACHED · ':'FROM PRESS · ')+ntLine(n)+' · sent by '+esc(n.by)+' '+esc(fmt12(n.ts))+ntSeenArr(n)+'</span><button type="button" class="btn sm" data-nid="'+esc(n.id)+'">Arrived</button></div>';}).join('');
+    const hist=S.notices.filter(n=>n.to===id&&!ntOpen(n)).sort((a,b)=>(a.ts<b.ts?1:-1)).slice(0,3);
+    const mh=$('#pkm_'+id);if(mh)mh.innerHTML=hist.length?'<section class="card slim"><h3>Messages from press · arrived</h3>'+hist.map(n=>'<div class="ntsent done">'+ntLine(n)+' · sent by '+esc(n.by)+' '+esc(ntWhen(n.ts))+ntSeenArr(n)+'</div>').join('')+'</section>':'';
+    $$('button[data-nid]',el).forEach(b=>b.onclick=async()=>{
+      const n=list.find(x=>x.id===b.dataset.nid);
+      const who=await ask({title:'Has the product arrived?',msg:n?ntText(n):'',pw:true,ok:'Yes, arrived'});if(!who)return;
+      try{await S.db.doc('notices/'+b.dataset.nid).update({status:'arrived',arrivedBy:who.name,arrivedAt:new Date().toISOString()});toast('Marked as arrived.');}catch(e){toast(dbErr(e),true);}});
+  });
+}
+function packCardHTML(){
+  const n=PKL.reduce((t,id)=>t+noticesFor(id).length,0);
+  return '<button class="acard" data-a="__pack"><b>Packaging'+(n?' <span class="chip bad">'+n+' from press</span>':'')+'</b><span class="muted">Macaroni (left) and Spaghetti (right): cartons completed and production type</span></button>';
+}
+
+/* ---------- merged raw materials (Macaroni left, Spaghetti right, Regrinding common) ---------- */
+const RAWL=['pack_mac','pack_spa'],RAW_T={pack_mac:'Macaroni',pack_spa:'Spaghetti'},RAW_LINE={pack_mac:'macaroni',pack_spa:'spaghetti'};
+const RAW_IDS=['film_waste','film_brand','film_waste2','film_brand2','scotch','scotch_brand','dmg_carton','dmg_brand','flour','semolina'];
+const RAW_PAIR={film_waste:'film_brand',film_waste2:'film_brand2',scotch:'scotch_brand',dmg_carton:'dmg_brand'};
+const RAW_GROUPS=[['Film wastage',['film_waste','film_brand','film_waste2','film_brand2']],['Carton',['scotch','scotch_brand','dmg_carton','dmg_brand']],['Raw material',['flour','semolina']]];
+const rawOK=()=>RAWL.every(id=>canSee(area(id)));
+const rawSlots=()=>packSlots(area('pack_mac'));
+const durTxt=m=>m<60?m+' min':Math.floor(m/60)+' h '+pad(m%60)+' min';
+function rawSlotState(sl,date){
+  if(date<S.today)return {st:'past'};
+  if(date>S.today)return {st:'later'};
+  const m=nowMin();
+  if(m>=sl.s&&m<sl.e)return {st:'open',left:sl.e-m};
+  return {st:'soon',wait:((sl.s-m)+1440)%1440};
+}
+function rawInfo(date){
+  const sls=rawSlots();if(!sls.length)return null;
+  const o=sls.map(sl=>({sl:sl,s:rawSlotState(sl,date)}));
+  const op=o.find(x=>x.s.st==='open');
+  if(op)return {open:true,left:op.s.left,sl:op.sl,txt:'Open now · '+op.s.left+' min left',cls:op.s.left<=15?'bad':'ok'};
+  const nx=o.filter(x=>x.s.st==='soon').sort((a,b)=>a.s.wait-b.s.wait)[0];
+  return nx?{open:false,wait:nx.s.wait,sl:nx.sl,txt:'Next opening in '+durTxt(nx.s.wait)+' · '+winText([[nx.sl.s,nx.sl.e]]),cls:nx.s.wait<=40?'warn':''}:null;
+}
+function rawEntry(doc,sl){
+  const es=entries(doc).filter(x=>x.min>=sl.s&&x.min<sl.e&&x.e&&x.e.v&&RAW_IDS.concat(REGR).some(id=>x.e.v[id]!=null));
+  return es.length?es[es.length-1]:null;
+}
+function rawVal(aid,sl,id){
+  const R=S.raw;
+  if(REGR.indexOf(id)>=0){const sv=sharedVal(R.regr,sl.s,id);if(sv!=null)return sv;
+    for(let i=0;i<RAWL.length;i++){const x=rawEntry(R.docs[RAWL[i]],sl);if(x&&x.e.v[id]!=null)return x.e.v[id];}return null;}
+  const x=rawEntry(R.docs[aid],sl);return x&&x.e.v[id]!=null?x.e.v[id]:null;
+}
+const rawLineOff=(aid,sl)=>lineOffAt(RAW_LINE[aid],S.raw.date,Math.floor(sl.s/60));
+function rawSlotDone(sl){
+  const es=RAWL.map(id=>({id:id,x:rawEntry(S.raw.docs[id],sl)})),run=es.filter(q=>!rawLineOff(q.id,sl));
+  const got=es.filter(q=>q.x).length;
+  if(!got)return 'none';
+  return run.length&&run.every(q=>q.x)?'done':(!run.length?'done':'part');
+}
+function renderRaw(){
+  const sls=rawSlots();
+  S.raw={date:S.today,sel:0,docs:{pack_mac:null,pack_spa:null},regr:null,dirty:false,edit:false};
+  const inf=rawInfo(S.raw.date);if(inf){const i=sls.findIndex(s=>s.s===inf.sl.s);if(i>=0)S.raw.sel=i;}
+  $('#main').innerHTML='<div class="card hcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="eyebrow">Three times a day</div><h2>Raw materials</h2><div class="muted small">Film wastage, carton and raw material for Macaroni and Spaghetti, with Regrinding shared by both · <span id="rawWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="rawDt" value="'+S.raw.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+'</div><div id="rawStat" class="status" style="margin-top:10px"></div></div>'+
+   '<div id="rawChips" class="rawchips"></div><form class="card" id="rawForm" autocomplete="off" novalidate></form><div id="rawHist"></div>';
+  const dt=$('#rawDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.raw.date=v;S.raw.docs={pack_mac:null,pack_spa:null};S.raw.regr=null;S.raw.dirty=false;subRaw();rawRefresh();};
+  subRaw();rawRefresh();
+}
+function subRaw(){
+  const d=S.raw.date;$('#rawWhen').textContent='production day '+d;
+  if(!S.db){RAWL.forEach(id=>{S.raw.docs[id]={hours:{}};});S.raw.regr={slots:{}};return;}
+  RAWL.forEach((id,i)=>resub(i?'rawS':'rawM',()=>S.db.doc('logs/'+id+'_'+d).onSnapshot(snap=>{S.raw.docs[id]=snap.exists?snap.data():{hours:{}};rawRefresh();},e=>toast(dbErr(e),true))));
+  resub('rawG',()=>S.db.doc('logs/regr_'+d).onSnapshot(snap=>{S.raw.regr=snap.exists?snap.data():{slots:{}};rawRefresh();},e=>{}));
+}
+function rawReady(){return S.raw&&S.raw.docs.pack_mac&&S.raw.docs.pack_spa&&S.raw.regr;}
+function rawRefresh(){
+  if(S.view!=='raw'||!S.raw)return;
+  paintRawStatus();
+  if(!rawReady()){$('#rawForm').innerHTML='<div class="empty">Loading…</div>';return;}
+  paintRawChips();paintRawHist();
+  if(!S.raw.dirty)paintRawForm();else paintRawLock();
+}
+function paintRawStatus(){
+  const el=$('#rawStat');if(!el||!S.raw)return;
+  const inf=rawInfo(S.raw.date);
+  if(S.raw.date!==S.today){el.className='status';el.innerHTML='Viewing '+esc(S.raw.date)+' · an earlier production day.';}
+  else if(inf){el.className='status '+inf.cls+(inf.cls==='warn'||inf.open?' cdbar':'');el.innerHTML='<b>'+esc(inf.txt)+'</b>'+(inf.open?' · window '+winText([[inf.sl.s,inf.sl.e]]):'');}
+  else{el.className='status';el.textContent='';}
+  if(rawReady())paintRawChips();
+}
+function paintRawChips(){
+  const el=$('#rawChips');if(!el)return;
+  el.innerHTML=rawSlots().map((sl,i)=>{
+    const ts=rawSlotState(sl,S.raw.date),dn=rawSlotDone(sl);let txt,cls='';
+    if(dn==='done'){txt='saved';cls='ok';}
+    else if(ts.st==='open'){txt='open · '+ts.left+' min left';cls=ts.left<=15?'bad':'ok';}
+    else if(ts.st==='soon'){txt='opens in '+durTxt(ts.wait);cls=ts.wait<=40?'warn':'';if(dn==='part'){txt='partly saved';cls='warn';}}
+    else if(ts.st==='past'||(ts.st==='later')){txt=ts.st==='later'?'later':(dn==='part'?'partly saved':'missed');cls=ts.st==='past'&&dn!=='part'?'bad':(dn==='part'?'warn':'');}
+    if(dn==='part'&&ts.st==='open'){txt='partly saved · '+ts.left+' min left';cls='warn';}
+    return '<button type="button" class="rawchip'+(i===S.raw.sel?' sel':'')+'" data-i="'+i+'"><b>'+winText([[sl.s,sl.e]])+'</b><span class="chip '+cls+'">'+esc(txt)+'</span></button>';}).join('');
+  $$('.rawchip',el).forEach(b=>b.onclick=()=>{const i=Number(b.dataset.i);if(i===S.raw.sel)return;if(S.raw.dirty&&!confirm('Discard what you typed?'))return;S.raw.sel=i;S.raw.dirty=false;S.raw.edit=false;paintRawChips();paintRawForm();});
+}
+function rawField(aid,p,v,off){
+  const id=aid+'__'+p.id,kind=p.kind||'num';
+  if(kind==='select')return '<label class="fld" data-a="'+aid+'" data-p="'+esc(p.id)+'"><span class="fl">'+esc(p.label)+'</span><span class="ir"><select data-a="'+aid+'" data-p="'+esc(p.id)+'" data-k="select" style="border:0;min-height:50px;font-size:20px;background:transparent"><option value="">Choose…</option>'+(p.options||[]).map(o=>'<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select></span><span class="hint">'+(off?'line stopped · ':'')+(p.opt?'optional':'required')+'</span></label>';
+  return '<label class="fld" data-a="'+aid+'" data-p="'+esc(p.id)+'"><span class="fl">'+esc(p.label)+'</span><span class="ir"><input type="number" inputmode="decimal" step="any" data-a="'+aid+'" data-p="'+esc(p.id)+'" data-k="num" value="'+(v==null?'':esc(v))+'"><i>'+esc(p.unit)+'</i></span><span class="hint">'+(off?'line stopped · optional':(p.opt?'optional':'required'))+'</span></label>';
+}
+const rawCtl=(aid,id)=>$('#rawForm input[data-a="'+aid+'"][data-p="'+id+'"],#rawForm select[data-a="'+aid+'"][data-p="'+id+'"]');
+function paintRawForm(){
+  const f=$('#rawForm');if(!f||!rawReady())return;
+  const sl=rawSlots()[S.raw.sel];if(!sl){f.innerHTML='';return;}
+  if(rawSlotDone(sl)==='done'&&!S.raw.edit){f.style.display='none';f.innerHTML='';return;}
+  f.style.display='';
+  const P=aid=>id=>area(aid).params.find(p=>p.id===id);
+  let h='<div id="rawMsg" class="status"></div><div class="row" style="justify-content:space-between"><span id="rawLock" style="display:contents"></span></div><fieldset id="rawFs" class="plain"><div class="rawgrid"><div class="rawh mac">Macaroni'+(rawLineOff('pack_mac',sl)?' <span class="chip warn">not running</span>':'')+'</div><div class="rawh spa">Spaghetti'+(rawLineOff('pack_spa',sl)?' <span class="chip warn">not running</span>':'')+'</div>';
+  RAW_GROUPS.forEach(g=>{
+    const ids=g[1].filter(id=>P('pack_mac')(id)&&P('pack_spa')(id));if(!ids.length)return;
+    h+='<div class="rawgl">'+esc(g[0])+'</div>';
+    const skip=ids.filter(id=>Object.keys(RAW_PAIR).some(k=>RAW_PAIR[k]===id));
+    ids.filter(id=>skip.indexOf(id)<0).forEach(id=>{RAWL.forEach(aid=>{const off=rawLineOff(aid,sl),b=RAW_PAIR[id];
+      const c=aid==='pack_mac'?'mac':'spa';
+      h+=b&&ids.indexOf(b)>=0?'<div class="rawcell '+c+' rawpair">'+rawField(aid,P(aid)(id),rawVal(aid,sl,id),off)+rawField(aid,P(aid)(b),rawVal(aid,sl,b),off)+'</div>':'<div class="rawcell '+c+'">'+rawField(aid,P(aid)(id),rawVal(aid,sl,id),off)+'</div>';});});
+  });
+  h+='</div><div class="rawgl" style="margin-top:12px">Regrinding · one value for both lines</div><div class="rawgrid rawreg">'+REGR.map(id=>'<div class="rawcell reg">'+rawField('pack_mac',P('pack_mac')(id),rawVal('pack_mac',sl,id),false)+'</div>').join('')+'</div></fieldset>'+
+   '<div class="row"><button type="submit" class="btn pri big" id="rawSave">Save raw materials</button>'+(S.raw.edit?'<button type="button" class="btn big" id="rawCancel">Cancel</button>':'')+'<span class="status" id="rawState"></span></div>';
+  f.innerHTML=h;
+  f.oninput=ev=>{S.raw.dirty=true;const fl=ev.target.closest&&ev.target.closest('.fld');if(fl)fl.classList.remove('need');};
+  f.onchange=f.oninput;
+  f.onsubmit=ev=>{ev.preventDefault();saveRaw();};
+  {const cb=$('#rawCancel');if(cb)cb.onclick=()=>{S.raw.edit=false;S.raw.dirty=false;paintRawForm();};}
+  paintRawLock();
+}
+function rawPerm(){
+  const sl=rawSlots()[S.raw.sel],L=leaderActive();
+  if(!S.canWrite)return {can:false,cls:'bad',msg:'You can view this logbook but not save readings.'};
+  if(S.raw.date>S.today)return {can:false,cls:'bad',msg:'This day has not started yet.'};
+  const ts=rawSlotState(sl,S.raw.date),ex=RAWL.map(id=>rawEntry(S.raw.docs[id],sl)).filter(Boolean);
+  let normal;
+  if(ts.st==='open'){
+    const lk=ex.filter(x=>editLeft(x.e)<=0);
+    if(ex.length&&lk.length)normal={can:false,cls:'bad',lockable:true,msg:'Locked. Saved by '+lk[0].e.by+'. Changes are allowed for '+editMin()+' minutes after saving.'};
+    else if(ex.length){const l=Math.min.apply(null,ex.map(x=>editLeft(x.e)));normal={can:true,cls:'ok',msg:'Saved by '+ex[0].e.by+'. You can change it for '+left5(l)+' more.'};}
+    else normal={can:true,cls:'ok',msg:'Window open · '+ts.left+' min left.'};
+  }else normal={can:false,cls:ts.st==='soon'?'warn':'bad',lockable:true,msg:ts.st==='soon'?'This window is closed. It opens in '+durTxt(ts.wait)+' ('+winText([[sl.s,sl.e]])+').':'This window is closed ('+winText([[sl.s,sl.e]])+'). Only a shift leader can fill or change it.'};
+  if(normal.can)return normal;
+  if(L)return {can:true,cls:'warn',msg:(adminEff()?'Admin':'Shift leader '+(S.unlock?S.unlock.name:''))+' override: this window can be filled or changed.'};
+  return normal;
+}
+function paintRawLock(){
+  const pm=rawPerm(),msg=$('#rawMsg'),fs=$('#rawFs'),btn=$('#rawSave'),row=$('#rawLock');if(!msg)return;
+  msg.className='status '+pm.cls;msg.textContent=pm.msg;
+  const hasData=RAWL.some(id=>rawEntry(S.raw.docs[id],rawSlots()[S.raw.sel]));
+  if(fs){fs.disabled=!pm.can;fs.style.display=(!pm.can&&!hasData)?'none':'';}if(btn){btn.disabled=!pm.can;btn.parentNode.style.display=(!pm.can&&!hasData)?'none':'';}
+  if(row){row.innerHTML=(!pm.can&&pm.lockable&&!adminEff()&&!leaderActive())?'<button type="button" class="btn" id="rawUnlock">Shift leader: unlock</button>':(unlockOn()?'<span class="chip warn">Unlocked by '+esc(S.unlock.name)+' · locks in <span id="rawLeft">'+Math.ceil((S.unlock.exp-Date.now())/1000)+'s</span></span> <button type="button" class="btn sm" id="rawLockNow">Lock now</button>':'');
+    const ub=$('#rawUnlock',row);if(ub)ub.onclick=async()=>{const L=await ask({title:'Shift leader',msg:'Enter a shift leader password to unlock this screen. It locks again by itself after 1 minute without use, or when you press Lock.',pw:true,leaderOnly:true,ok:'Unlock'});if(!L)return;S.unlock={id:L.id,name:L.name,leader:true,exp:Date.now()+UNLOCK_IDLE};paintRawLock();};
+    const lb=$('#rawLockNow',row);if(lb)lb.onclick=()=>{S.unlock=null;paintRawLock();};}
+  const st=$('#rawState');if(st){const sl=rawSlots()[S.raw.sel],ex=RAWL.map(id=>rawEntry(S.raw.docs[id],sl)).filter(Boolean);st.textContent=ex.length?'Saved '+(ex[0].e.at?new Date(ex[0].e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'')+' by '+(ex[0].e.by||'?'):'Not saved yet';}
+}
+function paintRawHist(){
+  const el=$('#rawHist');if(!el)return;
+  const mp=area('pack_mac').params,numIds=RAW_IDS.filter(id=>{const p=mp.find(q=>q.id===id);return p&&(p.kind||'num')==='num';});
+  const brandOf=(aid,sl,id)=>{const k=RAW_PAIR[id];return k?rawVal(aid,sl,k):null;};
+  const sums={};numIds.forEach(id=>{sums[id]={pack_mac:null,pack_spa:null};});const rsum={};REGR.forEach(id=>{rsum[id]=null;});
+  const cell=(v,b)=>v==null?'–':fmtN(v)+(b?'<div class="muted small">'+esc(b)+'</div>':'');
+  const add=(a,v)=>v==null?a:(a||0)+v;
+  const blocks=rawSlots().map((sl,i)=>{
+    const ex=RAWL.map(id=>rawEntry(S.raw.docs[id],sl)).filter(Boolean),by=ex[0]?ex[0].e.by:'';
+    const rows=numIds.map(id=>{const p=mp.find(q=>q.id===id),a=rawVal('pack_mac',sl,id),b=rawVal('pack_spa',sl,id);if(a==null&&b==null)return '';
+      sums[id].pack_mac=add(sums[id].pack_mac,num(a));sums[id].pack_spa=add(sums[id].pack_spa,num(b));
+      const t=(num(a)||0)+(num(b)||0);
+      return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+'</span></td><td class="n mono">'+cell(a,brandOf('pack_mac',sl,id))+'</td><td class="n mono">'+cell(b,brandOf('pack_spa',sl,id))+'</td><td class="n mono tcol">'+fmtN(t)+'</td></tr>';}).join('')+REGR.map(id=>{const v=rawVal('pack_mac',sl,id),p=mp.find(q=>q.id===id);if(v==null)return '';rsum[id]=add(rsum[id],num(v));return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+' · both lines</span></td><td class="n mono" colspan="2">'+fmtN(v)+'</td><td class="n mono tcol">'+fmtN(v)+'</td></tr>';}).join('');
+    return '<div class="rawhh"><h4 style="margin:12px 0 4px">'+winText([[sl.s,sl.e]])+(by?' <span class="muted small" style="font-weight:400">· saved by '+esc(by)+(ex[0].e.at?' at '+new Date(ex[0].e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'')+'</span>':'')+'</h4>'+(rows?'<button type="button" class="btn sm" data-edit="'+i+'">Edit</button>':'')+'</div>'+(rows?'<table class="mx"><thead><tr><th></th><th class="n mac">Macaroni</th><th class="n spa">Spaghetti</th><th class="n">Total</th></tr></thead><tbody>'+rows+'</tbody></table>':'<div class="empty">Nothing saved in this window.</div>');}).join('');
+  const dayRows=numIds.map(id=>{const p=mp.find(q=>q.id===id),a=sums[id].pack_mac,b=sums[id].pack_spa;if(a==null&&b==null)return '';return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+'</span></td><td class="n mono">'+cell(a)+'</td><td class="n mono">'+cell(b)+'</td><td class="n mono tcol">'+fmtN((a||0)+(b||0))+'</td></tr>';}).join('')+REGR.map(id=>{const p=mp.find(q=>q.id===id);return rsum[id]==null?'':'<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+' · both lines</span></td><td class="n mono" colspan="2">'+fmtN(rsum[id])+'</td><td class="n mono tcol">'+fmtN(rsum[id])+'</td></tr>';}).join('');
+  el.innerHTML='<div class="card"><h3>Entries on this date</h3>'+blocks+(dayRows?'<h4 style="margin:16px 0 4px">Whole day</h4><table class="mx"><thead><tr><th></th><th class="n mac">Macaroni</th><th class="n spa">Spaghetti</th><th class="n">Total</th></tr></thead><tbody>'+dayRows+'</tbody></table>':'')+'</div>';
+  $$('button[data-edit]',el).forEach(b=>b.onclick=()=>{S.raw.sel=Number(b.dataset.edit);S.raw.edit=true;S.raw.dirty=false;paintRawChips();paintRawForm();window.scrollTo({top:0,behavior:'smooth'});});
+}
+async function saveRaw(){
+  if(!S.db)return toast('No database connection.',true);
+  const pm=rawPerm();if(!pm.can){paintRawLock();toast(pm.msg,true);return;}
+  const sl=rawSlots()[S.raw.sel],date=S.raw.date;
+  const val={},miss=[];let alarms={};
+  const line=aid=>area(aid).params.filter(p=>RAW_IDS.indexOf(p.id)>=0);
+  RAWL.forEach(aid=>{val[aid]={};alarms[aid]=0;const off=rawLineOff(aid,sl);
+    line(aid).forEach(p=>{const c=rawCtl(aid,p.id);if(!c)return;const raw=(c.value||'').trim();
+      if((p.kind||'num')!=='num'){val[aid][p.id]=raw||null;return;}
+      const n=num(raw);val[aid][p.id]=n;
+      if(n==null){if(!p.opt&&!off){miss.push(RAW_T[aid]+' · '+p.label);c.closest('.fld').classList.add('need');}}
+      else if(pState(p,n)!=='ok')alarms[aid]++;});});
+  const rv={};const bothOff=RAWL.every(aid=>rawLineOff(aid,sl));
+  REGR.forEach(id=>{const c=rawCtl('pack_mac',id);const n=num(c.value);rv[id]=n;if(n==null&&!bothOff){miss.push(area('pack_mac').params.find(p=>p.id===id).label);c.closest('.fld').classList.add('need');}});
+  if(miss.length){toast(miss.length+' reading'+(miss.length>1?'s':'')+' still empty ('+miss.slice(0,3).join(', ')+(miss.length>3?', …':'')+'). Fill every open reading.',true);const f1=$('#rawForm .fld.need input,#rawForm .fld.need select');if(f1){f1.focus();f1.scrollIntoView({block:'center',behavior:'smooth'});}return;}
+  const any=RAWL.some(aid=>Object.keys(val[aid]).some(k=>val[aid][k]!=null))||REGR.some(id=>rv[id]!=null);
+  if(!any){toast('Fill at least one raw material or film value.',true);return;}
+  const ex=RAWL.map(id=>rawEntry(S.raw.docs[id],sl));
+  const txt=(ex.some(Boolean)?'Save changes to the raw material, film and carton values of ':'Save the raw material, film and carton values of ')+'Macaroni and Spaghetti ('+winText([[sl.s,sl.e]])+')?';
+  let who;
+  if(unlockOn()){const okc=await ask({title:'Do you want to save?',msg:txt+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;who={name:S.unlock.name,id:S.unlock.id,leader:true};}
+  else{who=await ask({title:'Do you want to save?',msg:txt,pw:true,ok:'Yes, save'});if(!who)return;}
+  const L=adminEff()||leaderActive()||!!who.leader,ts=rawSlotState(sl,date);
+  for(let i=0;i<RAWL.length;i++){const e1=ex[i]&&ex[i].e;
+    if(e1?!(L||(sameP(who,e1)&&editLeft(e1)>0)):!(ts.st==='open'||L)){paintRawLock();toast(e1?'Only the operator who saved this entry (within '+editMin()+' minutes) or a shift leader can change it.':'The window is closed. A shift leader can unlock it.',true);return;}}
+  const btn=$('#rawSave');if(btn)btn.disabled=true;
+  const nowIso=new Date().toISOString(),d=new Date(),sec=d.getHours()*3600+d.getMinutes()*60+d.getSeconds();
+  try{
+    for(let i=0;i<RAWL.length;i++){
+      const aid=RAWL[i],e1=ex[i]&&ex[i].e,has=Object.keys(val[aid]).some(k=>val[aid][k]!=null);
+      if(!has&&!e1)continue;
+      const key=ex[i]?ex[i].k:'s'+(ts.st==='open'?sec:sl.s*60+d.getSeconds()),min=ex[i]?ex[i].min:(ts.st==='open'?Math.floor(sec/60):sl.s);
+      const v=Object.assign({},e1&&e1.v||{});area(aid).params.forEach(p=>{if(!(p.id in v))v[p.id]=null;});
+      Object.keys(val[aid]).forEach(k=>{v[k]=val[aid][k];});
+      const obj=Object.assign({},e1||{},{v:v,alarms:alarms[aid]});
+      if(e1){obj.editedAt=nowIso;obj.editedBy=who.name;}
+      else Object.assign(obj,{run:true,down:0,why:'',note:'',stopAt:'',startAt:'',empty:0,ovr:true,shift:shiftOf(Math.floor(min/60)),by:who.name,byId:who.id||null,at:nowIso,late:false});
+      await writeEntry(aid,date,key,obj,null);
+    }
+    const patch={};REGR.forEach(id=>{if(rv[id]!=null)patch[id]=rv[id];});
+    if(Object.keys(patch).length){try{await writeShared(date,'s'+sl.s,Object.assign(patch,{by:who.name,at:nowIso,from:'raw'}));}catch(e2){}}
+    S.raw.dirty=false;S.raw.edit=false;S.unlock=null;
+    toast('Raw materials saved by '+who.name+(Object.keys(alarms).some(k=>alarms[k])?' · some readings out of range':''));
+    rawRefresh();
+  }catch(e){toast(dbErr(e),true);}
+  if($('#rawSave'))paintRawLock();
 }
 
 /* ---------- merged laboratory (Macaroni left, Spaghetti right) ---------- */
@@ -1081,10 +1478,10 @@ function renderArea(){
    '<div class="card hcard"><div class="row hhead" style="justify-content:space-between;align-items:flex-start"><div>'+(a.timed?'':'<div class="eyebrow">Hourly reading</div>')+'<div class="row" style="gap:12px;flex-wrap:wrap"><h2>'+esc(a.name)+(a.timed?' · timed entries':'')+'</h2>'+(isLineTog(a)?'<span class="row" id="lineCtl" style="gap:8px;flex-wrap:wrap"></span>':'')+'</div><div class="muted small" id="whenLine"></div></div>'+
    '<div class="row">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':(a.timed?'':'<div class="daychip"><small>Production day</small><b>'+esc(S.date)+'</b></div>'))+(a.timed&&adminEff()?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
    '<div id="pinMsg"></div>'+noticeBoxHTML(a)+
-   (isPack(a)?'<div id="slotBar"></div>':'')+
+   
    (!hasCard(a)?'':'<section class="card" id="hourCard"><div class="ebar" id="eBar"></div><div id="hourView"></div></section>')+
    '<form class="card'+(hasCard(a)?' emodal':'')+'" id="entry" autocomplete="off" novalidate></form>'+
-   (isPack(a)?'<div class="split"><div class="card"><h3>Entries on this date</h3><div id="recent" class="tscroll"></div></div><div class="card"><h3>Film, carton &amp; raw material <span class="muted small" style="font-weight:400">3 times a day</span></h3><div id="recent2" class="tscroll"></div></div></div>':'<div class="card"><h3>Entries on this date</h3><div id="recent" class="tscroll"></div></div>')+
+   '<div class="card"><h3>Entries on this date</h3><div id="recent" class="tscroll"></div></div>'+
    '<div id="msgHist"></div><section class="card slim" id="issueBox"><button type="button" class="btn big" id="isOpen" style="width:100%">Send a request to maintenance (problem or breakdown)</button></section><div id="issHist"></div>';
   if($('#fDate'))$('#fDate').onchange=e=>{const v=e.target.value;if(!v)return;S.date=v;S.day=null;S.editKey=null;if(v===S.today&&ordH(S.hour)>ordH(nowH()))S.hour=nowH();S.dirty=false;subDay();refreshStrip();renderForm();refreshRecent();};
   if(a.timed&&adminEff())$('#newEntry').onclick=()=>{S.editKey=null;S.dirty=false;if(hasCard(a)){S.entryOpen=true;$('#entry').classList.add('open');}renderForm();window.scrollTo({top:0,behavior:'smooth'});};
@@ -1225,7 +1622,7 @@ function ask(o){
     const blocked=!!(o.leaderOnly&&noOps);
     const w=document.createElement('div');w.id='dlg';w.className='ovl';
     w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dT"><h2 id="dT">'+esc(o.title||'Do you want to save?')+'</h2><p>'+esc(o.msg||'')+'</p>'+(o.field?'<label class="l">'+esc(o.field.label)+'<input type="number" step="any" id="dField" value="'+esc(o.field.value==null?'':o.field.value)+'"></label>':'')+
-      (blocked?'<p class="status bad">No shift leader accounts exist yet. The admin adds them in Setup, Operators and passwords.</p>':'')+(o.pw&&!blocked?(noOps?'<p class="status warn">No operator passwords exist yet (Setup, Operators). Type your name to continue.</p><label class="l">Your name<input type="text" id="dName" autocomplete="off"></label>':'<label class="l">Operator password<input type="password" id="dPw" autocomplete="off"></label><div id="dWho" class="who" aria-live="polite"></div>'):'')+
+      (blocked?'<p class="status bad">No shift leader accounts exist yet. The admin adds them in Setup, Operators and passwords.</p>':'')+(o.pw&&!blocked?(noOps?'<p class="status warn">No operator passwords exist yet (Setup, Operators). Type your name to continue.</p><label class="l">Your name<input type="text" id="dName" autocomplete="off"></label>':'<label class="l">Operator password<input type="password" id="dPw" autocomplete="off" inputmode="numeric"></label><div id="dWho" class="who" aria-live="polite"></div>'):'')+
       '<div class="row" style="margin-top:6px"><button type="button" class="btn big" id="dNo">Cancel</button><button type="button" class="btn pri big" id="dYes"'+(o.pw?' disabled':'')+'>'+esc(o.ok||'Yes, save')+'</button></div>'+(o.pw&&adminEff()?'<button type="button" class="btn" id="dAdmin">Continue as Admin (no password)</button>':'')+'</div>';
     document.body.appendChild(w);
     let op=null;
@@ -1279,8 +1676,10 @@ function smNeeded(a,p){
   return others.length===0;
 }
 const smHidden=(a,p)=>!!(p&&p.sm&&a&&!a.timed&&!smNeeded(a,p));
-const reqd=(a,p)=>!p.opt||smNeeded(a,p);
-const optTxt=p=>{if(p.sm)return smNeeded(area(S.areaId),p)?'required now · ':'optional now · ';return p.opt?'optional · ':'';};
+const PUMP_LINE={lc_temp:'spaghetti',lc_press:'spaghetti',sc_temp:'macaroni',sc_press:'macaroni'};
+const pumpOff=(a,p)=>!!(a&&a.id==='boiler'&&p&&PUMP_LINE[p.id]&&lineOffAt(PUMP_LINE[p.id],S.date,S.hour));
+const reqd=(a,p)=>pumpOff(a,p)?false:(!p.opt||smNeeded(a,p));
+const optTxt=p=>{if(pumpOff(area(S.areaId),p))return 'line stopped · optional · ';if(p.sm)return smNeeded(area(S.areaId),p)?'required now · ':'optional now · ';return p.opt?'optional · ':'';};
 function curEntry(a){return S.day&&S.day.hours?(a.timed?(S.editKey?S.day.hours[S.editKey]:null):S.day.hours[String(S.hour)]):null;}
 function perm(){
   const a=area(S.areaId),e=curEntry(a),L=adminEff()||leaderActive();
@@ -1407,7 +1806,7 @@ function renderForm(fromSnap){
   let rawH='';
   groups.forEach(g=>{
     const gh='<fieldset class="grp"><legend>'+esc(g.n||'Readings')+'</legend><div class="fields">'+g.ps.map(p=>fieldHTML(p,fv(a,p,e))).join('')+'</div></fieldset>';
-    if(isPack(a)&&g.ps.some(p=>p.win))rawH+=gh;else html+=gh;
+    if(isPack(a)&&g.ps.some(p=>p.win)){}else html+=gh;
   });
   const run=!e||e.run!==false;
   if(isPack(a)){
@@ -1566,6 +1965,23 @@ function rdBar(){
   if(adminEff())return '';
   return '<div class="seg" id="rdTog" style="margin:0 0 10px"><button type="button" class="btn sm'+(S.rd==='yday'?'':' pri')+'" data-d="today">Today</button><button type="button" class="btn sm'+(S.rd==='yday'?' pri':'')+'" data-d="yday">Yesterday</button></div>';
 }
+function shiftBoxes(el){
+  const t=el.querySelector('table');if(!t||!t.tBodies[0])return;
+  const sh=(S.cfg&&S.cfg.shifts||[]).slice().sort((a,b)=>a.start-b.start);if(sh.length<2)return;
+  const hourOf=r=>{if(r.dataset.h!=null&&r.dataset.h!=='')return Number(r.dataset.h);const k=r.dataset.k||'';if(k.charAt(0)==='s')return Math.floor(Number(k.slice(1))/3600);return null;};
+  const groups=[],byName={};
+  Array.from(t.tBodies[0].rows).forEach(r=>{const h=hourOf(r);if(h==null)return;const n=shiftOf(h);let g=byName[n];if(!g){g=byName[n]={name:n,rows:[]};groups.push(g);}g.rows.push(r);});
+  if(!groups.length)return;
+  const rng=n=>{const i=sh.findIndex(x=>x.name===n);if(i<0)return '';const a=sh[i].start,b=sh[(i+1)%sh.length].start;return hh(a)+' – '+hh(b);};
+  const wrap=document.createElement('div');
+  groups.forEach(g=>{
+    const box=document.createElement('section');box.className='shbox';
+    box.innerHTML='<div class="shhd"><b>'+esc(g.name)+'</b><span class="muted small">'+esc(rng(g.name))+' · '+g.rows.length+' '+(g.rows.length===1?'entry':'entries')+'</span></div><div class="tscroll"><table><thead>'+t.tHead.innerHTML+'</thead><tbody></tbody></table></div>';
+    g.rows.forEach(r=>box.querySelector('tbody').appendChild(r));
+    wrap.appendChild(box);
+  });
+  t.replaceWith(wrap);
+}
 function bindRd(){$$('#rdTog button').forEach(b=>b.onclick=()=>{if((S.rd||'today')!==b.dataset.d)setRd(b.dataset.d);else refreshRecent();$$('#rdTog button').forEach(x=>x.classList.toggle('pri',x===b));});}
 const gapOf=list=>{const m={};list.filter(x=>!(x.e&&(x.e.ovr||x.e.run===false))).forEach((x,i,arr)=>{if(i>0){const d=x.min-arr[i-1].min;if(d>=0)m[x.k]=d;}});return m;};
 const gapTxt=d=>d==null?'':d+' min';
@@ -1643,7 +2059,7 @@ function refreshRecent(){
     el.innerHTML='<table><thead><tr><th>Hour</th><th>Operator</th><th>Line</th><th class="n">Out of range</th><th>Notes</th></tr></thead><tbody>'+es.map(x=>{const e=x.e;
       return '<tr class="clk" data-h="'+x.h+'"><td class="mono">'+hh(x.h)+'</td><td>'+esc(e.by)+chip(e)+'</td><td>'+(e.run===false?'<span class="chip">Stopped '+(e.down||0)+' min</span>':'<span class="chip ok">Running</span>')+'</td><td class="n mono">'+(e.alarms?'<span class="chip warn">'+e.alarms+'</span>':'0')+'</td><td>'+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table>';
   }
-  el.innerHTML=tog+el.innerHTML;bindRd();bindDelStop(el);
+  el.innerHTML=tog+el.innerHTML;shiftBoxes(el);bindRd();bindDelStop(el);
   if(R.ro){$$('tr.clk',el).forEach(r=>r.classList.remove('clk'));return;}
   $$('tr.clk',el).forEach(r=>r.onclick=()=>{if(hasCard(a)&&a.timed){S.viewKey=r.dataset.k;renderHourView();paintEntryBar();window.scrollTo({top:0,behavior:'smooth'});return;}if(a.timed)S.editKey=r.dataset.k;else S.hour=Number(r.dataset.h);S.dirty=false;refreshStrip();renderForm();window.scrollTo({top:0,behavior:'smooth'});});
 }
@@ -1848,6 +2264,7 @@ function paintNoticeUI(){
   const cut=Date.now()-24*3600e3;S.notices=S.notices.filter(n=>new Date(n.ts).getTime()>=cut);
   paintNtBlock();
   if(S.view==='area'){if(PACK_FROM[S.areaId])paintNotices();if(PRESS_TO_PACK[S.areaId])paintSent();}
+  if(S.view==='packm')paintPkNotices();
   if(S.view==='admin'&&S.tab==='notices')paintTab();
   if(S.view==='home'&&!S.dev&&!($('#pcPw')&&$('#pcPw').value))renderHome();
 }
@@ -2266,11 +2683,9 @@ function prGrid(a,cols,o){
   let t='<table class="prg"><colgroup><col style="width:'+(o.lw||190)+'px"><col style="width:40px">'+cols.map(()=>'<col>').join('')+'</colgroup><thead>';
   if(o.bands)t+='<tr><th class="pl" colspan="2"></th>'+o.bands.map(b=>'<th colspan="'+b[1]+'" class="bnd">'+esc(b[0])+'</th>').join('')+'</tr>';
   t+='<tr><th class="pl">Time</th><th></th>'+cols.map(c=>'<th'+(c.sep?' class="sep"':'')+'>'+esc(c.head)+(c.sub?'<div class="sh">'+esc(c.sub)+'</div>':'')+'</th>').join('')+'</tr>';
-  t+='<tr><td class="pl">Operator</td><td></td>'+cols.map(c=>'<td class="op'+(c.sep?' sep':'')+'">'+esc(c.e&&c.e.by?String(c.e.by).split(' ')[0]:'')+'</td>').join('')+'</tr>';
   if(cols.some(c=>c.e&&c.e.run===false))t+='<tr><td class="pl">Line status</td><td></td>'+cols.map(c=>'<td class="op'+(c.sep?' sep':'')+'">'+(c.e&&c.e.run===false?'Stopped':'')+'</td>').join('')+'</tr>';
   t+='</thead><tbody>';let grp=null;
   a.params.forEach(p=>{
-    if(p.group&&p.group!==grp){grp=p.group;t+='<tr class="pg"><td colspan="'+(n+2)+'">'+esc(grp)+'</td></tr>';}
     t+='<tr><td class="pl">'+esc(p.label)+'</td><td class="pu">'+esc(p.unit)+'</td>'+cols.map(c=>prVal(p,c.e,zp&&c.e&&c.e.v?c.e.v.zone:undefined,c.sep)).join('')+'</tr>';});
   if(cols.some(c=>c.e&&(c.e.note||c.e.why||c.e.edited||c.e.late)))t+='<tr class="nt"><td class="pl">Notes</td><td></td>'+cols.map(c=>'<td class="nn'+(c.sep?' sep':'')+'">'+esc(c.e?[c.e.late?'L':'',c.e.edited?'*':'',c.e.why||'',c.e.note||''].filter(Boolean).join(' '):'')+'</td>').join('')+'</tr>';
   return t+'</tbody></table>';
@@ -2286,8 +2701,8 @@ function prLine(a,date,doc,night){
 }
 function prBoiler(a,date,doc){
   const es=entries(doc);if(!es.length)return '';
-  const dh=prHours(false),nh=prHours(true),cols=prHourCols(es,dh.concat(nh),true);cols[dh.length].sep=true;
-  return '<section class="prsheet pl">'+prHead(a.name,date,'24 hours · day and night')+prGrid(a,cols,{bands:[[prName(false),dh.length],[prName(true),nh.length]],lw:210})+prFoot()+'</section>';
+  const blk=night=>'<div class="prcap">'+esc(prName(night))+'</div>'+prGrid(a,prHourCols(es,prHours(night),true),{lw:210});
+  return '<section class="prsheet pl prb">'+prHead(a.name,date,'24 hours · day (top) and night (bottom)')+blk(false)+blk(true)+prFoot()+'</section>';
 }
 function prRO(a,date,doc){
   const es=entries(doc);if(!es.length)return '';
@@ -2405,7 +2820,7 @@ function printDlg(){
     let r=$('#prRoot');if(!r){r=document.createElement('div');r.id='prRoot';document.body.appendChild(r);}
     r.innerHTML=html;
     let pst=$('#prPage');if(!pst){pst=document.createElement('style');pst.id='prPage';document.head.appendChild(pst);}
-    pst.textContent='@page{size:A4 '+(PR_TYPES.find(q=>q[0]===$('#pr_t').value)||['','','l'])[2].replace('l','landscape').replace('p','portrait')+';margin:8mm}';
+    pst.textContent='@page{size:'+((PR_TYPES.find(q=>q[0]===$('#pr_t').value)||['','','l'])[2]==='l'?'297mm 210mm':'210mm 297mm')+';margin:8mm}';
     const clean=()=>{r.innerHTML='';window.removeEventListener('afterprint',clean);};
     window.addEventListener('afterprint',clean);
     try{window.print();}catch(e){toast('Printing is not available here.',true);}
@@ -2575,7 +2990,7 @@ function stockDlg(o){
       return '<label class="l">'+esc(f.label)+'<input type="'+(f.type||'text')+'"'+(f.type==='number'?' step="any" inputmode="decimal" min="0"':'')+' id="'+id+'" autocomplete="off" value="'+esc(v)+'"'+(f.ph?' placeholder="'+esc(f.ph)+'"':'')+'></label>';};
     const wide=(o.fields||[]).length>5;
     w.innerHTML='<div class="dlg'+(wide?' wide':'')+'" role="dialog" aria-modal="true"><h2>'+esc(o.title)+'</h2>'+(o.msg?'<p>'+esc(o.msg)+'</p>':'')+'<div class="'+(wide?'g2':'')+'" style="display:grid;gap:10px">'+(o.fields||[]).map((f,i)=>wide&&i===0?fld(f).replace('<label class="l">','<label class="l full">'):fld(f)).join('')+
-      (adm?'':(noOps?'<label class="l full">Your name<input type="text" id="sd_name" autocomplete="off"></label>':'<label class="l full">Operator password<input type="password" id="sd_pw" autocomplete="off"></label><div id="sd_who" class="who full" aria-live="polite"></div>'))+
+      (adm?'':(noOps?'<label class="l full">Your name<input type="text" id="sd_name" autocomplete="off"></label>':'<label class="l full">Operator password<input type="password" id="sd_pw" autocomplete="off" inputmode="numeric"></label><div id="sd_who" class="who full" aria-live="polite"></div>'))+
       '<div id="sd_err" class="status bad full" hidden></div></div><div class="row" style="margin-top:6px"><button type="button" class="btn big" id="sd_no">Cancel</button><button type="button" class="btn pri big" id="sd_yes" disabled>'+esc(o.ok||'Save')+'</button></div></div>';
     document.body.appendChild(w);
     let op=null,seq=0;
@@ -2947,8 +3362,8 @@ function opDlg(o){
     const old=$('#dlg');if(old)old.remove();
     const adm=adminEff();
     const w=document.createElement('div');w.id='dlg';w.className='ovl';
-    w.innerHTML='<div class="dlg opdlg" role="dialog" aria-modal="true"><h2>'+esc(o.title)+'</h2><p>'+esc(o.msg||'')+'</p><div style="display:grid;gap:10px">'+(o.fields||[]).map(f=>'<label class="l">'+esc(f.label)+((f.type||'password')==='password'?'<span class="pwf"><input type="password" id="od_'+f.id+'" autocomplete="off"><button type="button" class="pwt" tabindex="-1">Show</button></span>':'<input type="'+f.type+'" id="od_'+f.id+'" autocomplete="off" value="'+esc(f.value||'')+'">')+'</label>').join('')+
-     (adm?'':'<div class="apv"><div class="apvh">'+'Approval needed</div><label class="l">Shift leader password<span class="pwf"><input type="password" id="od_lead" autocomplete="off"><button type="button" class="pwt" tabindex="-1">Show</button></span></label><div id="od_who" class="who" aria-live="polite"></div></div>')+'<div id="od_err" class="status bad" hidden></div></div>'+
+    w.innerHTML='<div class="dlg opdlg" role="dialog" aria-modal="true"><h2>'+esc(o.title)+'</h2><p>'+esc(o.msg||'')+'</p><div style="display:grid;gap:10px">'+(o.fields||[]).map(f=>'<label class="l">'+esc(f.label)+((f.type||'password')==='password'?'<span class="pwf"><input type="password" id="od_'+f.id+'" autocomplete="off"'+(f.num?' inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/\\D/g,\'\')"':'')+'><button type="button" class="pwt" tabindex="-1">Show</button></span>':'<input type="'+f.type+'" id="od_'+f.id+'" autocomplete="off" value="'+esc(f.value||'')+'">')+'</label>').join('')+
+     (adm?'':'<div class="apv"><div class="apvh">'+'Approval needed</div><label class="l">Shift leader password<span class="pwf"><input type="password" id="od_lead" autocomplete="off" inputmode="numeric"><button type="button" class="pwt" tabindex="-1">Show</button></span></label><div id="od_who" class="who" aria-live="polite"></div></div>')+'<div id="od_err" class="status bad" hidden></div></div>'+
      '<div class="row" style="margin-top:6px"><button type="button" class="btn big" id="od_no">Cancel</button><button type="button" class="btn pri big" id="od_yes" disabled>'+esc(o.ok||'Save')+'</button></div></div>';
     document.body.appendChild(w);
     let lead=adm?{name:'Admin'}:null,seq=0;
@@ -3004,9 +3419,9 @@ function opsPanel(host,adm){
     return '<div class="opr'+(off?' off':'')+'" data-id="'+esc(o.id)+'">'+head+'<div class="oact"><button type="button" class="btn sm" data-act="pw">'+KEY+' Password</button>'+'<select class="opsel" aria-label="More actions for '+esc(o.name)+'"><option value="">More…</option>'+(adm?'<option value="ren">Rename</option><option value="lead">'+(o.leader?'Remove leader':'Make shift leader')+'</option><option value="lhead">'+(o.labHead?'Remove lab head':'Make lab head')+'</option>':'')+'<option value="act">'+(off?'Make active':'Make inactive')+'</option></select><button type="button" class="btn sm bad ico" data-act="del" title="Remove" aria-label="Remove">'+TRASH+'</button></div></div>';
   }).join('');
   host.innerHTML='<section class="card opcard"><div class="ophd"><div><h2>Operators and passwords</h2><p class="muted small">'+(adm?(S.opsDraft?'Changes are kept here until you press Save operators at the bottom. ':'Every change saves straight away. ')+'You are signed in as admin, so no shift leader approval is needed.':'Every change needs a shift leader password. Changing a password asks for the old password first. Shift leaders can only be changed by the admin.')+'</p></div><button type="button" class="btn pri" id="opAdd">+ Add operator</button></div><div class="ostats"><span><b>'+L.length+'</b> operators</span><span><b>'+nAct+'</b> active</span><span><b>'+nLead+'</b> shift leaders</span><span><b>'+nLab+'</b> lab heads</span></div><div id="opPage" class="oplist">'+(rows||'<div class="empty">No operators yet.</div>')+'</div></section>';
-  const pwRules=async(v,id,oldOk)=>{if(v.p1.length<4)return 'Passwords need at least 4 characters.';if(v.p1!==v.p2)return 'The two passwords are not the same.';const u=await pwUsed(v.p1,id);if(u)return 'This password is already used by '+u.name+'. Choose another.';return null;};
+  const pwRules=async(v,id,oldOk)=>{if(!/^\d+$/.test(v.p1))return 'Passwords can only contain numbers (0-9).';if(v.p1.length<5)return 'Passwords need at least 5 digits.';if(v.p1!==v.p2)return 'The two passwords are not the same.';const u=await pwUsed(v.p1,id);if(u)return 'This password is already used by '+u.name+'. Choose another.';return null;};
   $('#opAdd').onclick=async()=>{
-    const r=await opDlg({title:'Add operator',msg:adm?'Type the new operator name and password.':'Type the new operator name and password, then a shift leader approves.',fields:[{id:'name',label:'Operator name',type:'text'},{id:'p1',label:'Password (at least 4 characters)'},{id:'p2',label:'Repeat password'}],ok:'Add operator',validate:v=>pwRules(v,null)});
+    const r=await opDlg({title:'Add operator',msg:adm?'Type the new operator name and password.':'Type the new operator name and password, then a shift leader approves.',fields:[{id:'name',label:'Operator name',type:'text'},{id:'p1',label:'Password (at least 5 digits, numbers only)',num:true},{id:'p2',label:'Repeat password',num:true}],ok:'Add operator',validate:v=>pwRules(v,null)});
     if(!r)return;const v=r.vals,salt=newSalt(),hash=await hashPw(salt,v.p1);
     if(await opsWrite(l=>l.push({id:'o_'+Date.now().toString(36)+Math.floor(Math.random()*99),name:v.name.trim(),active:true,leader:false,salt,hash})))toast(v.name.trim()+' added.');
   };
@@ -3015,7 +3430,7 @@ function opsPanel(host,adm){
     const b=e.target.closest('[data-act]');if(!b)return;const id=b.closest('.opr').dataset.id,o=OP().find(x=>x.id===id);if(!o||(!adm&&(o.leader||o.labHead)))return;
     const act=b.dataset.act;
     if(act==='pw'){
-      const fields=adm?[{id:'p1',label:'New password (at least 4 characters)'},{id:'p2',label:'Repeat new password'}]:[{id:'old',label:'Old password'},{id:'p1',label:'New password (at least 4 characters)'},{id:'p2',label:'Repeat new password'}];
+      const fields=adm?[{id:'p1',label:'New password (at least 5 digits, numbers only)',num:true},{id:'p2',label:'Repeat new password',num:true}]:[{id:'old',label:'Old password',num:true},{id:'p1',num:true,label:'New password (at least 5 digits, numbers only)'},{id:'p2',num:true,label:'Repeat new password'}];
       const r=await opDlg({title:'Change password: '+o.name,msg:adm?'Type the new password twice.':'Type the old password, the new password twice, then a shift leader approves.',fields,ok:'Change password',
         validate:async v=>{if(!adm){if(await hashPw(o.salt,v.old)!==o.hash)return 'The old password is not correct.';if(v.p1===v.old)return 'The new password must be different from the old one.';}return pwRules(v,id);}});
       if(!r)return;const salt=newSalt(),hash=await hashPw(salt,r.vals.p1);
