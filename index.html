@@ -311,6 +311,18 @@ const fmtN=v=>v==null?'–':Number(v).toFixed(2).replace(/\.?0+$/,'');
 const hh=h=>pad(h)+':00';
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+/* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
+const THEMES=['time','light','dark','device'];
+const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:(window.fully?'time':'device');};
+function themeLbl(){const m=themeMode();return {time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark',device:'📱 Device'}[m];}
+function applyTheme(){
+  const m=themeMode(),h=new Date().getHours();
+  const t=m==='light'?'light':m==='dark'?'dark':m==='time'?((h>=7&&h<19)?'light':'dark'):'';
+  const r=document.documentElement;if(t)r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');
+  const b=document.getElementById('themeBtn');if(b)b.textContent=themeLbl();
+}
+applyTheme();setInterval(applyTheme,60000);
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#themeBtn');if(b){const m=themeMode();lsSet('plant.theme',THEMES[(THEMES.indexOf(m)+1)%THEMES.length]);applyTheme();}},true);
 const _ss={};
 const ssGet=k=>{try{return sessionStorage.getItem(k)}catch(e){return _ss[k]||null}};
 const ssSet=(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){_ss[k]=v}};
@@ -565,7 +577,7 @@ function renderTop(){
    '<div class="stk2"><span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'No database')+'</span></span>'+
    '<span class="batt" id="batt" hidden></span></div>'+
    '<div class="stk2"><span class="clock" id="clock"><span>'+topDate(t)+'</span><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span></span></div>'+
-   '<button class="bbtn" id="langBtn" data-nolang type="button" title="'+(LANG==='fr'?'Switch to English':'Passer en français')+'">'+(LANG==='fr'?'🌐 EN':'🌐 FR')+'</button>'+(canPrint()?'<button class="bbtn prbtn" id="prBtn" type="button">🖨 Print</button>':'')+(S.dev&&S.view!=='home'&&(S.view!=='mplace'||adminEff()||S.dev.place==='all')?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+(S.acct?'<button class="bbtn" id="signOut">Sign out</button>':'')+'</header>';
+   '<button class="bbtn" id="themeBtn" data-nolang type="button" title="Screen colours: tap to change">'+themeLbl()+'</button><button class="bbtn" id="langBtn" data-nolang type="button" title="'+(LANG==='fr'?'Switch to English':'Passer en français')+'">'+(LANG==='fr'?'🌐 EN':'🌐 FR')+'</button>'+(canPrint()?'<button class="bbtn prbtn" id="prBtn" type="button">🖨 Print</button>':'')+(S.dev&&S.view!=='home'&&(S.view!=='mplace'||adminEff()||S.dev.place==='all')?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+(S.acct?'<button class="bbtn" id="signOut">Sign out</button>':'')+'</header>';
   const gh=$('#goHome');if(gh)gh.onclick=()=>go('home');
   const pb=$('#prBtn');if(pb)pb.onclick=()=>printDlg();
   paintBatt();setBH();
