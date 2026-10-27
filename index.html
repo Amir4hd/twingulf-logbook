@@ -2,6 +2,8 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1f5a3a">
+<meta name="color-scheme" content="light dark">
+<script>(function(){try{var m=localStorage.getItem('plant.theme');var h=new Date().getHours();var t=m==='light'?'light':m==='dark'?'dark':((h>=7&&h<19)?'light':'dark');var r=document.documentElement;r.setAttribute('data-theme',t);r.style.colorScheme=t;}catch(e){}})();</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -313,7 +315,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v38';
+const APP_V='plant-v39';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -596,7 +598,7 @@ async function aboutDlg(){
   const row=(k,v)=>'<tr><td class="muted">'+k+'</td><td><b>'+esc(v)+'</b></td></tr>';
   w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:440px"><h2>About this tablet</h2><table class="elt"><tbody>'+
    row('App version',APP_V)+'<tr><td class="muted">Newest version</td><td><b id="abNew">checking…</b></td></tr>'+
-   row('Place',S.dev?placeName(S.dev.place):'–')+row('Signed in',S.acct?S.acct.email:'–')+row('Connection',S.db?(S.online?'Online':'Offline'):'No database')+row('Screen',window.innerWidth+' × '+window.innerHeight)+row('Date and time',new Date().toLocaleString())+
+   row('Place',S.dev?placeName(S.dev.place):'–')+row('Signed in',S.acct?S.acct.email:'–')+row('Connection',S.db?(S.online?'Online':'Offline'):'No database')+row('Screen',window.innerWidth+' × '+window.innerHeight)+row('Colour test',(document.documentElement.dataset.theme||'-')+' · page '+getComputedStyle(document.body).backgroundColor+' · tablet says '+(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')+' · kiosk '+(window.fully?'yes':'no'))+row('Date and time',new Date().toLocaleString())+
    '</tbody></table><button type="button" class="btn pri big" style="width:100%;margin-top:10px" id="abOk">Close</button></div>';
   document.body.appendChild(w);$('#abOk').onclick=()=>w.remove();
   try{const t=await (await fetch('sw.js',{cache:'no-store'})).text(),m=t.match(/const V='([^']+)'/),el=$('#abNew');if(el)el.textContent=m?m[1]+((m[1]===APP_V)?' · up to date':' · refresh to update'):'unknown';}catch(e){const el=$('#abNew');if(el)el.textContent='not reachable';}
