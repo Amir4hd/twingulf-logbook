@@ -247,6 +247,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .rawcell.reg{background:rgba(106,154,106,.16);border-left-color:#6a9a6a}
 .rawcell.rawpair .fld{padding:0}
 .shbox{border:1px solid var(--line);border-radius:10px;margin:0 0 12px;overflow:hidden;background:var(--panel2,transparent)}.shbox:nth-of-type(odd){border-left:4px solid #4fa3d9}.shbox:nth-of-type(even){border-left:4px solid #e8a93d}.shhd{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--panel,#0000);border-bottom:1px solid var(--line)}.shbox table{margin:0}
+.diebar .btn{white-space:nowrap}.diehead{flex:1;display:flex;justify-content:center;align-self:center}.diebar{display:flex;align-items:center;gap:12px;margin:0;padding:4px 4px}.diebox{margin:0 0 10px}.dieh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.dbtns{display:flex;gap:6px;flex-wrap:wrap}.diecur{font:700 15px var(--f-d,inherit)}.dchip.over{background:var(--bad)}.dchip{display:inline-block;background:var(--ok);color:#fff;border-radius:999px;padding:1px 10px;font-weight:800}.dper{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.dp{border:1px solid var(--line);border-radius:8px;padding:3px 10px;font-size:14px}.dp.on{border-color:var(--ok)}
 .pkgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.pkcol{min-width:0}.pkcol .rawcell{margin-bottom:8px}.pkpair{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pkpair .rawcell{padding:6px}.pkpair .fld input,.pkpair .fld select{font-size:15px}.pkt .chip{font-size:10px;padding:1px 6px}.pkby{font-size:10px;font-weight:600}.pkdf{font-size:12px;color:var(--muted,#667);font-family:inherit}.pknew{background:#fff!important;color:#1d1400!important;border:2px solid #1d1400!important;font-weight:700;margin-left:8px;padding:2px 8px;min-height:0;height:26px;font-size:11px;text-transform:none;letter-spacing:0}.pkt td,.pkt th{padding:6px 4px;font-size:13px}
 .rawh.mac{background:#e8a93d;color:#1d1400;border-color:#e8a93d}
 .rawh.spa{background:#4fa3d9;color:#001522;border-color:#4fa3d9}
@@ -315,7 +316,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v39';
+const APP_V='plant-v40';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -492,7 +493,7 @@ async function acquireSession(){
   resub('sess',()=>S.db.doc('sessions/'+S.acct.uid).onSnapshot(sn=>{const x=sn.exists?sn.data():null;if(S.sessionOk&&x&&x.sid&&x.sid!==SID())kicked();},e=>{}));
   return true;
 }
-function kicked(){S.sessionOk=false;unsub('sess');unsub('notices');S.dev=null;S.gate='kicked';S.view='home';renderTop();renderHome();}
+function kicked(){S.sessionOk=false;unsub('sess');unsub('notices');unsub('dieM');unsub('dieS');S.dev=null;S.gate='kicked';S.view='home';renderTop();renderHome();}
 async function evalGate(){
   const a=S.acct;S.sessInfo=null;
   const stop=g=>{S.gate=g;S.dev=null;S.view='home';renderTop();renderHome();if(g==='approve')beat();};
@@ -504,12 +505,12 @@ async function evalGate(){
   S.gate=null;S.dev={place:a.role,at:new Date().toISOString()};S.unlock=null;S.dirty=false;
   if(!lsGet('plant.inAt'))lsSet('plant.inAt',S.db.serverTime||new Date().toISOString());
   resub('kill',()=>S.db.doc(sessPath()).onSnapshot(sn=>{const x=sn.exists?sn.data():null;if(x&&x.kill&&x.kill.at&&x.kill.at>(lsGet('plant.inAt')||''))remoteOut();},e=>{}));
-  unsub('notices');ensureNoticeSub();beat();renderTop();restoreView();
+  unsub('notices');ensureNoticeSub();ensureDieSub();beat();renderTop();restoreView();
 }
 async function remoteOut(){if(S.killing)return;S.killing=true;try{toast('The admin signed this device out.');}catch(e){}await doSignOut();S.killing=false;}
 async function doSignOut(){
   try{if(S.db&&S.acct&&(S.sessionOk||!LOCKED_ROLE(S.acct.role||'')))await S.db.doc(sessPath()).delete();}catch(e){}
-  S.sessionOk=false;unsub('sess');unsub('kill');unsub('notices');lsSet('plant.inAt','');lsSet('plant.appr','');lsSet('plant.view','');S.dev=null;S.unlock=null;
+  S.sessionOk=false;unsub('sess');unsub('kill');unsub('notices');unsub('dieM');unsub('dieS');lsSet('plant.inAt','');lsSet('plant.appr','');lsSet('plant.view','');S.dev=null;S.unlock=null;
   if(S.user&&S.user.signOut){await S.user.signOut();return;}
   ssSet('plant.test','');S.acct=null;S.gate='pick';S.view='home';renderTop();renderHome();
 }
@@ -688,6 +689,7 @@ setInterval(()=>{
   if(S.view==='raw'&&S.raw){if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;paintRawStatus();if(rawReady()&&!$('#dlg'))paintRawLock();}
   if(S.view==='home')paintRawCard();
   if(S.view==='packm')paintRawBan();
+  if(S.view==='area')paintDieBox();
   if(S.view==='packm'&&S.pk&&!$('#dlg')&&!$('#pkStop'))PKL.forEach(id=>{if(!S.pk.dirty[id]){paintPkList(id);const m=$('#pkf_'+id+' [data-pm]'),e=S.pk.docs[id]?pkEntry(id):null;if(m&&e){const l=editLeft(e);m.className='status '+(l>0?'ok':'bad');m.textContent=l>0?'Saved by '+e.by+'. You can change it for '+left5(l)+' more.':'Saved by '+e.by+'. Locked: only a shift leader can change it now.';}}});
   if(S.view==='lab'&&S.lab){if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;if(S.date!==S.today&&!adminEff()){S.date=S.today;S.lab.edit={};S.lab.dirty={};subLab();}LABS.forEach(id=>{if(!S.lab.dirty[id])paintLabList(id);});}
   if(S.view==='admin'&&(S.tab==='overview'||S.tab==='devices'))paintTab();
@@ -750,7 +752,7 @@ function renderHome(){
   const vis=S.cfg.areas.filter(canSee);
   const mergeLab=labOK();let labDone=false;
   const mergePk=packOK();let pkDone=false;
-  const cards=vis.map(a=>mergePk&&isPack(a)?(pkDone?'':(pkDone=true,packCardHTML())+(rawOK()?rawCardHTML():'')):mergeLab&&LABS.indexOf(a.id)>=0?(labDone?'':(labDone=true,'<button class="acard" data-a="__lab"><b>Lab Moisture</b><span class="muted">Macaroni and Spaghetti moisture readings, side by side</span></button><button class="acard" data-a="__rm"><b>Flour &amp; semolina tests</b><span class="muted">Gluten, ash, moisture, color, spots and granulation of raw material</span></button>')):'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(isLineTog(a)&&lineOpen(a.id)?' <span class="chip warn">not running</span>':'')+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.filter(p=>!(isPack(a)&&p.win)).length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>'+(!mergePk&&a.id==='pack_spa'&&rawOK()?rawCardHTML():'')).join('');
+  const cards=vis.map(a=>mergePk&&isPack(a)?(pkDone?'':(pkDone=true,packCardHTML())+(rawOK()?rawCardHTML():'')):mergeLab&&LABS.indexOf(a.id)>=0?(labDone?'':(labDone=true,'<button class="acard" data-a="__lab"><b>Lab Moisture</b><span class="muted">Macaroni and Spaghetti moisture readings, side by side</span></button><button class="acard" data-a="__rm"><b>Flour &amp; semolina tests</b><span class="muted">Gluten, ash, moisture, color, spots and granulation of raw material</span></button>')):'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(isLineTog(a)&&lineOpen(a.id)?' <span class="chip warn">not running</span>':'')+dieChipHTML(a.id)+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.filter(p=>!(isPack(a)&&p.win)).length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>'+(!mergePk&&a.id==='pack_spa'&&rawOK()?rawCardHTML():'')).join('');
   const sub=adminEff()?'Admin: every area and the Control room.':'Signed in as: '+placeName(S.dev.place)+(S.acct&&S.acct.email?' ('+S.acct.email+')':'')+'.';
   $('#main').innerHTML='<div'+(adminEff()||S.dev.place==='all'?'':' class="c1w"')+'><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
@@ -758,6 +760,121 @@ function renderHome(){
    '<div class="areas '+(adminEff()||S.dev.place==='all'?'cols2':'cols1')+'">'+cards+(S.dev.place==='all'?'<button class="acard sum" data-a="__ops"><b>Operators and passwords</b><span>Add, remove or change operator passwords</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__maint"><b>Maintenance</b><span>Requests, preventive maintenance, recent maintenance done</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
   $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__lab')go('lab');else if(a==='__rm')go('rm');else if(a==='__raw')go('raw');else if(a==='__pack')go('packm');else if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else if(a==='__ops')go('ops');else if(a==='__maint')go('mplace');else go('area',a);});
   paintRawCard();
+}
+
+/* ---------- press dies and teflon ---------- */
+const DIE_LINES=['macaroni','spaghetti'];
+const dieDefault=id=>id==='macaroni'?['M1','M2']:['S1','S2'];
+function dieNames(id){const d=S.dies&&S.dies[id];return d&&d.names&&d.names.length?d.names:dieDefault(id);}
+function dieEvents(id){const d=S.dies&&S.dies[id],ev=d&&d.events?d.events:{};return Object.keys(ev).filter(k=>ev[k]&&ev[k].at).map(k=>Object.assign({k:k},ev[k])).sort((a,b)=>a.at<b.at?-1:1);}
+function dieInfo(id){
+  const ev=dieEvents(id),dies=ev.filter(e=>e.type==='die'),now=Date.now(),cur=dies.length?dies[dies.length-1]:null;
+  const segs=dies.map((e,i)=>({die:e.die,s:new Date(e.at).getTime(),e:i<dies.length-1?new Date(dies[i+1].at).getTime():now}));
+  const names=dieNames(id).slice();ev.forEach(e=>{if(e.die&&names.indexOf(e.die)<0)names.push(e.die);});
+  const per=names.map(n=>{const tf=ev.filter(e=>e.type==='teflon'&&e.die===n).pop();let ms=0;const t0=tf?new Date(tf.at).getTime():0;
+    if(tf)segs.forEach(sg=>{if(sg.die!==n)return;const a=Math.max(sg.s,t0);if(sg.e>a)ms+=sg.e-a;});
+    return {n:n,tf:tf,days:tf?(Number(tf.pre)||0)+ms/864e5:null,cur:!!(cur&&cur.die===n)};});
+  return {cur:cur,per:per,since:cur?(now-new Date(cur.at).getTime())/864e5:null,names:names};
+}
+const dieShort=n=>'···'+String(n==null?'':n).slice(-3);
+const dieLim=id=>{const d=S.dies&&S.dies[id],l=d&&d.limits||{};return {die:Number(l.die)>0?Number(l.die):4,teflon:Number(l.teflon)>0?Number(l.teflon):90};};
+const dieOver=(days,lim)=>days!=null&&Math.floor(days)>lim;
+const dieLeader=()=>adminEff()||!!(S.dev&&S.dev.place==='all');
+const dieLeft=(since,lim)=>{if(since==null)return '';const r=lim-Math.floor(since);return '';};
+const dieDays=d=>d==null?'–':(d<1?'today':Math.floor(d)+' d');
+const dieWhen=iso=>{const d=new Date(iso);return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+pad(d.getHours())+':'+pad(d.getMinutes());};
+function ensureDieSub(){
+  const pl=S.dev&&S.dev.place;
+  if(!(S.db&&(pl==='press'||pl==='all'||pl==='admin'))){unsub('dieM');unsub('dieS');return;}
+  S.dies=S.dies||{};
+  DIE_LINES.forEach((id,i)=>{if(S.subs[i?'dieS':'dieM'])return;resub(i?'dieS':'dieM',()=>S.db.doc('logs/dies_'+id).onSnapshot(sn=>{S.dies[id]=sn.exists?sn.data():{};paintDieBox();if(S.view==='home'&&S.dev&&!($('#pcPw')&&$('#pcPw').value))renderHome();},e=>{}));});
+}
+function dieChipHTML(id){
+  if(DIE_LINES.indexOf(id)<0||!S.dies||!S.dies[id])return '';
+  const I=dieInfo(id);if(!I.cur)return '';
+  const L=dieLim(id).die,over=dieOver(I.since,L);
+  return ' <span class="chip'+(over?' bad':'')+'" title="Days since the last die change">Die '+(dieLeader()?esc(dieShort(I.cur.die))+' · ':'')+esc(dieDays(I.since))+(dieLeader()?'':' · '+esc(dieLeft(I.since,L)))+'</span>';
+}
+function paintDieBox(){
+  const el=$('#dieBox');if(!el||S.view!=='area'||DIE_LINES.indexOf(S.areaId)<0)return;
+  if(!S.dies||!S.dies[S.areaId]){el.innerHTML='';return;}
+  const I=dieInfo(S.areaId),L=dieLim(S.areaId).die,over=I.cur&&dieOver(I.since,L),ld=dieLeader();
+  let h;
+  if(!I.cur)h='<div class="diebar"><span class="muted small">Die change not recorded yet</span>'+(ld?'<button type="button" class="btn sm" data-dd="menu">Die &amp; Teflon</button>':'')+'</div>';
+  else if(ld)h='<div class="diebar"><span><span class="muted small">Die</span> <span class="diecur" title="Die '+esc(I.cur.die)+'">'+esc(dieShort(I.cur.die))+'</span> <span class="dchip'+(over?' over':'')+'" title="Days since the last die change (limit '+L+')">'+esc(dieDays(I.since))+'</span> <span class="muted small">'+esc(dieLeft(I.since,L))+'</span></span><button type="button" class="btn sm" data-dd="menu">Die &amp; Teflon</button></div>';
+  else h='<div class="diebar"><span><span class="muted small">Die changed</span> <b>'+esc(dieWhen(I.cur.at).replace(/ \d\d:\d\d$/,''))+'</b> <span class="dchip'+(over?' over':'')+'" title="Days since the last die change">'+esc(dieDays(I.since))+'</span> <span class="'+(over?'':'muted ')+'small"'+(over?' style="color:var(--bad);font-weight:700"':'')+'>'+esc(dieLeft(I.since,L))+'</span></span></div>';
+  if(el._h!==h){el._h=h;el.innerHTML=h;$$('[data-dd]',el).forEach(b=>b.onclick=()=>dieMenu());}
+}
+function dieMenu(){
+  const id=S.areaId,I=dieInfo(id),old=$('#dieMenu');if(old)old.remove();
+  const w=document.createElement('div');w.id='dieMenu';w.className='ovl';
+  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:460px"><h2>Die &amp; Teflon · '+esc(area(id).name)+'</h2>'+
+   '<p style="margin:0 0 8px">'+(I.cur?'Die in the press: <b class="diecur">'+esc(I.cur.die)+'</b> <span class="dchip'+(dieOver(I.since,dieLim(id).die)?' over':'')+'">'+esc(dieDays(I.since))+'</span> <span class="muted small">since '+esc(dieWhen(I.cur.at))+'</span>':'<span class="muted">Die not recorded yet. Press Die changed and choose the die now installed.</span>')+'</p>'+
+   '<table class="elt"><thead><tr><th>Die</th><th>Teflon worked</th></tr></thead><tbody>'+I.per.map(p=>'<tr><td><b>'+esc(p.n)+'</b>'+(p.cur?' <span class="chip ok">in press</span>':'')+'</td><td'+(p.tf&&dieOver(p.days,dieLim(id).teflon)?' style="color:var(--bad);font-weight:700"':'')+'>'+(p.tf?esc(dieDays(p.days))+' <span class="muted small">(changed '+esc(dieWhen(p.tf.at))+')</span>':'<span class="muted">not recorded</span>')+'</td></tr>').join('')+'</tbody></table>'+
+   '<div class="row" style="margin-top:10px;flex-wrap:wrap"><button type="button" class="btn pri big" style="flex:1" id="dmDie">Die changed</button><button type="button" class="btn pri big" style="flex:1" id="dmTef">Teflon changed</button></div>'+
+   '<div class="row" style="margin-top:8px;flex-wrap:nowrap"><button type="button" class="btn big" style="flex:1" id="dmHist">History</button><button type="button" class="btn big" style="flex:1" id="dmLim">Limits</button><button type="button" class="btn big" style="flex:1" id="dmX">Close</button></div></div>';
+  document.body.appendChild(w);
+  $('#dmX').onclick=()=>w.remove();$('#dmDie').onclick=()=>{w.remove();dieDlg('die');};$('#dmTef').onclick=()=>{w.remove();dieDlg('teflon');};$('#dmHist').onclick=()=>{w.remove();dieHist();};
+  $('#dmLim').onclick=async()=>{w.style.display='none';const L=dieLim(id);
+    const r=await opDlg({title:'Day limits · '+area(id).name,msg:'The day counters turn red when they go above these numbers.',fields:[{id:'d',label:'Die: days in the press, then change',type:'number',value:L.die},{id:'t',label:'Teflon: working days, then change',type:'number',value:L.teflon}],ok:'Save',validate:async v=>{const a=Math.round(Number(v.d)),b=Math.round(Number(v.t));return a>=1&&a<=999&&b>=1&&b<=999?null:'Enter whole numbers from 1 to 999.';}});
+    w.style.display='';if(!r)return;
+    try{await dieWrite(id,{limits:{die:Math.round(Number(r.vals.d)),teflon:Math.round(Number(r.vals.t))}});toast('Limits saved.');w.remove();dieMenu();}catch(e){toast(dbErr(e),true);}};
+  w.onclick=ev=>{if(ev.target===w)w.remove();};
+}
+async function dieWrite(id,patch){
+  const ref=S.db.doc('logs/dies_'+id),body=Object.assign({area:'dies',date:''},patch);
+  try{await ref.update(body);}catch(e){if(e&&(e.code==='invalid_argument'||e.code==='not-found'))await ref.set(body);else throw e;}
+}
+function dieDup(id,die,iso){return dieEvents(id).some(e=>e.type==='die'&&e.die===die&&Math.abs(new Date(e.at).getTime()-new Date(iso).getTime())<60*60000);}
+async function dieAdd(id,type,die,iso,who,extra){
+  const k='e'+Date.now(),obj=Object.assign({type:type,die:die,at:iso,by:who.name,byId:who.id||null,ts:new Date().toISOString()},extra||{});
+  await dieWrite(id,{events:{[k]:obj}});
+}
+function dieDlg(kind){
+  const id=S.areaId;if(DIE_LINES.indexOf(id)<0)return;
+  const I=dieInfo(id),old=$('#dieDlg');if(old)old.remove();
+  const now=new Date(),isT=kind==='teflon',def=isT?(I.cur?I.cur.die:I.names[0]):(I.names.find(n=>!I.cur||n!==I.cur.die)||I.names[0]);
+  const w=document.createElement('div');w.id='dieDlg';w.className='ovl';
+  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:520px"><h2>'+(isT?'Teflon changed':'Die changed')+' · '+esc(area(id).name)+'</h2>'+
+   '<div class="fields"><label class="l">'+(isT?'Which die got new Teflon?':'Die now installed')+'<select id="ddDie">'+I.names.map(n=>'<option'+(n===def?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></label>'+
+   '<label class="l">Date<input type="date" id="ddDate" value="'+ymd(now)+'" max="'+ymd(now)+'"></label><label class="l">Time<input type="time" id="ddTime" value="'+pad(now.getHours())+':'+pad(now.getMinutes())+'"></label>'+
+   (isT?'<label class="l">Days this Teflon already worked before today (optional)<input type="number" id="ddPre" min="0" max="999" inputmode="numeric" placeholder="0"></label>':'')+'</div>'+
+   '<div class="row" style="margin-top:8px;flex-wrap:nowrap"><button type="button" class="btn big cyan" style="flex:1" id="ddC">Cancel</button><button type="button" class="btn pri big" style="flex:1" id="ddOk">Save</button></div></div>';
+  document.body.appendChild(w);
+  $('#ddC').onclick=()=>w.remove();
+  $('#ddOk').onclick=async()=>{
+    const die=$('#ddDie').value,dt=$('#ddDate').value,tm=$('#ddTime').value;
+    if(!dt||!/^([01]\d|2[0-3]):[0-5]\d$/.test(tm)){toast('Enter the date and the time (24h, like 15:30).',true);return;}
+    const at=new Date(dt+'T'+tm+':00');
+    if(at.getTime()>Date.now()+5*60000){toast('The time cannot be in the future.',true);return;}
+    if(!isT&&dieDup(id,die,at.toISOString())){toast('This die change is already recorded.',true);return;}
+    const pre=isT?Math.max(0,Math.min(999,Math.round(Number($('#ddPre').value)||0))):0;
+    w.style.display='none';
+    const who=await ask({title:isT?'Shift leader password needed':'Do you want to save?',msg:(isT?'Teflon changed on die ':'Die changed to ')+die+' · '+dieWhen(at.toISOString())+(pre?' · already worked '+pre+' days':'')+' · '+area(id).name,pw:true,ok:'Yes, save'});
+    w.style.display='';
+    if(!who)return;
+    if(isT&&!who.leader){toast('Only a shift leader can record a Teflon change.',true);return;}
+    if(at.getTime()<Date.now()-3*864e5&&!who.leader){toast('Older than 3 days: ask a shift leader.',true);return;}
+    try{await dieAdd(id,kind,die,at.toISOString(),who,isT?{pre:pre}:{src:'manual'});w.remove();toast((isT?'Teflon':'Die')+' change saved by '+who.name);}catch(e){toast(dbErr(e),true);}
+  };
+}
+function dieHist(){
+  const id=S.areaId,old=$('#dieHist');if(old)old.remove();
+  const ev=dieEvents(id).reverse().slice(0,25),w=document.createElement('div');w.id='dieHist';w.className='ovl';
+  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:560px"><h2>Die and Teflon history · '+esc(area(id).name)+'</h2>'+
+   (ev.length?'<div class="tscroll"><table class="elt"><thead><tr><th>When</th><th>What</th><th>By</th><th></th></tr></thead><tbody>'+ev.map(e=>'<tr><td class="mono">'+esc(dieWhen(e.at))+'</td><td>'+(e.type==='teflon'?'Teflon changed · die <b>'+esc(e.die)+'</b>'+(e.pre?' <span class="muted small">(already worked '+e.pre+' d)</span>':''):'Die changed → <b>'+esc(e.die)+'</b>'+(e.src==='message'?' <span class="muted small">(from message to packaging)</span>':''))+'</td><td>'+esc(String(e.by||'').split(' ')[0])+'</td><td><button type="button" class="delstop" data-k="'+esc(e.k)+'" aria-label="Delete">🗑</button></td></tr>').join('')+'</tbody></table></div>':'<div class="empty">Nothing recorded yet.</div>')+
+   '<div class="row" style="margin-top:8px;flex-wrap:wrap"><button type="button" class="btn" id="dhNames">Edit die numbers</button><button type="button" class="btn pri big" style="flex:1" id="dhOk">Close</button></div></div>';
+  document.body.appendChild(w);$('#dhOk').onclick=()=>w.remove();
+  $$('.delstop',w).forEach(b=>b.onclick=async()=>{
+    w.style.display='none';const who=await ask({title:'Delete this record?',msg:'Only a shift leader can delete it. This cannot be undone.',pw:true,ok:'Yes, delete'});w.style.display='';
+    if(!who)return;if(!who.leader){toast('Only a shift leader can delete it.',true);return;}
+    try{await dieWrite(id,{events:{[b.dataset.k]:null}});toast('Deleted by '+(who.name||'Admin'));w.remove();dieHist();}catch(e){toast(dbErr(e),true);}});
+  $('#dhNames').onclick=async()=>{
+    w.style.display='none';
+    const r=await opDlg({title:'Die numbers · '+area(id).name,msg:'Type the die numbers separated by commas, for example M1, M2.',fields:[{id:'n',label:'Die numbers',type:'text',value:dieNames(id).join(', ')}],ok:'Save',validate:async v=>{const l=v.n.split(',').map(x=>x.trim()).filter(Boolean);return l.length&&l.length<=8&&new Set(l).size===l.length?null:'Enter 1 to 8 different numbers.';}});
+    w.style.display='';if(!r)return;
+    try{await dieWrite(id,{names:r.vals.n.split(',').map(x=>x.trim()).filter(Boolean)});toast('Die numbers saved.');w.remove();dieHist();}catch(e){toast(dbErr(e),true);}
+  };
 }
 
 /* ---------- merged packaging (Macaroni left, Spaghetti right) ---------- */
@@ -1549,7 +1666,7 @@ function renderArea(){
   S.rd='today';
   const legend=a.timed?'':'<div class="strip" id="strip" style="margin-top:14px"></div><div class="legend"><span><i style="background:var(--okbg);border-color:var(--ok)"></i>Logged</span><span><i class="dh"></i>Too high (top corner)</span><span><i class="dl"></i>Too low (bottom corner)</span><span><i style="background:var(--stopbg);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span><span><i style="background:repeating-linear-gradient(135deg,transparent 0 3px,var(--line) 3px 6px);border-color:var(--line)"></i>Line not running</span></div>';
   $('#main').innerHTML=
-   '<div class="card hcard"><div class="row hhead" style="justify-content:space-between;align-items:flex-start"><div>'+(a.timed?'':'<div class="eyebrow">Hourly reading</div>')+'<div class="row" style="gap:12px;flex-wrap:wrap"><h2>'+esc(a.name)+(a.timed?' · timed entries':'')+'</h2>'+(isLineTog(a)?'<span class="row" id="lineCtl" style="gap:8px;flex-wrap:wrap"></span>':'')+'</div><div class="muted small" id="whenLine"></div></div>'+
+   '<div class="card hcard"><div class="row hhead" style="justify-content:space-between;align-items:flex-start"><div>'+(a.timed?'':'<div class="eyebrow">Hourly reading</div>')+'<div class="row" style="gap:12px;flex-wrap:wrap"><h2>'+esc(a.name)+(a.timed?' · timed entries':'')+'</h2>'+(isLineTog(a)?'<span class="row" id="lineCtl" style="gap:8px;flex-wrap:wrap"></span>':'')+'</div><div class="muted small" id="whenLine"></div></div>'+(DIE_LINES.indexOf(a.id)>=0?'<div id="dieBox" class="diehead"></div>':'')+
    '<div class="row">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':(a.timed?'':'<div class="daychip"><small>Production day</small><b>'+esc(S.date)+'</b></div>'))+(a.timed&&adminEff()?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
    '<div id="pinMsg"></div>'+noticeBoxHTML(a)+
    
@@ -1560,7 +1677,7 @@ function renderArea(){
   if($('#fDate'))$('#fDate').onchange=e=>{const v=e.target.value;if(!v)return;S.date=v;S.day=null;S.editKey=null;if(v===S.today&&ordH(S.hour)>ordH(nowH()))S.hour=nowH();S.dirty=false;subDay();refreshStrip();renderForm();refreshRecent();};
   if(a.timed&&adminEff())$('#newEntry').onclick=()=>{S.editKey=null;S.dirty=false;if(hasCard(a)){S.entryOpen=true;$('#entry').classList.add('open');}renderForm();window.scrollTo({top:0,behavior:'smooth'});};
   $('#isOpen').onclick=()=>openIssModal(null);
-  paintLineBox();paintPinMsg();
+  paintLineBox();paintPinMsg();paintDieBox();
   if(PACK_FROM[a.id])paintNotices();
   if(PRESS_TO_PACK[a.id])paintSent();
   subAreaIssues();subDay();refreshStrip();renderForm();refreshRecent();
@@ -2237,7 +2354,7 @@ function showBar(html){const el=$('#alertBar');if(!el)return;wakeScreen();el.inn
 const fmt12=d=>{d=new Date(d);return pad(d.getHours())+':'+pad(d.getMinutes());};
 const NT_REASONS=['DI change','Power interruption','Breakdown','Product change','Start as new','Other'],NT_STOP=['DI change','Power interruption','Breakdown'];
 const ntWhen=v=>(v&&!isNaN(new Date(v)))?fmt12(v):'?';
-const ntDetail=n=>{if(!n.arriveAt)return n.text||'';const rt=(n.reason||'')+(n.details?': '+n.details:''),st=(n.stopFrom&&n.stopTo)?'stopped '+n.stopFrom+'–'+n.stopTo:(n.stopTo?'started '+n.stopTo:'');return (n.stick?'stick '+n.stick+(n.stickD!=null?' ('+(n.stickD>0?'+':'')+n.stickD+')':'')+' · ':'')+(st?st+' ('+rt+')':rt)+' · arrives '+ntWhen(n.arriveAt);};
+const ntDetail=n=>{if(!n.arriveAt)return n.text||'';const rt=(n.reason||'')+(n.details?': '+n.details:''),st=(n.stopFrom&&n.stopTo)?'stopped '+n.stopFrom+'–'+n.stopTo:(n.stopTo?'started '+n.stopTo:'');return (n.die?'new die '+n.die+' · ':'')+(n.stick?'stick '+n.stick+(n.stickD!=null?' ('+(n.stickD>0?'+':'')+n.stickD+')':'')+' · ':'')+(st?st+' ('+rt+')':rt)+' · arrives '+ntWhen(n.arriveAt);};
 const ntText=n=>{const fa=area(n.from);return (fa?fa.name:n.from)+(n.arriveAt?' ':': ')+ntDetail(n);};
 const ntLine=n=>esc(ntText(n));
 const ntOpen=n=>n.status==='open';
@@ -2408,7 +2525,7 @@ function openNtModal(id){
   const tdOn=!!(n&&n.stopFrom&&n.stopTo&&NT_STOP.indexOf(n.reason)<0);
   w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:560px"><h2>'+(n?'Edit the message to packaging':'Notify the packaging team')+'</h2>'+
    '<div class="ntrow"><label class="l">Reason<select id="ntWhy" style="width:190px">'+NT_REASONS.map(r=>'<option'+(n&&n.reason===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></label>'+
-   (S.areaId==='macaroni'?'':'<label class="l">Stick number (required)<input type="text" id="ntStick" inputmode="numeric" maxlength="8" value="'+esc(n&&n.stick||'')+'"><span class="small" id="ntStickD" style="font-weight:700"></span></label>')+'</div>'+
+   '<label class="l" id="ntDieW" style="display:none">Die now installed<select id="ntDie">'+(()=>{const I=dieInfo(S.areaId),d=n&&n.die||(I.names.find(x=>!I.cur||x!==I.cur.die)||I.names[0]);return I.names.map(x=>'<option'+(x===d?' selected':'')+'>'+esc(x)+'</option>').join('');})()+'</select></label>'+(S.areaId==='macaroni'?'':'<label class="l">Stick number (required)<input type="text" id="ntStick" inputmode="numeric" maxlength="8" value="'+esc(n&&n.stick||'')+'"><span class="small" id="ntStickD" style="font-weight:700"></span></label>')+'</div>'+
    '<label class="chkl" id="ntTdW" style="display:flex;gap:12px;align-items:center"><input type="checkbox" id="ntTd"'+(tdOn?' checked':'')+' style="width:24px;height:24px"><span>Enable time duration</span></label>'+
    '<div class="ntrow"><label class="l" id="ntFromW">Stopped at<input type="time" id="ntFrom" value="'+esc(n&&n.stopFrom||'')+'"></label><label class="l" id="ntToW">Started at<input type="time" id="ntTo" value="'+esc(n&&n.stopTo||'')+'"></label>'+
    '<label class="l">Product arrives at<input type="time" id="ntArr" value="'+(d&&!isNaN(d)?pad(d.getHours())+':'+pad(d.getMinutes()):'')+'"></label></div>'+
@@ -2421,6 +2538,7 @@ function openNtModal(id){
 }
 function ntSync(){
   const r=$('#ntWhy').value,stopR=NT_STOP.indexOf(r)>=0,newR=r==='Start as new',chk=$('#ntTd').checked;
+  $('#ntDieW').style.display=r==='DI change'?'':'none';
   $('#ntTdW').hidden=stopR||newR;$('#ntTdW').style.display=(stopR||newR)?'none':'flex';
   $('#ntFromW').style.display=(stopR||(!newR&&chk))?'':'none';
   $('#ntToW').style.display=(stopR||newR||chk)?'':'none';
@@ -2431,6 +2549,7 @@ async function sendNotice(){
   const a=area(S.areaId),to=PRESS_TO_PACK[S.areaId];if(!to)return;
   const why=$('#ntWhy').value,stopR=NT_STOP.indexOf(why)>=0,newR=why==='Start as new',chk=$('#ntTd').checked,ar=$('#ntArr').value,dt=($('#ntTx').value||'').trim(),stick=$('#ntStick')?($('#ntStick').value||'').trim():'';
   if(S.areaId==='spaghetti'&&!stick){toast('Enter the stick number.',true);return;}
+  const die=why==='DI change'?($('#ntDie').value||''):'';
   const needFrom=stopR||(!newR&&chk),needTo=stopR||newR||chk,f=needFrom?$('#ntFrom').value:'',t=needTo?$('#ntTo').value:'',T=x=>/^([01]\d|2[0-3]):[0-5]\d$/.test(x);
   if(needFrom&&!T(f)){toast('Enter the time stopped (24h, like 15:30).',true);return;}
   if(needTo&&!T(t)){toast(newR?'Enter the time the line started (24h, like 15:30).':'Enter the time started again (24h, like 15:30).',true);return;}
@@ -2448,11 +2567,12 @@ async function sendNotice(){
   const who=await ask({title:editing?'Save the changes?':'Notify the packaging team?',msg:(warn.length?'WARNING: '+warn.join(' and ')+'. The message may not reach them. After sending, go and tell them in person.  ':'Packaging tablet is online.  ')+base,pw:true,ok:editing?'Yes, save changes':'Yes, notify'});if(!who)return;
   try{
     if(editing){
-      await S.db.doc('notices/'+editing.id).update({stopFrom:f,stopTo:t,stick:stick,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),edited:true,editedBy:who.name,editedAt:new Date().toISOString()});
+      await S.db.doc('notices/'+editing.id).update({die:die,stopFrom:f,stopTo:t,stick:stick,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),edited:true,editedBy:who.name,editedAt:new Date().toISOString()});
       endNtEdit();toast('Message updated.');
     }else{
-      const sp=stick?stickPrev(null,null):null,sd=sp?Number(stick)-Number(sp.stick):null;const doc={from:S.areaId,to:to,stopFrom:f,stopTo:t,stick:stick,stickD:(sd==null||isNaN(sd))?null:sd,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),by:who.name,ts:new Date().toISOString(),status:'open'};
+      const sp=stick?stickPrev(null,null):null,sd=sp?Number(stick)-Number(sp.stick):null;const doc={from:S.areaId,to:to,die:die,stopFrom:f,stopTo:t,stick:stick,stickD:(sd==null||isNaN(sd))?null:sd,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),by:who.name,ts:new Date().toISOString(),status:'open'};
       await S.db.collection('notices').add(doc);endNtEdit();toast('Packaging team notified.');
+      if(die&&DIE_LINES.indexOf(S.areaId)>=0){try{const at=(t&&/^\d\d:\d\d$/.test(t))?(()=>{const x=new Date();x.setHours(Number(t.slice(0,2)),Number(t.slice(3,5)),0,0);if(x.getTime()>Date.now()+5*60000)x.setDate(x.getDate()-1);return x;})():new Date();if(!dieDup(S.areaId,die,at.toISOString()))await dieAdd(S.areaId,'die',die,at.toISOString(),who,{src:'message'});}catch(e2){}}
     }
     if(warn.length)showBar('<span class="tx">NO CONNECTION: '+esc(warn.join(' and '))+'. Go to the packaging team and tell them about the stop yourself.</span>');
   }catch(e){toast(dbErr(e),true);}
