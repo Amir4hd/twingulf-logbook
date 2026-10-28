@@ -48,7 +48,7 @@ h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
 .dot.off{background:#f0705f;box-shadow:0 0 0 3px rgba(240,112,95,.3)}
 .batt{display:inline-flex;align-items:center;gap:5px;font:600 14px var(--f-m);white-space:nowrap}.batt .bi{position:relative;width:26px;height:13px;border:2px solid currentColor;border-radius:3px;padding:1px}.batt .bi:after{content:'';position:absolute;right:-5px;top:2.5px;width:3px;height:6px;background:currentColor;border-radius:0 2px 2px 0}.batt .bi b{display:block;height:100%;background:#58c184;border-radius:1px}.batt.low{color:#f0705f}.batt.low .bi b{background:#f0705f}
 .bbtn{background:transparent;border:1px solid color-mix(in srgb,var(--bg) 45%,transparent);color:var(--bg);padding:8px 12px;border-radius:6px;min-height:40px}
-.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:16px}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:16px}.wrap>div:empty{display:none}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
 .card>h2,.card>h3{margin-bottom:10px}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
@@ -80,9 +80,10 @@ label.l{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 
 .strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:10px;row-gap:18px}
 .hb{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50px;border:2px solid var(--line);background:var(--panel2);border-radius:6px;font:500 19px var(--f-m);gap:2px;padding:2px}#strip{display:flex;flex-direction:column;gap:8px}.srow{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--bg);border-radius:12px;padding:5px 12px 5px 8px;border:2px solid transparent}.srow.cur{border-color:var(--accent)}.slab em{font:600 11px var(--f-m);font-style:normal;margin-top:1px;color:var(--mut)}.slab em.ok{color:var(--ok)}.slab em.bad{color:var(--bad)}.eyebrow{font:700 11px var(--f-b,inherit);letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}.daychip{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}.daychip small{font:600 10px var(--f-b,inherit);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}.daychip b{font:600 15px var(--f-m)}.hcard .legend{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.hb.now::after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-5px;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid var(--accent)}.sgrid{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,54px));gap:10px}.slab{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;color:var(--mut)}.slab b{font:700 24px/1 var(--f-d);margin:0}.slab small{font:700 9px var(--f-b,inherit);letter-spacing:.14em}.slab.cur{color:var(--accent,var(--ok))}.slab.cur b{color:var(--accent)}
+.clwrap{display:flex;flex-direction:column;align-items:center;gap:2px}.clcf{font:700 9px var(--f-b,inherit);white-space:nowrap}.clcf.ok{color:var(--ok)}.clcf.no{color:var(--bad)}.clbtn{border:1px solid var(--line);background:transparent;border-radius:8px;min-width:34px;height:30px;padding:0 6px;font-size:15px;cursor:pointer;color:var(--mut)}.clbtn small{font:700 10px var(--f-m);margin-left:3px}.clbtn.part{border-color:var(--warn);color:var(--warn)}.clbtn.full{border-color:var(--ok);color:var(--ok)}
 .hb small{font:500 10px var(--f-b);text-transform:uppercase;letter-spacing:.04em}
 .hb.done{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
-.hb .od{position:absolute;right:-6px;min-width:17px;height:17px;padding:0;border-radius:9px;box-sizing:border-box;font:800 11px/14px var(--f-b,inherit);font-style:normal;text-align:center;box-shadow:0 0 0 2px var(--panel)}.hb i.od{position:absolute;right:4px;min-width:0;height:auto;padding:0;border-radius:0;box-shadow:none;display:block;text-align:right;font:800 11px/1 var(--f-b,inherit);font-style:normal;background:none;letter-spacing:0}.sinfo{display:flex;flex-direction:column;gap:3px;justify-self:end;align-items:flex-start;font:600 12px var(--f-b,inherit);color:var(--mut)}.sinfo span{display:flex;align-items:center;gap:6px;white-space:nowrap}.sinfo i{width:9px;height:9px;border-radius:50%;display:inline-block}.sinfo .ih i{background:var(--hi)}.sinfo .ih{color:var(--hi)}.sinfo .il i{background:var(--lo)}.sinfo .il{color:var(--lo)}.sinfo .im i{background:var(--bad);border-radius:2px}.sinfo .im{color:var(--bad)}.sinfo .io{color:var(--ok)}.hb .od.hi{top:3px;color:var(--hi)}.hb .od.lo{bottom:3px;color:var(--lo)}.legend i.dh,.legend i.dl{width:14px;height:14px;border-radius:50%;border:0;box-shadow:none}.legend i.dh{background:radial-gradient(circle,var(--hi) 0 2.5px,var(--hibg) 3px)}.legend i.dl{background:radial-gradient(circle,var(--lo) 0 2.5px,var(--lobg) 3px)}
+.hb .od{position:absolute;right:-6px;min-width:17px;height:17px;padding:0;border-radius:9px;box-sizing:border-box;font:800 11px/14px var(--f-b,inherit);font-style:normal;text-align:center;box-shadow:0 0 0 2px var(--panel)}.hb i.od{position:absolute;right:4px;min-width:0;height:auto;padding:0;border-radius:0;box-shadow:none;display:block;text-align:right;font:800 11px/1 var(--f-b,inherit);font-style:normal;background:none;letter-spacing:0}.sinfo{display:flex;flex-direction:column;gap:3px;justify-self:end;align-items:flex-start;font:600 12px var(--f-b,inherit);color:var(--mut)}.sinfo span{display:flex;align-items:center;gap:6px;white-space:nowrap}.sinfo i{width:9px;height:9px;border-radius:50%;display:inline-block}.sinfo .ih i{background:var(--hi)}.sinfo .ih{color:var(--hi)}.sinfo .il i{background:var(--lo)}.sinfo .il{color:var(--lo)}.sinfo .im i{background:var(--bad);border-radius:2px}.sinfo .im{color:var(--bad)}.sinfo .io{color:var(--ok)}.hb .od.hi{top:3px;color:var(--hi)}.hb .od.lo{bottom:3px;color:#3d8fd1}.legend i.dh,.legend i.dl{width:14px;height:14px;border-radius:50%;border:0;box-shadow:none}.legend i.dh{background:radial-gradient(circle,var(--hi) 0 2.5px,var(--hibg) 3px)}.legend i.dl{background:radial-gradient(circle,var(--lo) 0 2.5px,var(--lobg) 3px)}
 .hb.alarm{background:var(--warnbg);border-color:var(--warn);color:var(--warn)}
 .hb.stop{background:var(--stopbg);border-color:var(--stop);color:var(--mut)}
 .hb.part{background:var(--panel2);border:2px dashed var(--ok);color:var(--ok)}
@@ -316,7 +317,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v40';
+const APP_V='plant-v41';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -406,6 +407,9 @@ const S={db:null,user:null,isAdmin:false,canWrite:true,cfg:DEFAULT_CFG,cfgJ:JSON
   day:null,dirty:false,logs:{},mlogs:{},tasks:[],hist:[],issues:[],ovDate:pdate(new Date()),sel:null,
   trend:{area:'press',param:'',days:3,zone:'all',custom:false},subs:{},ops:[],dev:null,pickPlace:false,unlock:null,lastHour:new Date().getHours(),online:navigator.onLine,setupEditing:false,notices:[],seenN:null,arrAl:{},seen:null,fix:{},pmSig:'',mTrunc:false,editTask:null};
 const nowH=()=>new Date().getHours();
+const EARLY_MIN=5;
+const early=(date,h)=>date===S.today&&new Date().getMinutes()>=60-EARLY_MIN&&h===(nowH()+1)%24&&ordH(h)>ordH(nowH());
+const effH=()=>early(S.today,(nowH()+1)%24)?(nowH()+1)%24:nowH();
 const area=id=>S.cfg.areas.find(a=>a.id===id)||null;
 const shiftLabel=h=>{const sh=S.cfg.shifts.slice().sort((a,b)=>a.start-b.start),n=shiftOf(h),i=sh.findIndex(x=>x.name===n);if(i<0)return n;const nx=sh[(i+1)%sh.length];return n+' · '+hh(sh[i].start)+' – '+hh(nx.start);};
 const shiftOf=h=>{const sh=S.cfg.shifts.slice().sort((a,b)=>a.start-b.start);let r=sh[sh.length-1];sh.forEach(s=>{if(s.start<=h)r=s;});return r?r.name:'';};
@@ -434,12 +438,12 @@ function shiftWindows(date){
 function isReq(a,h){return !(a&&a.timed);}
 function cellState(doc,date,h,a){
   const es=entries(doc).filter(x=>x.h===h);
-  const isToday=date===S.today,future=date>S.today||(isToday&&ordH(h)>ordH(nowH()));
+  const isToday=date===S.today,future=date>S.today||(isToday&&ordH(h)>ordH(nowH())&&!early(date,h));
   if(es.length)return worst(es);
   if(future)return 'future';
   if(a&&a.timed)return 'na';
   if(a&&lineOffAt(a.id,date,h))return 'off';
-  if(isToday&&h===nowH())return 'now';
+  if(isToday&&h===effH())return 'now';
   return 'miss';
 }
 /* ---------- places: a shift leader assigns each tablet to a place ---------- */
@@ -493,7 +497,7 @@ async function acquireSession(){
   resub('sess',()=>S.db.doc('sessions/'+S.acct.uid).onSnapshot(sn=>{const x=sn.exists?sn.data():null;if(S.sessionOk&&x&&x.sid&&x.sid!==SID())kicked();},e=>{}));
   return true;
 }
-function kicked(){S.sessionOk=false;unsub('sess');unsub('notices');unsub('dieM');unsub('dieS');S.dev=null;S.gate='kicked';S.view='home';renderTop();renderHome();}
+function kicked(){S.sessionOk=false;unsub('sess');unsub('notices');unsub('dieM');unsub('dieS');unsub('clp');S.dev=null;S.gate='kicked';S.view='home';renderTop();renderHome();}
 async function evalGate(){
   const a=S.acct;S.sessInfo=null;
   const stop=g=>{S.gate=g;S.dev=null;S.view='home';renderTop();renderHome();if(g==='approve')beat();};
@@ -505,12 +509,12 @@ async function evalGate(){
   S.gate=null;S.dev={place:a.role,at:new Date().toISOString()};S.unlock=null;S.dirty=false;
   if(!lsGet('plant.inAt'))lsSet('plant.inAt',S.db.serverTime||new Date().toISOString());
   resub('kill',()=>S.db.doc(sessPath()).onSnapshot(sn=>{const x=sn.exists?sn.data():null;if(x&&x.kill&&x.kill.at&&x.kill.at>(lsGet('plant.inAt')||''))remoteOut();},e=>{}));
-  unsub('notices');ensureNoticeSub();ensureDieSub();beat();renderTop();restoreView();
+  unsub('notices');ensureNoticeSub();ensureDieSub();ensureCleanSub();beat();renderTop();restoreView();
 }
 async function remoteOut(){if(S.killing)return;S.killing=true;try{toast('The admin signed this device out.');}catch(e){}await doSignOut();S.killing=false;}
 async function doSignOut(){
   try{if(S.db&&S.acct&&(S.sessionOk||!LOCKED_ROLE(S.acct.role||'')))await S.db.doc(sessPath()).delete();}catch(e){}
-  S.sessionOk=false;unsub('sess');unsub('kill');unsub('notices');unsub('dieM');unsub('dieS');lsSet('plant.inAt','');lsSet('plant.appr','');lsSet('plant.view','');S.dev=null;S.unlock=null;
+  S.sessionOk=false;unsub('sess');unsub('kill');unsub('notices');unsub('dieM');unsub('dieS');unsub('clp');lsSet('plant.inAt','');lsSet('plant.appr','');lsSet('plant.view','');S.dev=null;S.unlock=null;
   if(S.user&&S.user.signOut){await S.user.signOut();return;}
   ssSet('plant.test','');S.acct=null;S.gate='pick';S.view='home';renderTop();renderHome();
 }
@@ -681,8 +685,8 @@ setInterval(()=>{
     const a=area(S.areaId);
     if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;
     paintLineBox();
-    if(a&&!a.timed&&!adminEff()&&!S.dirty&&!S.entryOpen&&S.date===S.today&&S.lastHour!==nowH()){S.hour=nowH();S.lastHour=nowH();refreshStrip();renderForm();}
-    else{S.lastHour=nowH();refreshStrip();applyWindow();}
+    if(a&&!a.timed&&!adminEff()&&!S.dirty&&!S.entryOpen&&S.date===S.today&&S.lastHour!==effH()){S.hour=effH();S.lastHour=effH();refreshStrip();renderForm();}
+    else{S.lastHour=effH();refreshStrip();applyWindow();}
     refreshRecent();paintAreaIssues();
   }
   if(S.view==='rm'&&S.rm&&S.rm.rows&&!$('#rmDlg'))paintRmList();
@@ -717,7 +721,7 @@ function go(view,areaId,tab){
   unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');unsub('rawM');unsub('rawS');unsub('rawG');unsub('pkM');unsub('pkS');if(view!=='rm')S.rm=null;if(view!=='raw')S.raw=null;if(view!=='packm')S.pk=null;S.opsDraft=null;S.acctDraft=null;
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
   if(tab)S.tab=tab;
-  if(view==='area'){S.date=S.today;S.hour=nowH();S.lastHour=nowH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;S.entryOpen=false;lsSet('plant.view','area:'+areaId);}
+  if(view==='area'){S.date=S.today;S.hour=effH();S.lastHour=effH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;S.entryOpen=false;lsSet('plant.view','area:'+areaId);}
   if(view==='lab'){S.date=S.today;S.unlock=null;S.areaId=null;lsSet('plant.view','lab');}
   if(view==='rm'){S.unlock=null;S.areaId=null;lsSet('plant.view','rm');}
   if(view==='raw'){S.unlock=null;S.areaId=null;lsSet('plant.view','raw');}
@@ -785,7 +789,7 @@ const dieDays=d=>d==null?'–':(d<1?'today':Math.floor(d)+' d');
 const dieWhen=iso=>{const d=new Date(iso);return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+pad(d.getHours())+':'+pad(d.getMinutes());};
 function ensureDieSub(){
   const pl=S.dev&&S.dev.place;
-  if(!(S.db&&(pl==='press'||pl==='all'||pl==='admin'))){unsub('dieM');unsub('dieS');return;}
+  if(!(S.db&&(pl==='press'||pl==='all'||pl==='admin'))){unsub('dieM');unsub('dieS');unsub('clp');return;}
   S.dies=S.dies||{};
   DIE_LINES.forEach((id,i)=>{if(S.subs[i?'dieS':'dieM'])return;resub(i?'dieS':'dieM',()=>S.db.doc('logs/dies_'+id).onSnapshot(sn=>{S.dies[id]=sn.exists?sn.data():{};paintDieBox();if(S.view==='home'&&S.dev&&!($('#pcPw')&&$('#pcPw').value))renderHome();},e=>{}));});
 }
@@ -1664,7 +1668,7 @@ function paintSummary(){
 function renderArea(){
   const a=area(S.areaId);if(!a){go('home');return;}
   S.rd='today';
-  const legend=a.timed?'':'<div class="strip" id="strip" style="margin-top:14px"></div><div class="legend"><span><i style="background:var(--okbg);border-color:var(--ok)"></i>Logged</span><span><i class="dh"></i>Too high (top corner)</span><span><i class="dl"></i>Too low (bottom corner)</span><span><i style="background:var(--stopbg);border-color:var(--stop)"></i>Stopped</span><span><i style="background:var(--badbg);border-color:var(--bad)"></i>Missed</span><span><i style="background:repeating-linear-gradient(135deg,transparent 0 3px,var(--line) 3px 6px);border-color:var(--line)"></i>Line not running</span></div>';
+  const legend=a.timed?'':'<div class="strip" id="strip" style="margin-top:14px"></div>';
   $('#main').innerHTML=
    '<div class="card hcard"><div class="row hhead" style="justify-content:space-between;align-items:flex-start"><div>'+(a.timed?'':'<div class="eyebrow">Hourly reading</div>')+'<div class="row" style="gap:12px;flex-wrap:wrap"><h2>'+esc(a.name)+(a.timed?' · timed entries':'')+'</h2>'+(isLineTog(a)?'<span class="row" id="lineCtl" style="gap:8px;flex-wrap:wrap"></span>':'')+'</div><div class="muted small" id="whenLine"></div></div>'+(DIE_LINES.indexOf(a.id)>=0?'<div id="dieBox" class="diehead"></div>':'')+
    '<div class="row">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':(a.timed?'':'<div class="daychip"><small>Production day</small><b>'+esc(S.date)+'</b></div>'))+(a.timed&&adminEff()?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
@@ -1722,7 +1726,7 @@ function oorCounts(a,doc,h){const c={high:0,low:0};entries(doc).filter(x=>x.h===
 function cdInfo(a){
   if(!a||a.timed||S.date!==S.today)return null;
   const t=new Date(),left=3600-(t.getMinutes()*60+t.getSeconds()),m=Math.ceil(left/60),nh=(nowH()+1)%24;
-  if(m>10||!HRS().includes(nh)||lineOffAt(a.id,S.today,nh))return null;
+  if(m>10||m<=EARLY_MIN||!HRS().includes(nh)||lineOffAt(a.id,S.today,nh))return null;
   return {m:m,at:pad(nh)+':00'};
 }
 function cdMsg(pm,a){
@@ -1731,6 +1735,97 @@ function cdMsg(pm,a){
   if(cd.m<=5&&!pm.can)return {cls:'warn',html:'<span>⏱ Next reading in <b>'+mm+'</b> · due at '+cd.at+'</span>',cd:true};
   if(!pm.can&&Math.floor(Date.now()/4000)%2)return {cls:'warn',html:'<span>⏱ Next reading in <b>'+mm+'</b> · due at '+cd.at+'</span>',cd:true};
   return {cls:pm.cls||'',html:pm.can?'<span>'+esc(pm.msg)+'</span><span class="cdchip">⏱ Next reading in <b>'+mm+'</b></span>':esc(pm.msg),cd:pm.can};
+}
+const CLEAN_ITEMS=[['press','Press'],['vacuum','Vacuum'],['jet','Jet filter']];
+const cleanOf=(sh)=>{const c=S.day&&S.day.clean&&S.day.clean[sh];return c||{};};
+const dowOf=ds=>{const q=String(ds||S.date).split('-');return new Date(Number(q[0]),Number(q[1])-1,Number(q[2])).getDay();};
+const cleanPlan=sh=>{const pl=S.cplan&&S.cplan.plan&&S.cplan.plan[S.areaId]||{},dd=pl['d'+dowOf(S.date)],p=dd&&Array.isArray(dd[sh])?dd[sh]:(Array.isArray(pl[sh])?pl[sh]:null);return p||CLEAN_ITEMS.map(x=>x[0]);};
+const cleanEnded=sh=>{if(S.date<S.today)return true;if(S.date>S.today)return false;const hs=HRS(),g=hs.filter(h=>shiftOf(h)===sh);if(!g.length)return false;return hs.indexOf(g[g.length-1])<hs.indexOf(nowH());};
+const cleanConf=sh=>S.day&&S.day.cleanConf&&S.day.cleanConf[sh]||null;
+const cleanAssigned=sh=>{const c=cleanOf(sh),p=cleanPlan(sh);return CLEAN_ITEMS.filter(x=>p.indexOf(x[0])>=0||c[x[0]]).map(x=>x[0]);};
+function ensureCleanSub(){
+  const pl=S.dev&&S.dev.place;
+  if(!(S.db&&(pl==='press'||pl==='all'||pl==='admin'))){unsub('clp');return;}
+  if(S.subs.clp)return;
+  resub('clp',()=>S.db.doc('logs/clean_plan').onSnapshot(sn=>{S.cplan=sn.exists?sn.data():{};if(S.view==='area')refreshStrip();},e=>{}));
+}
+function cleanBtnHTML(sh){
+  if(DIE_LINES.indexOf(S.areaId)<0)return '';
+  const c=cleanOf(sh),as=cleanAssigned(sh),n=as.filter(i=>c[i]).length,cf=cleanConf(sh);
+  const btn=!as.length?'<button type="button" class="clbtn" data-clsh="'+esc(sh)+'" aria-label="Cleaning '+esc(sh)+'" title="No cleaning assigned" style="opacity:.45">🧽<small>–</small></button>':
+   '<button type="button" class="clbtn'+(n===as.length?' full':n?' part':'')+'" data-clsh="'+esc(sh)+'" aria-label="Cleaning '+esc(sh)+'" title="Cleaning assigned to this shift">🧽<small>'+n+'/'+as.length+'</small></button>';
+  const tx=cf?'<span class="clcf ok" title="Confirmed by '+esc(String(cf.by||'').split(' ')[0])+'">Confirmed ✔</span>':(cleanEnded(sh)&&as.length?'<span class="clcf no">Not confirmed</span>':'');
+  return '<div class="clwrap">'+btn+tx+'</div>';
+}
+function cleanDlg(sh){
+  const old=$('#clDlg');if(old)old.remove();
+  const c=cleanOf(sh),can=adminEff()||S.date===S.today,w=document.createElement('div');w.id='clDlg';w.className='ovl';
+  const as=cleanAssigned(sh),lead=dieLeader(),cf=cleanConf(sh);
+  const ov=adminEff()||leaderActive()||unlockOn();let lv=null;
+  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:380px"><h2>Cleaning · '+esc(sh)+'</h2><div class="muted small">'+esc(area(S.areaId).name)+' · '+esc(S.date)+'</div><div style="display:grid;gap:8px;margin:12px 0">'+
+   (as.length?as.map(i=>{const x=CLEAN_ITEMS.find(q=>q[0]===i),d=c[i],ed=d&&(ov||editLeft(d)>0);return '<label class="chkl" style="display:flex;gap:12px;align-items:center;font-size:19px;font-weight:600"><input type="checkbox" data-ci="'+i+'" data-was="'+(d?1:0)+'" style="width:28px;height:28px"'+(d?' checked':'')+((d&&!ed)||!can?' disabled':'')+'><span>'+x[1]+(d?' <span class="muted small" style="font-weight:400">· '+esc(String(d.by||'').split(' ')[0])+' '+esc(d.at?fmt12(d.at):'')+(ed&&!ov?' · edit '+left5(editLeft(d)):'')+'</span>':'')+'</span></label>';}).join(''):'<div class="muted">Nothing is assigned to this shift.</div>')+'</div>'+
+   '<div class="row" style="flex-wrap:nowrap"><button type="button" class="btn big cyan" style="flex:1" id="clX">'+(can?'Cancel':'Close')+'</button>'+(can&&as.length?'<button type="button" class="btn pri big" style="flex:1" id="clOk">Save</button>':'')+'</div>'+
+   (cf?'<div class="muted small" style="margin-top:8px">Confirmed by '+esc(cf.by||'')+' '+esc(cf.at?fmt12(cf.at):'')+'</div>':'')+
+   '<div class="row" style="margin-top:8px;flex-wrap:wrap">'+(can&&!ov?'<button type="button" class="btn" id="clUnl">Shift leader: unlock</button>':'')+(can?'<button type="button" class="btn" id="clCf"'+(as.every(i=>c[i])?'':' disabled')+'>'+(cf?'Confirm again':'Confirm cleaning')+'</button>':'')+(lead?'<button type="button" class="btn" id="clPlan">Weekly plan</button>':'')+'</div></div>';
+  document.body.appendChild(w);
+  $('#clX').onclick=()=>w.remove();
+  const pb=$('#clPlan');if(pb)pb.onclick=()=>{w.remove();cleanPlanDlg();};
+  const ul=$('#clUnl');if(ul)ul.onclick=async()=>{w.style.display='none';const who=await ask({title:'Shift leader password needed',msg:'Unlock the cleaning of '+sh+' for changes.',pw:true,ok:'Unlock'});w.style.display='';if(!who)return;if(!who.leader){toast('That is not a shift leader password.',true);return;}lv=who;$$('input[data-ci]',w).forEach(x=>{x.disabled=false;});ul.remove();toast('Unlocked by '+who.name);};
+  const cb=$('#clCf');if(cb)cb.onclick=async()=>{
+    const miss=as.filter(i=>!c[i]).map(i=>(CLEAN_ITEMS.find(x=>x[0]===i)||[0,i])[1]);
+    w.style.display='none';
+    const who=await ask({title:'Confirm the cleaning?',msg:sh+' · '+area(S.areaId).name+(miss.length?' · NOT ticked: '+miss.join(', '):' · all assigned parts are cleaned'),pw:true,ok:'Yes, confirm'});
+    w.style.display='';if(!who)return;
+    if(!who.leader){toast('Only a shift leader can confirm the cleaning.',true);return;}
+    const body={area:S.areaId,date:S.date,cleanConf:{[sh]:{by:who.name,byId:who.id||null,at:new Date().toISOString()}}},ref=S.db.doc('logs/'+S.areaId+'_'+S.date);
+    try{try{await ref.update(body);}catch(e){if(e&&(e.code==='invalid_argument'||e.code==='not-found'))await ref.set(body);else throw e;}w.remove();toast('Cleaning confirmed by '+who.name);}catch(e){toast(dbErr(e),true);}
+  };
+  const ok=$('#clOk');if(ok)ok.onclick=async()=>{
+    const add=[],del=[];
+    $$('input[data-ci]:not(:disabled)',w).forEach(x=>{const was=x.dataset.was==='1';if(x.checked&&!was)add.push(x.dataset.ci);if(!x.checked&&was)del.push(x.dataset.ci);});
+    if(!add.length&&!del.length){toast('Nothing changed.',true);return;}
+    const nm=i=>(CLEAN_ITEMS.find(x=>x[0]===i)||[0,i])[1];
+    w.style.display='none';
+    const who=lv||await ask({title:'Do you want to save?',msg:'Cleaning in '+sh+(add.length?' · cleaned: '+add.map(nm).join(', '):'')+(del.length?' · removed: '+del.map(nm).join(', '):''),pw:true,ok:'Yes, save'});
+    w.style.display='';if(!who)return;
+    const cur=cleanOf(sh);
+    for(const i of del){const d=cur[i];if(!(who.leader||adminEff()||(d&&sameP(who,d)&&editLeft(d)>0))){toast('Only the person who saved '+nm(i)+' (within '+editMin()+' minutes) or a shift leader can change it.',true);return;}}
+    const now=new Date().toISOString(),patch={};add.forEach(i=>{patch[i]={by:who.name,byId:who.id||null,at:now};});del.forEach(i=>{patch[i]=null;});
+    const ref=S.db.doc('logs/'+S.areaId+'_'+S.date),body={area:S.areaId,date:S.date,clean:{[sh]:patch}};
+    try{try{await ref.update(body);}catch(e){if(e&&(e.code==='invalid_argument'||e.code==='not-found'))await ref.set(body);else throw e;}
+      w.remove();toast('Cleaning saved by '+who.name);}catch(e){toast(dbErr(e),true);}
+  };
+}
+function cleanPlanDlg(){
+  const id=S.areaId,sh=(S.cfg.shifts||[]).slice().sort((a,b)=>a.start-b.start).map(x=>x.name);
+  const old=$('#clPl');if(old)old.remove();const w=document.createElement('div');w.id='clPl';w.className='ovl';
+  const DAYS=[[1,'Mon'],[2,'Tue'],[3,'Wed'],[4,'Thu'],[5,'Fri'],[6,'Sat'],[0,'Sun']];
+  const pl=S.cplan&&S.cplan.plan&&S.cplan.plan[id]||{},all=CLEAN_ITEMS.map(x=>x[0]);
+  const W={};DAYS.forEach(([d])=>{W[d]={};sh.forEach(n=>{const dd=pl['d'+d],p=dd&&Array.isArray(dd[n])?dd[n]:(Array.isArray(pl[n])?pl[n]:all);W[d][n]=p.slice();});});
+  let cur=dowOf(S.date);
+  const draw=()=>{
+    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:520px"><h2>Weekly cleaning plan · '+esc(area(id).name)+'</h2><div class="muted small">Choose a day, then tick which parts each shift must clean. It repeats every week.</div>'+
+     '<div class="row" style="gap:6px;flex-wrap:wrap;margin:10px 0">'+DAYS.map(([d,n])=>'<button type="button" class="btn sm'+(d===cur?' pri':'')+'" data-dy="'+d+'">'+n+'</button>').join('')+'</div>'+
+     '<table class="elt" style="margin:6px 0"><thead><tr><th>Shift</th>'+CLEAN_ITEMS.map(x=>'<th style="text-align:center">'+x[1]+'</th>').join('')+'</tr></thead><tbody>'+sh.map(n=>'<tr><td><b>'+esc(n)+'</b></td>'+CLEAN_ITEMS.map(x=>'<td style="text-align:center"><input type="checkbox" data-pl="'+esc(n)+'|'+x[0]+'" style="width:26px;height:26px"'+(W[cur][n].indexOf(x[0])>=0?' checked':'')+'></td>').join('')+'</tr>').join('')+'</tbody></table>'+
+     '<div class="row" style="margin:6px 0"><button type="button" class="btn sm" id="cpAll">Copy this day to all days</button></div>'+
+     '<div class="row" style="flex-wrap:nowrap"><button type="button" class="btn big cyan" style="flex:1" id="cpX">Cancel</button><button type="button" class="btn pri big" style="flex:1" id="cpOk">Save</button></div></div>';
+    $$('[data-dy]',w).forEach(b=>b.onclick=()=>{cur=Number(b.dataset.dy);draw();});
+    $$('input[data-pl]',w).forEach(c=>c.onchange=()=>{const q=c.dataset.pl.split('|'),a=W[cur][q[0]],k=a.indexOf(q[1]);if(c.checked&&k<0)a.push(q[1]);if(!c.checked&&k>=0)a.splice(k,1);});
+    $('#cpAll').onclick=()=>{DAYS.forEach(([d])=>{if(d!==cur)sh.forEach(n=>{W[d][n]=W[cur][n].slice();});});toast('Copied to all days.');};
+    $('#cpX').onclick=()=>w.remove();
+    $('#cpOk').onclick=async()=>{
+      w.style.display='none';
+      const who=await ask({title:'Shift leader password needed',msg:'Save the weekly cleaning plan for '+area(id).name+'?',pw:true,ok:'Yes, save'});
+      w.style.display='';if(!who)return;
+      if(!who.leader){toast('Only a shift leader can change the cleaning plan.',true);return;}
+      const lp={};DAYS.forEach(([d])=>{lp['d'+d]={};sh.forEach(n=>{lp['d'+d][n]=all.filter(i=>W[d][n].indexOf(i)>=0);});});
+      sh.forEach(n=>{lp[n]=null;});
+      const body={area:'clean_plan',date:'',plan:{[id]:lp}},ref=S.db.doc('logs/clean_plan');
+      try{try{await ref.update(body);}catch(e){if(e&&(e.code==='invalid_argument'||e.code==='not-found'))await ref.set(body);else throw e;}
+        w.remove();toast('Weekly cleaning plan saved by '+who.name);}catch(e){toast(dbErr(e),true);}
+    };
+  };
+  document.body.appendChild(w);draw();
 }
 function refreshStrip(){
   const a=area(S.areaId),w=$('#whenLine');
@@ -1744,10 +1839,11 @@ function refreshStrip(){
     const sn=shiftOf(h);let g=groups[groups.length-1];if(!g||g.n!==sn){g={n:sn,hs:[],b:[],hi:0,lo:0};groups.push(g);}g.hs.push(h);g.hi+=cn.high;g.lo+=cn.low;
     g.b.push('<button type="button" class="hb '+cls+(st==='now'?' now':'')+(h===sel?' sel':'')+'" data-h="'+h+'"'+(st==='future'?' disabled':'')+' aria-label="'+hh(h)+' '+(st==='alarm'?'logged':st)+(cn.high?', '+cn.high+' too high':'')+(cn.low?', '+cn.low+' too low':'')+'">'+pad(h)+(cn.high?'<i class="od hi" title="Too high">'+cn.high+'</i>':'')+(cn.low?'<i class="od lo" title="Too low">'+cn.low+'</i>':'')+'</button>');
   }
-  const isT=S.date===S.today,nh=nowH();
+  const isT=S.date===S.today,nh=effH();
   const sts={};HRS().forEach(h=>{sts[h]=cellState(S.day,S.date,h,a);});
-  const html=groups.map(g=>{const f=g.hs[0],l=g.hs[g.hs.length-1],cur=isT&&g.hs.indexOf(nh)>=0;const lg=g.hs.filter(h=>['done','alarm','part','stop'].indexOf(sts[h])>=0).length,due=g.hs.filter(h=>['future','off','na'].indexOf(sts[h])<0).length,miss=g.hs.filter(h=>sts[h]==='miss').length;return '<div class="srow'+(cur?' cur':'')+'"><div class="slab'+(cur?' cur':'')+'"><small>SHIFT</small><b>'+esc(g.n.replace(/^Shift\s*/i,''))+'</b><em class="'+(miss?'bad':due&&lg===due?'ok':'')+'">'+(due?lg+'/'+due:'–')+'</em></div><div class="sgrid" style="--n:'+g.hs.length+'">'+g.b.join('')+'</div><div class="sinfo">'+(g.hi?'<span class="ih"><i></i>'+g.hi+' high</span>':'')+(g.lo?'<span class="il"><i></i>'+g.lo+' low</span>':'')+(miss?'<span class="im"><i></i>'+miss+' missed</span>':'')+(!g.hi&&!g.lo&&!miss&&lg?'<span class="io">✓ In range</span>':'')+'</div></div>';}).join('');
+  const html=groups.map(g=>{const f=g.hs[0],l=g.hs[g.hs.length-1],cur=isT&&g.hs.indexOf(nh)>=0;const lg=g.hs.filter(h=>['done','alarm','part','stop'].indexOf(sts[h])>=0).length,due=g.hs.filter(h=>['future','off','na'].indexOf(sts[h])<0).length,miss=g.hs.filter(h=>sts[h]==='miss').length;return '<div class="srow'+(cur?' cur':'')+'"><div class="slab'+(cur?' cur':'')+'"><small>SHIFT</small><b>'+esc(g.n.replace(/^Shift\s*/i,''))+'</b><em class="'+(miss?'bad':due&&lg===due?'ok':'')+'">'+(due?lg+'/'+due:'–')+'</em></div><div class="sgrid" style="--n:'+g.hs.length+'">'+g.b.join('')+'</div><div class="sinfo">'+cleanBtnHTML(g.n)+'</div></div>';}).join('');
   if(el._h!==html){el._h=html;el.innerHTML=html;}
+  $$('.clbtn',el).forEach(b=>b.onclick=()=>cleanDlg(b.dataset.clsh));
   $$('.hb',el).forEach(b=>b.onclick=()=>{S.hour=Number(b.dataset.h);S.dirty=false;refreshStrip();renderForm();});
   if(w)w.innerHTML='Showing <b>'+pad(S.hour)+':00 – '+pad((S.hour+1)%24)+':00</b> · '+esc(shiftOf(S.hour))+(S.date===S.today?'':' · '+esc(S.date));
   renderHourView();paintEntryBar();
@@ -1848,8 +1944,9 @@ const winText=w=>w.slice().sort((a,b)=>om(a[0])-om(b[0])).map(x=>t12(x[0])+'–'
 const entryMin=()=>{const n=Math.round(Number(S.cfg.entryMin));return n>=1&&n<=59?n:20;};
 function winBase(a,date,h){
   if(a.timed)return {open:true};
-  if(date>S.today||(date===S.today&&ordH(h)>ordH(nowH())))return {open:false,why:'future'};
+  if(date>S.today||(date===S.today&&ordH(h)>ordH(nowH())&&!early(date,h)))return {open:false,why:'future'};
   const m=new Date().getMinutes();
+  if(early(date,h))return {open:true,left:60-m+entryMin(),closeAt:pad(h)+':'+pad(entryMin())};
   if(date===S.today&&h===nowH()&&m<entryMin())return {open:true,left:entryMin()-m,closeAt:pad(h)+':'+pad(entryMin())};
   return {open:false,why:'closed'};
 }
@@ -2057,7 +2154,7 @@ function updateEntryState(){
   const a=area(S.areaId),timed=!!a.timed;
   const e=S.day&&S.day.hours?(timed?(S.editKey?S.day.hours[S.editKey]:null):S.day.hours[String(S.hour)]):null;
   {const r2=$('#eStateRaw');if(r2){const hasW=e&&e.v&&a.params.some(p=>p.win&&e.v[p.id]!=null);r2.textContent=hasW?'Saved '+(e.at?new Date(e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'')+' by '+(e.by||'?'):'Not saved yet';}}
-  if(!timed&&S.date===S.today&&ordH(S.hour)>ordH(nowH()))el.textContent='This hour has not started yet.';
+  if(!timed&&S.date===S.today&&ordH(S.hour)>ordH(nowH())&&!early(S.date,S.hour))el.textContent='This hour has not started yet.';
   else el.textContent=e?'Saved '+(e.at?new Date(e.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'')+' by '+(e.by||'?')+(e.late?' (late entry)':''):(timed?'New entry, not saved yet':'Not logged yet');
 }
 async function saveEntry(part){
