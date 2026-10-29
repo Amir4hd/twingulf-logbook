@@ -317,7 +317,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v43';
+const APP_V='plant-v44';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2456,7 +2456,7 @@ function showBar(html){const el=$('#alertBar');if(!el)return;wakeScreen();el.inn
 const fmt12=d=>{d=new Date(d);return pad(d.getHours())+':'+pad(d.getMinutes());};
 const NT_REASONS=['DI change','Power interruption','Breakdown','Product change','Start as new','Other'],NT_STOP=['DI change','Power interruption','Breakdown'];
 const ntWhen=v=>(v&&!isNaN(new Date(v)))?fmt12(v):'?';
-const ntDetail=n=>{if(!n.arriveAt)return n.text||'';const rt=(n.reason||'')+(n.details?': '+n.details:''),st=(n.stopFrom&&n.stopTo)?'stopped '+n.stopFrom+'–'+n.stopTo:(n.stopTo?'started '+n.stopTo:'');return (n.die?'new die '+n.die+' · ':'')+(n.stick?'stick '+n.stick+(n.stickD!=null?' ('+(n.stickD>0?'+':'')+n.stickD+')':'')+' · ':'')+(st?st+' ('+rt+')':rt)+' · arrives '+ntWhen(n.arriveAt);};
+const ntDetail=n=>{if(!n.arriveAt)return n.text||'';const rt=(n.reason||'')+(n.details?': '+n.details:''),st=(n.stopFrom&&n.stopTo)?'stopped '+n.stopFrom+'–'+n.stopTo:(n.stopTo?'started '+n.stopTo:'');return (n.die?(n.reason==='DI change'?'new die ':'die ')+n.die+' · ':'')+(n.stick?'stick '+n.stick+(n.stickD!=null?' ('+(n.stickD>0?'+':'')+n.stickD+')':'')+' · ':'')+(st?st+' ('+rt+')':rt)+' · arrives '+ntWhen(n.arriveAt);};
 const ntText=n=>{const fa=area(n.from);return (fa?fa.name:n.from)+(n.arriveAt?' ':': ')+ntDetail(n);};
 const ntLine=n=>esc(ntText(n));
 const ntOpen=n=>n.status==='open';
@@ -2622,12 +2622,12 @@ function openNtModal(id){
   const old=$('#ntDlg');if(old)old.remove();
   const n=id?S.notices.find(x=>x.id===id):null;
   if(id&&(!n||ntEditLeft(n)<=0)){toast('The edit time has passed.',true);paintSent();return;}
-  S.ntEdit=n?n.id:null;
+  S.ntEdit=n?n.id:null;S.ntDieTouched=false;
   const d=n?new Date(n.arriveAt):null,w=document.createElement('div');w.id='ntDlg';w.className='ovl';
   const tdOn=!!(n&&n.stopFrom&&n.stopTo&&NT_STOP.indexOf(n.reason)<0);
   w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:560px"><h2>'+(n?'Edit the message to packaging':'Notify the packaging team')+'</h2>'+
    '<div class="ntrow"><label class="l">Reason<select id="ntWhy" style="width:190px">'+NT_REASONS.map(r=>'<option'+(n&&n.reason===r?' selected':'')+'>'+esc(r)+'</option>').join('')+'</select></label>'+
-   '<label class="l" id="ntDieW" style="display:none">Die now installed<select id="ntDie">'+(()=>{const I=dieInfo(S.areaId),d=n&&n.die||(I.names.find(x=>!I.cur||x!==I.cur.die)||I.names[0]);return I.names.map(x=>'<option'+(x===d?' selected':'')+'>'+esc(x)+'</option>').join('');})()+'</select></label>'+(S.areaId==='macaroni'?'':'<label class="l">Stick number (required)<input type="text" id="ntStick" inputmode="numeric" maxlength="8" value="'+esc(n&&n.stick||'')+'"><span class="small" id="ntStickD" style="font-weight:700"></span></label>')+'</div>'+
+   '<label class="l" id="ntDieW" style="display:none"><span id="ntDieL">Die now installed</span><select id="ntDie"><option value="">Choose the die</option>'+(()=>{const I=dieInfo(S.areaId),d=n&&n.die||(I.names.find(x=>!I.cur||x!==I.cur.die)||I.names[0]);return I.names.map(x=>'<option'+(x===d?' selected':'')+'>'+esc(x)+'</option>').join('');})()+'</select></label>'+(S.areaId==='macaroni'?'':'<label class="l">Stick number (required)<input type="text" id="ntStick" inputmode="numeric" maxlength="8" value="'+esc(n&&n.stick||'')+'"><span class="small" id="ntStickD" style="font-weight:700"></span></label>')+'</div>'+
    '<label class="chkl" id="ntTdW" style="display:flex;gap:12px;align-items:center"><input type="checkbox" id="ntTd"'+(tdOn?' checked':'')+' style="width:24px;height:24px"><span>Enable time duration</span></label>'+
    '<div class="ntrow"><label class="l" id="ntFromW">Stopped at<input type="time" id="ntFrom" value="'+esc(n&&n.stopFrom||'')+'"></label><label class="l" id="ntToW">Started at<input type="time" id="ntTo" value="'+esc(n&&n.stopTo||'')+'"></label>'+
    '<label class="l">Product arrives at<input type="time" id="ntArr" value="'+(d&&!isNaN(d)?pad(d.getHours())+':'+pad(d.getMinutes()):'')+'"></label></div>'+
@@ -2636,11 +2636,30 @@ function openNtModal(id){
   document.body.appendChild(w);
   {const si=$('#ntStick',w);if(si){const pv=stickPrev(n&&n.id,n&&n.ts),upd=()=>{const el=$('#ntStickD',w),v=Number(si.value);if(!pv||si.value===''||isNaN(v)){el.textContent=pv?'last: '+pv.stick:'';return;}const d=v-Number(pv.stick);el.textContent=(d>0?'+':'')+d+' since last (stick '+pv.stick+')';el.style.color=d<0?'var(--bad)':'var(--ok)';};si.oninput=upd;upd();}}
   
-  $('#ntCancel').onclick=endNtEdit;$('#ntSend').onclick=sendNotice;ntSync();$('#ntWhy').onchange=ntSync;$('#ntTd').onchange=ntSync;
+  $('#ntCancel').onclick=endNtEdit;$('#ntSend').onclick=sendNotice;ntSync();$('#ntWhy').onchange=()=>{ntSync();ntAuto();};$('#ntTd').onchange=()=>{ntSync();ntAuto();};
+  {const ar=$('#ntArr',w);S.ntArrDirty=!!n;ar.oninput=()=>{S.ntArrDirty=true;const h=$('#ntArrH');if(h)h.textContent='';};['ntFrom','ntTo'].forEach(i=>{const e=$('#'+i,w);e.oninput=e.onchange=()=>ntAuto();});if(!n)ntAuto();}
+}
+const NT_STICKS=760,NT_MAC_MIN=150;
+function ntLastLS(){
+  try{const es=entries(S.day||{hours:{}}).filter(x=>x.e&&x.e.run!==false&&x.e.v&&num(x.e.v.ls)>0).sort((a,b)=>om(a.min)-om(b.min));const l=es[es.length-1];return l?num(l.e.v.ls):null;}catch(e){return null;}
+}
+function ntAuto(){
+  const ar=$('#ntArr'),hint=$('#ntArrH');if(!ar||S.ntArrDirty)return;
+  const r=$('#ntWhy').value,stopR=NT_STOP.indexOf(r)>=0,newR=r==='Start as new',chk=$('#ntTd').checked;
+  const needTo=stopR||newR||chk,tv=$('#ntTo')?$('#ntTo').value:'',ok=/^([01]\d|2[0-3]):[0-5]\d$/.test(tv);
+  let st,lbl;
+  if(needTo){if(!ok){ar.value='';if(hint)hint.textContent='Auto: enter the start time first';return;}st=Number(tv.slice(0,2))*60+Number(tv.slice(3,5));lbl='start '+tv;}
+  else{const n=new Date();st=n.getHours()*60+n.getMinutes();lbl='from now';}
+  let dur,why;
+  if(S.areaId==='macaroni'){dur=NT_MAC_MIN;why='2 h 30 min';}
+  else{const ls=ntLastLS();if(!ls){ar.value='';if(hint)hint.textContent='Auto: no line speed reading yet, enter the time';return;}dur=Math.round(NT_STICKS/ls*60);why=NT_STICKS+' sticks ÷ '+ls+'/h = '+Math.floor(dur/60)+' h '+pad(dur%60)+' min';}
+  const m=(st+dur)%1440;ar.value=pad(Math.floor(m/60))+':'+pad(m%60);
+  if(hint)hint.textContent='Auto: '+lbl+' + '+why;
 }
 function ntSync(){
   const r=$('#ntWhy').value,stopR=NT_STOP.indexOf(r)>=0,newR=r==='Start as new',chk=$('#ntTd').checked;
-  $('#ntDieW').style.display=r==='DI change'?'':'none';
+  $('#ntDieW').style.display=(r==='DI change'||newR)?'':'none';
+  {const L=$('#ntDieL'),sel=$('#ntDie');if(L)L.textContent=newR?'Die number (required)':'Die now installed';if(sel&&!S.ntEdit){if(newR){if(!S.ntDieTouched)sel.value='';}else if(r==='DI change'&&!sel.value){const I=dieInfo(S.areaId);sel.value=I.names.find(x=>!I.cur||x!==I.cur.die)||I.names[0];}}if(sel&&!sel.onchange)sel.onchange=()=>{S.ntDieTouched=true;};}
   $('#ntTdW').hidden=stopR||newR;$('#ntTdW').style.display=(stopR||newR)?'none':'flex';
   $('#ntFromW').style.display=(stopR||(!newR&&chk))?'':'none';
   $('#ntToW').style.display=(stopR||newR||chk)?'':'none';
@@ -2651,7 +2670,8 @@ async function sendNotice(){
   const a=area(S.areaId),to=PRESS_TO_PACK[S.areaId];if(!to)return;
   const why=$('#ntWhy').value,stopR=NT_STOP.indexOf(why)>=0,newR=why==='Start as new',chk=$('#ntTd').checked,ar=$('#ntArr').value,dt=($('#ntTx').value||'').trim(),stick=$('#ntStick')?($('#ntStick').value||'').trim():'';
   if(S.areaId==='spaghetti'&&!stick){toast('Enter the stick number.',true);return;}
-  const die=why==='DI change'?($('#ntDie').value||''):'';
+  const die=(why==='DI change'||newR)?($('#ntDie').value||''):'';
+  if(newR&&DIE_LINES.indexOf(S.areaId)>=0&&!die){toast('Choose the die number.',true);return;}
   const needFrom=stopR||(!newR&&chk),needTo=stopR||newR||chk,f=needFrom?$('#ntFrom').value:'',t=needTo?$('#ntTo').value:'',T=x=>/^([01]\d|2[0-3]):[0-5]\d$/.test(x);
   if(needFrom&&!T(f)){toast('Enter the time stopped (24h, like 15:30).',true);return;}
   if(needTo&&!T(t)){toast(newR?'Enter the time the line started (24h, like 15:30).':'Enter the time started again (24h, like 15:30).',true);return;}
@@ -2665,7 +2685,7 @@ async function sendNotice(){
   if(st.pack==='offline')warn.push('the PACKAGING tablet looks offline');
   else if(st.pack==='waiting')warn.push('the PACKAGING tablet is signed in but waiting for a shift leader approval, so nobody will see the message');
   else if(st.pack==='unknown')warn.push('the PACKAGING tablet could not be checked (no connection to the server)');
-  const base=a.name+(stick?' · stick '+stick:'')+(f&&t?' stopped '+f+'–'+t:(t?' started at '+t:''))+' ('+why+(dt?': '+dt:'')+'). Arrives at packaging '+fmt12(d)+(d.getDate()!==now.getDate()?' (tomorrow)':'')+'.';
+  const base=a.name+(die?' · die '+die:'')+(stick?' · stick '+stick:'')+(f&&t?' stopped '+f+'–'+t:(t?' started at '+t:''))+' ('+why+(dt?': '+dt:'')+'). Arrives at packaging '+fmt12(d)+(d.getDate()!==now.getDate()?' (tomorrow)':'')+'.';
   const who=await ask({title:editing?'Save the changes?':'Notify the packaging team?',msg:(warn.length?'WARNING: '+warn.join(' and ')+'. The message may not reach them. After sending, go and tell them in person.  ':'Packaging tablet is online.  ')+base,pw:true,ok:editing?'Yes, save changes':'Yes, notify'});if(!who)return;
   try{
     if(editing){
@@ -2674,7 +2694,7 @@ async function sendNotice(){
     }else{
       const sp=stick?stickPrev(null,null):null,sd=sp?Number(stick)-Number(sp.stick):null;const doc={from:S.areaId,to:to,die:die,stopFrom:f,stopTo:t,stick:stick,stickD:(sd==null||isNaN(sd))?null:sd,reason:why,details:dt,text:why+(dt?': '+dt:''),arriveAt:d.toISOString(),by:who.name,ts:new Date().toISOString(),status:'open'};
       await S.db.collection('notices').add(doc);endNtEdit();toast('Packaging team notified.');
-      if(die&&DIE_LINES.indexOf(S.areaId)>=0){try{const at=(t&&/^\d\d:\d\d$/.test(t))?(()=>{const x=new Date();x.setHours(Number(t.slice(0,2)),Number(t.slice(3,5)),0,0);if(x.getTime()>Date.now()+5*60000)x.setDate(x.getDate()-1);return x;})():new Date();if(!dieDup(S.areaId,die,at.toISOString()))await dieAdd(S.areaId,'die',die,at.toISOString(),who,{src:'message'});}catch(e2){}}
+      if(die&&DIE_LINES.indexOf(S.areaId)>=0){try{const at=(t&&/^\d\d:\d\d$/.test(t))?(()=>{const x=new Date();x.setHours(Number(t.slice(0,2)),Number(t.slice(3,5)),0,0);if(x.getTime()>Date.now()+5*60000)x.setDate(x.getDate()-1);return x;})():new Date();if((why==='DI change'||!(dieInfo(S.areaId).cur&&dieInfo(S.areaId).cur.die===die))&&!dieDup(S.areaId,die,at.toISOString()))await dieAdd(S.areaId,'die',die,at.toISOString(),who,{src:'message'});}catch(e2){}}
     }
     if(warn.length)showBar('<span class="tx">NO CONNECTION: '+esc(warn.join(' and '))+'. Go to the packaging team and tell them about the stop yourself.</span>');
   }catch(e){toast(dbErr(e),true);}
@@ -3384,12 +3404,12 @@ function stockHTML(adm){
   const low=all.filter(p=>partState(p)==='low').length,out=all.filter(p=>partState(p)==='out').length,val=all.reduce((s,p)=>s+(Number(p.qty)||0)*(Number(p.price)||0),0);
   const strip='<div class="row small"><span class="chip acc">'+all.length+' part'+(all.length===1?'':'s')+'</span>'+(low?'<span class="chip warn">'+low+' low</span>':'')+(out?'<span class="chip bad">'+out+' out of stock</span>':'')+(adm&&val>0?'<span class="chip">Stock value '+money(val)+'</span>':'')+'</div>';
   if(!all.length)return '<section class="card"><h2>Spare parts</h2><p class="muted">No parts yet. Use <b>+ Add part</b>, or <b>Import list</b> to paste your parts list from Excel.</p></section>';
-  return '<section class="card">'+strip+(list.length?'<div class="muted small" style="margin-top:8px">Showing '+Math.min(list.length,S.pf.n)+' of '+list.length+'</div><div class="tscroll" style="margin-top:6px"><table><thead><tr><th>Part</th><th>Shelf</th><th>In stock</th><th>Min</th>'+(adm?'<th>Value</th>':'')+'<th></th></tr></thead><tbody>'+list.slice(0,S.pf.n).map(p=>{
+  return '<section class="card">'+strip+(list.length?'<div class="muted small" style="margin-top:8px">Showing '+Math.min(list.length,S.pf.n)+' of '+list.length+'</div><div class="tscroll" style="margin-top:6px"><table><thead><tr><th>Part</th><th style="width:1%">Shelf</th><th style="width:1%;white-space:nowrap">In stock</th><th style="width:1%">Min</th>'+(adm?'<th style="width:1%">Value</th>':'')+'<th style="width:1%"></th></tr></thead><tbody>'+list.slice(0,S.pf.n).map(p=>{
     const q=Number(p.qty)||0;
     return '<tr><td>'+(p.uc?'<span class="chip acc mono" style="margin-right:6px">'+esc(p.uc)+'</span>':'')+'<b>'+esc(p.name)+'</b>'+(p.spec?' <span class="mono small" style="background:var(--accentbg);padding:1px 6px;border-radius:5px">'+esc(p.spec)+'</span>':'')+'<div class="muted small">'+[p.cat,p.use&&p.use!=='general'?forName(p.use):'',p.grp,p.code?'Order code '+p.code:'',p.supplier].filter(Boolean).map(esc).join(' · ')+'</div></td>'+
      '<td style="white-space:nowrap"><b class="mono" style="font-size:14px">'+(p.loc?esc(p.loc):'–')+'</b></td>'+
      '<td><b class="mono" style="font-size:18px">'+fmtQ(q)+'</b> <span class="muted small">'+esc(p.unit||'')+'</span><div>'+stChip(p)+'</div></td><td class="mono">'+(Number(p.min)?fmtQ(p.min):'–')+'</td>'+(adm?'<td class="mono small">'+(p.price?money(q*Number(p.price)):'–')+'</td>':'')+
-     '<td style="white-space:nowrap;min-width:140px"><select data-psel data-pid="'+esc(p.id)+'" aria-label="Action" style="min-height:44px;font-weight:600;min-width:130px;width:130px"><option value="">Action ▾</option><option value="out">Take out</option><option value="in">Receive</option><option value="edit">Edit</option>'+(adm?'<option value="del">Delete</option>':'')+'</select></td></tr>';}).join('')+'</tbody></table></div>'+(list.length>S.pf.n?'<div class="row" style="margin-top:10px"><button class="btn" id="pMore">Show 100 more</button></div>':''):'<p class="muted" style="margin-top:10px">No parts match the search.</p>')+'</section>';
+     '<td style="white-space:nowrap"><select data-psel data-pid="'+esc(p.id)+'" aria-label="Action" style="min-height:44px;font-weight:600;min-width:120px;width:120px"><option value="">Action ▾</option><option value="out">Take out</option><option value="in">Receive</option><option value="edit">Edit</option>'+(adm?'<option value="del">Delete</option>':'')+'</select></td></tr>';}).join('')+'</tbody></table></div>'+(list.length>S.pf.n?'<div class="row" style="margin-top:10px"><button class="btn" id="pMore">Show 100 more</button></div>':''):'<p class="muted" style="margin-top:10px">No parts match the search.</p>')+'</section>';
 }
 function orderHTML(ol){
   if(!ol.length)return '<section class="card"><h2>To order</h2><p class="muted">Nothing to order. Parts appear here when stock falls to the minimum or below.</p></section>';
