@@ -317,7 +317,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v44';
+const APP_V='plant-v45';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2404,7 +2404,7 @@ async function sendIssue(){
   }catch(e){toast(dbErr(e),true);}
 }
 /* ---------- control room ---------- */
-const TABS=[['overview','Overview'],['trends','Trends & export'],['mgrp','Maintenance'],['notices','Messages'],['devices','Devices'],['setup','Setup']];
+const TABS=[['overview','Overview'],['trends','Trends & export'],['mgrp','Maintenance'],['points','Points'],['notices','Messages'],['devices','Devices'],['setup','Setup']];
 const MGRP=['issues','maint','parts','done'];
 let lastM='issues';
 function paintSubtabs(){const el=$('#subtabs');if(!el)return;if(MGRP.indexOf(S.tab)<0){el.innerHTML='';return;}lastM=S.tab;el.innerHTML='<div class="tabs" role="tablist" style="margin-bottom:12px">'+MTABS.map(t=>'<button class="tab" role="tab" data-m="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='maint'?' <span class="chip warn" id="pmBadge" hidden></span>':'')+'</button>').join('')+'</div>';$$('[data-m]',el).forEach(b=>b.onclick=()=>{S.tab=b.dataset.m;paintSubtabs();buildTab();});paintBadge();paintLowBadge();}
@@ -2742,6 +2742,7 @@ function buildTab(){
   if(S.tab==='notices')t.innerHTML='<div id="ntBody"></div>';
   if(S.tab==='devices')t.innerHTML='<div id="devBody"></div>';
   if(S.tab==='issues')t.innerHTML='<div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
+  if(S.tab==='points')t.innerHTML='<div id="ptBody"></div>';
   if(S.tab==='setup')t.innerHTML=setupShell();
   bindTab();paintTab();paintBadge();
 }
@@ -2755,6 +2756,7 @@ function paintTab(){
   if(S.tab==='parts')paintParts();
   if(S.tab==='notices')paintNtTab();
   if(S.tab==='devices')paintDevices();
+  if(S.tab==='points'&&S.pt.rows===null&&!S.pt.loading)ptLoad();else if(S.tab==='points')paintPoints();
 }
 function bindTab(){
   if(S.tab==='overview'){
@@ -2899,6 +2901,102 @@ function totalsHTML(date){
 }
 
 /* ---- trends & export ---- */
+/* ---------- points & ranking (admin only) ---------- */
+const PT_DEF={hourly:1,late:0.5,pack:1,lab:2,clean:1,cleanConfirm:1,needConfirm:1,notice:2,arrived:1,issue:2,closed:3,pm:3,die:2,capN:3};
+const PT_LBL=[['hourly','Hourly reading on time'],['late','Hourly reading late'],['pack','Packaging entry'],['lab','Laboratory entry'],['clean','Cleaning part ticked'],['cleanConfirm','Shift leader confirms cleaning'],['notice','Message to packaging'],['arrived','Marked product arrived'],['issue','Request sent to maintenance'],['closed','Request finished (maintenance)'],['pm','Preventive job done'],['die','Die / Teflon record']];
+const PT_ROLES=['Press','Packaging','Laboratory','Maintenance'];
+S.pt={range:'week',role:'all',rows:null,loading:false,err:''};
+const ptCfg=()=>Object.assign({},PT_DEF,S.ptCfg||{});
+function ptRange(k){
+  const t=parseYmd(S.today),dow=(t.getDay()+6)%7;let f,e;
+  if(k==='week'){f=addDays(S.today,-dow);e=S.today;}
+  else if(k==='lastweek'){f=addDays(S.today,-dow-7);e=addDays(S.today,-dow-1);}
+  else if(/^w\d$/.test(k)){f=addDays(S.today,-dow-7*(Number(k.slice(1))-1));e=S.today;}
+  else if(k==='month'){f=S.today.slice(0,8)+'01';e=S.today;}
+  else{f=ymd(new Date(t.getFullYear(),t.getMonth()-1,1));e=ymd(new Date(t.getFullYear(),t.getMonth(),0));}
+  return [f,e];
+}
+function ptCompute(D,f,e){
+  const C=ptCfg(),P={};
+  const get=(name,role)=>{const nm=String(name||'').trim();if(!nm||/^admin$/i.test(nm))return null;const k=nm.toLowerCase();return P[k]||(P[k]={name:nm,pts:0,r:{Press:0,Packaging:0,Laboratory:0,Maintenance:0},rd:0,ot:0,rdN:0,exp:0,sh:{},cl:0,msg:0,req:0,mt:0,oth:0});};
+  const add=(p,role,v,cat)=>{if(!p||!v)return;p.pts+=v;p.r[role]+=v;if(cat)p[cat]+=v;};
+  const inR=ts=>{if(!ts)return false;const d=ymd(new Date(ts));return d>=f&&d<=e;};
+  D.logs.forEach(d=>{
+    const ar=String(d.area||''),a=area(ar);
+    if(ar==='dies'||ar==='regr'||ar==='clean_plan'||ar.indexOf('dies_')===0)return;
+    const role=ar.indexOf('pack_')===0?'Packaging':(ar.indexOf('lab_')===0||ar.indexOf('rm')===0?'Laboratory':'Press');
+    entries(d).forEach(x=>{const en=x.e;if(!en||!en.by)return;const p=get(en.by);if(!p)return;
+      let v=en.late?C.late:C.hourly;
+      if(role==='Packaging'){v=C.pack;}else if(role==='Laboratory'){v=C.lab;}
+      add(p,role,v,null);p.rd++;if(!en.late)p.ot++;
+      if(role==='Press'&&a&&!a.timed){p.rdN++;const k=d.date+'|'+ar+'|'+shiftOf(x.h);if(!p.sh[k]){p.sh[k]=1;p.exp+=Math.max(1,HRS().filter(h=>shiftOf(h)===shiftOf(x.h)).length);}}
+    });
+    if(d.clean){Object.keys(d.clean).forEach(sh=>{const ok=!C.needConfirm||(d.cleanConf&&d.cleanConf[sh]);if(!ok)return;const m=d.clean[sh]||{};Object.keys(m).forEach(it=>{const c=m[it];if(!c||!c.by)return;add(get(c.by),'Press',C.clean,'cl');});});}
+    if(d.cleanConf){Object.keys(d.cleanConf).forEach(sh=>{const c=d.cleanConf[sh];if(c&&c.by)add(get(c.by),'Press',C.cleanConfirm,'cl');});}
+  });
+  const dayN={};const cap=(key,name,day)=>{const k=key+'|'+String(name).toLowerCase()+'|'+day;dayN[k]=(dayN[k]||0)+1;return dayN[k]<=C.capN;};
+  D.notices.forEach(n=>{if(n.by&&inR(n.ts)&&cap('n',n.by,ymd(new Date(n.ts))))add(get(n.by),'Press',C.notice,'msg');
+    if(n.arrivedBy&&inR(n.arrivedAt))add(get(n.arrivedBy),'Packaging',C.arrived,'msg');});
+  D.issues.forEach(i=>{if(i.by&&inR(i.ts)&&cap('i',i.by,ymd(new Date(i.ts))))add(get(i.by),'Press',C.issue,'req');
+    if(i.closedBy&&inR(i.closedAt))add(get(i.closedBy),'Maintenance',C.closed,'mt');});
+  D.hist.forEach(h=>{if(h.by&&inR(h.at))add(get(h.by),'Maintenance',C.pm,'mt');});
+  D.dies.forEach(ev=>{if(ev&&ev.by&&inR(ev.at))add(get(ev.by),'Press',C.die,'oth');});
+  return Object.keys(P).map(k=>{const p=P[k];let role='Press',best=-1;PT_ROLES.forEach(r=>{if(p.r[r]>best){best=p.r[r];role=r;}});
+    p.role=role;p.pts=Math.round(p.pts*10)/10;p.otp=p.rd?Math.round(p.ot/p.rd*100):null;p.rate=p.exp?Math.min(100,Math.round(p.rdN/p.exp*100)):null;return p;});
+}
+async function ptLoad(){
+  const Q=S.pt;
+  if(!S.db){Q.rows=[];Q.loading=false;paintPoints();return;}
+  Q.loading=true;Q.err='';paintPoints();
+  const [f,e]=ptRange(Q.range),f1=addDays(f,-1);
+  try{
+    try{const c=await S.db.doc('config/points').get();S.ptCfg=c.exists?c.data():{};}catch(x){}
+    const q=(c,fld)=>S.db.collection(c).where(fld,'>=',f1).limit(3000).get().then(s=>s.docs.map(d=>d.data()));
+    const [logs,notices,issues,hist]=await Promise.all([S.db.collection('logs').where('date','>=',f).limit(3000).get().then(s=>s.docs.map(d=>d.data()).filter(d=>d.date&&d.date<=e)),q('notices','ts'),q('issues','ts'),q('maint_history','at')]);
+    const dies=[];for(const id of ['dies_macaroni','dies_spaghetti']){try{const sn=await S.db.doc('logs/'+id).get();if(sn.exists){const ev=sn.data().events||{};Object.keys(ev).forEach(k=>dies.push(ev[k]));}}catch(x){}}
+    /* closed requests were sent earlier: also read recently closed ones */
+    let iss2=issues;try{const s2=await S.db.collection('issues').where('closedAt','>=',f1).limit(3000).get();const seen={};iss2=issues.concat(s2.docs.map(d=>d.data())).filter(i=>{const k=(i.ts||'')+'|'+(i.by||'')+'|'+(i.text||'');if(seen[k])return false;seen[k]=1;return true;});}catch(x){}
+    Q.rows=ptCompute({logs:logs,notices:notices,issues:iss2,hist:hist,dies:dies},f,e);Q.at=Date.now();
+  }catch(er){Q.err=dbErr(er);Q.rows=Q.rows||[];}
+  Q.loading=false;paintPoints();
+}
+function ptList(){
+  const Q=S.pt;let l=(Q.rows||[]).slice();if(Q.role!=='all')l=l.filter(p=>p.role===Q.role);
+  return l.sort((a,b)=>b.pts-a.pts||((b.otp||0)-(a.otp||0))||a.name.localeCompare(b.name));
+}
+function paintPoints(){
+  const el=$('#ptBody');if(!el)return;const Q=S.pt,[f,e]=ptRange(Q.range),list=ptList();
+  const rg=[['week','This week'],['lastweek','Last week'],['month','This month'],['lastmonth','Last month']],btn=(v,t,cur,key)=>'<button type="button" class="btn sm'+(v===cur?' pri':'')+'" data-'+key+'="'+v+'">'+esc(t)+'</button>';
+  const medals=['🥇','🥈','🥉'];
+  const pod=list.slice(0,3).map((p,i)=>'<div class="card" style="flex:1 1 180px;text-align:center;padding:14px"><div style="font-size:34px">'+medals[i]+'</div><div style="font-weight:700;font-size:20px;margin:4px 0">'+esc(p.name)+'</div><div class="mono" style="font-size:26px;font-weight:700">'+p.pts+'</div><div class="muted small">points · '+esc(p.role)+'</div></div>').join('');
+  const rows=list.map((p,i)=>'<tr><td class="mono"><b>'+(i+1)+'</b></td><td><b>'+esc(p.name)+'</b></td><td class="small">'+esc(p.role)+'</td><td class="mono"><b style="font-size:17px">'+p.pts+'</b></td><td class="mono">'+p.rd+'</td><td class="mono">'+(p.otp==null?'–':p.otp+'%')+'</td><td class="mono">'+(p.rate==null?'–':p.rate+'%')+'</td><td class="mono">'+(Math.round(p.cl*10)/10)+'</td><td class="mono">'+(Math.round(p.msg*10)/10)+'</td><td class="mono">'+(Math.round(p.req*10)/10)+'</td><td class="mono">'+(Math.round(p.mt*10)/10)+'</td><td class="mono">'+(Math.round(p.oth*10)/10)+'</td></tr>').join('');
+  el.innerHTML='<section class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><div><h2 style="margin:0">Points and ranking</h2><div class="muted small">'+esc(f)+' to '+esc(e)+' · visible to the admin only for now</div></div><div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn sm" id="ptRef">Refresh</button><button type="button" class="btn sm" id="ptCsv">Download Excel file</button><button type="button" class="btn sm" id="ptCfg">Point values</button></div></div>'+
+   '<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:12px">'+rg.map(x=>btn(x[0],x[1],Q.range,'rg')).join('')+'<select id="ptW" aria-label="Weeks" style="min-height:40px;font-weight:600"><option value="">'+(/^w\d$/.test(Q.range)?'':'Weeks ▾')+'</option>'+[2,3,4,5,6].map(n=>'<option value="w'+n+'"'+(Q.range==='w'+n?' selected':'')+'>Last '+n+' weeks</option>').join('')+'</select><span style="width:12px"></span>'+[['all','Everyone']].concat(PT_ROLES.map(r=>[r,r])).map(x=>btn(x[0],x[1],Q.role,'rl')).join('')+'</div>'+
+   (Q.loading?'<p class="muted" style="margin-top:14px">Counting points…</p>':(Q.err?'<p class="muted" style="margin-top:14px">'+esc(Q.err)+'</p>':(list.length?'<div class="row" style="gap:12px;flex-wrap:wrap;margin-top:14px">'+pod+'</div><div class="tscroll" style="margin-top:14px"><table><thead><tr><th>#</th><th>Name</th><th>Role</th><th>Points</th><th>Records</th><th>On time</th><th>Hourly rate</th><th>Cleaning</th><th>Messages</th><th>Requests</th><th>Maintenance</th><th>Other</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="muted small" style="margin-top:10px"><b>On time</b> = records saved in time. <b>Hourly rate</b> = hourly readings done out of the hours in the shifts the person worked (press lines only). Reporting a problem or an out of range value never costs points. Messages and requests count up to '+ptCfg().capN+' per person per day. Cleaning counts when the shift leader confirms it.</p>':'<p class="muted" style="margin-top:14px">No records in this period.</p>')))+'</section>';
+  $$('[data-rg]',el).forEach(b=>b.onclick=()=>{Q.range=b.dataset.rg;ptLoad();});
+  const pw=$('#ptW');if(pw)pw.onchange=()=>{if(pw.value){Q.range=pw.value;ptLoad();}};
+  $$('[data-rl]',el).forEach(b=>b.onclick=()=>{Q.role=b.dataset.rl;paintPoints();});
+  $('#ptRef').onclick=ptLoad;$('#ptCsv').onclick=ptCsv;$('#ptCfg').onclick=ptCfgDlg;
+}
+async function ptCsv(){
+  const list=ptList();if(!list.length){toast('Nothing to download.',true);return;}
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"',[f,e]=ptRange(S.pt.range);
+  const head=['Rank','Name','Role','Points','Records','On time %','Hourly rate %','Cleaning','Messages','Requests','Maintenance','Other'];
+  const rows=list.map((p,i)=>[i+1,p.name,p.role,p.pts,p.rd,p.otp==null?'':p.otp,p.rate==null?'':p.rate,p.cl,p.msg,p.req,p.mt,p.oth]);
+  try{const dl=await window.claude.use('downloads');if(!dl){toast('Download is not available in this view.',true);return;}
+    await dl.save({filename:'points_'+f+'_to_'+e+'.csv',data:'﻿'+[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n')});toast('File saved.');}
+  catch(er){if(!(er&&er.code==='declined'))toast(dbErr(er),true);}
+}
+function ptCfgDlg(){
+  const old=$('#ptDlg');if(old)old.remove();const C=ptCfg(),w=document.createElement('div');w.id='ptDlg';w.className='ovl';
+  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:460px"><h2>Point values</h2><div style="display:grid;gap:8px;margin:10px 0">'+PT_LBL.map(x=>'<label class="l" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span>'+esc(x[1])+'</span><input type="number" step="0.5" min="0" data-k="'+x[0]+'" value="'+C[x[0]]+'" style="width:90px"></label>').join('')+
+   '<label class="l" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span>Max messages and requests counted per person per day</span><input type="number" step="1" min="1" data-k="capN" value="'+C.capN+'" style="width:90px"></label>'+
+   '<label class="chkl" style="display:flex;gap:12px;align-items:center"><input type="checkbox" id="ptNc" style="width:24px;height:24px"'+(C.needConfirm?' checked':'')+'><span>Cleaning counts only after the shift leader confirms</span></label></div>'+
+   '<div class="row"><button type="button" class="btn big cyan" id="ptX" style="flex:1">Cancel</button><button type="button" class="btn pri big" id="ptOk" style="flex:1">Save</button></div></div>';
+  document.body.appendChild(w);$('#ptX').onclick=()=>w.remove();
+  $('#ptOk').onclick=async()=>{const o={};$$('input[data-k]',w).forEach(i=>{const v=Number(i.value);o[i.dataset.k]=isNaN(v)||v<0?PT_DEF[i.dataset.k]:v;});o.needConfirm=$('#ptNc').checked?1:0;
+    try{await S.db.doc('config/points').set(o);S.ptCfg=o;w.remove();toast('Saved.');if(S.pt.rows)ptLoad();}catch(er){toast(dbErr(er),true);}};
+}
 function trendShell(){
   const a=S.cfg.areas;if(!area(S.trend.area))S.trend.area=a[0].id;
   const ar=area(S.trend.area);if(!numParams(ar).find(p=>p.id===S.trend.param))S.trend.param=numParams(ar)[0].id;
