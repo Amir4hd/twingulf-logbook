@@ -317,7 +317,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v42';
+const APP_V='plant-v43';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -3387,9 +3387,9 @@ function stockHTML(adm){
   return '<section class="card">'+strip+(list.length?'<div class="muted small" style="margin-top:8px">Showing '+Math.min(list.length,S.pf.n)+' of '+list.length+'</div><div class="tscroll" style="margin-top:6px"><table><thead><tr><th>Part</th><th>Shelf</th><th>In stock</th><th>Min</th>'+(adm?'<th>Value</th>':'')+'<th></th></tr></thead><tbody>'+list.slice(0,S.pf.n).map(p=>{
     const q=Number(p.qty)||0;
     return '<tr><td>'+(p.uc?'<span class="chip acc mono" style="margin-right:6px">'+esc(p.uc)+'</span>':'')+'<b>'+esc(p.name)+'</b>'+(p.spec?' <span class="mono small" style="background:var(--accentbg);padding:1px 6px;border-radius:5px">'+esc(p.spec)+'</span>':'')+'<div class="muted small">'+[p.cat,p.use&&p.use!=='general'?forName(p.use):'',p.grp,p.code?'Order code '+p.code:'',p.supplier].filter(Boolean).map(esc).join(' · ')+'</div></td>'+
-     '<td><b class="mono" style="font-size:18px;white-space:nowrap">'+(p.loc?esc(p.loc):'–')+'</b></td>'+
+     '<td style="white-space:nowrap"><b class="mono" style="font-size:14px">'+(p.loc?esc(p.loc):'–')+'</b></td>'+
      '<td><b class="mono" style="font-size:18px">'+fmtQ(q)+'</b> <span class="muted small">'+esc(p.unit||'')+'</span><div>'+stChip(p)+'</div></td><td class="mono">'+(Number(p.min)?fmtQ(p.min):'–')+'</td>'+(adm?'<td class="mono small">'+(p.price?money(q*Number(p.price)):'–')+'</td>':'')+
-     '<td style="white-space:nowrap"><select data-psel data-pid="'+esc(p.id)+'" aria-label="Action" style="min-height:44px;font-weight:600;max-width:130px"><option value="">Action ▾</option><option value="out">Take out</option><option value="in">Receive</option><option value="edit">Edit</option>'+(adm?'<option value="del">Delete</option>':'')+'</select></td></tr>';}).join('')+'</tbody></table></div>'+(list.length>S.pf.n?'<div class="row" style="margin-top:10px"><button class="btn" id="pMore">Show 100 more</button></div>':''):'<p class="muted" style="margin-top:10px">No parts match the search.</p>')+'</section>';
+     '<td style="white-space:nowrap;min-width:140px"><select data-psel data-pid="'+esc(p.id)+'" aria-label="Action" style="min-height:44px;font-weight:600;min-width:130px;width:130px"><option value="">Action ▾</option><option value="out">Take out</option><option value="in">Receive</option><option value="edit">Edit</option>'+(adm?'<option value="del">Delete</option>':'')+'</select></td></tr>';}).join('')+'</tbody></table></div>'+(list.length>S.pf.n?'<div class="row" style="margin-top:10px"><button class="btn" id="pMore">Show 100 more</button></div>':''):'<p class="muted" style="margin-top:10px">No parts match the search.</p>')+'</section>';
 }
 function orderHTML(ol){
   if(!ol.length)return '<section class="card"><h2>To order</h2><p class="muted">Nothing to order. Parts appear here when stock falls to the minimum or below.</p></section>';
