@@ -48,7 +48,7 @@ h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
 .dot.off{background:#f0705f;box-shadow:0 0 0 3px rgba(240,112,95,.3)}
 .batt{display:inline-flex;align-items:center;gap:5px;font:600 14px var(--f-m);white-space:nowrap}.batt .bi{position:relative;width:26px;height:13px;border:2px solid currentColor;border-radius:3px;padding:1px}.batt .bi:after{content:'';position:absolute;right:-5px;top:2.5px;width:3px;height:6px;background:currentColor;border-radius:0 2px 2px 0}.batt .bi b{display:block;height:100%;background:#58c184;border-radius:1px}.batt.low{color:#f0705f}.batt.low .bi b{background:#f0705f}
 .bbtn{background:transparent;border:1px solid color-mix(in srgb,var(--bg) 45%,transparent);color:var(--bg);padding:8px 12px;border-radius:6px;min-height:40px}
-.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:16px}.wrap>div:empty{display:none}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:16px}.wrap>div:empty{display:none}.rawban.nl{cursor:default;pointer-events:none}.chip[hidden]{display:none!important}#subtabs .tab{font-size:.9em;padding-top:8px;padding-bottom:8px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
 .card>h2,.card>h3{margin-bottom:10px}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
@@ -317,7 +317,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v41';
+const APP_V='plant-v42';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -894,7 +894,7 @@ function renderPk(){
   const dt=$('#pkDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.pk.date=v;pkReset();subPk();};
   $$('#pkTog button').forEach(b=>b.onclick=()=>{const v=b.dataset.d==='yday'?addDays(S.today,-1):S.today;if(S.pk.date===v)return;S.pk.date=v;$$('#pkTog button').forEach(x=>x.classList.toggle('pri',x===b));pkReset();subPk();});
   $('#isOpen').onclick=()=>openIssModal(null);
-  $('#rawBan').onclick=()=>go('raw');
+  $('#rawBan').onclick=()=>{if($('#rawBan').dataset.open==='1')go('raw');};
   PKL.forEach(id=>paintPkForm(id));subPk();paintPinMsg();paintPkNotices();paintRawBan();
 }
 const pkRo=()=>!adminEff()&&S.pk.date!==S.today;
@@ -907,10 +907,11 @@ function subPk(){
 function paintRawBan(){
   const el=$('#rawBan');if(!el)return;
   const inf=rawInfo(S.today);
-  if(!inf){el.className='rawban none';return;}
+  if(!inf){el.className='rawban none';el.dataset.open='0';return;}
+  el.dataset.open=inf.open?'1':'0';
   if(inf.open)el.textContent='Raw materials open · closes in '+inf.left+' min ('+t12(inf.sl.e)+')';
   else el.textContent='Raw materials closed · opens in '+durTxt(inf.wait)+' ('+t12(inf.sl.s)+')';
-  el.className='rawban '+(inf.open?(inf.left<=15?'bad':'ok'):(inf.wait<=40?'warn':''));
+  el.className='rawban '+(inf.open?(inf.left<=15?'bad':'ok'):(inf.wait<=40?'warn nl':'nl'));
 }
 function pkEntry(id){const k=S.pk.edit[id],d=S.pk.docs[id];return k&&d&&d.hours&&d.hours[k]?d.hours[k]:null;}
 function pkLastType(id){
@@ -1752,8 +1753,8 @@ function ensureCleanSub(){
 function cleanBtnHTML(sh){
   if(DIE_LINES.indexOf(S.areaId)<0)return '';
   const c=cleanOf(sh),as=cleanAssigned(sh),n=as.filter(i=>c[i]).length,cf=cleanConf(sh);
-  const btn=!as.length?'<button type="button" class="clbtn" data-clsh="'+esc(sh)+'" aria-label="Cleaning '+esc(sh)+'" title="No cleaning assigned" style="opacity:.45">🧽<small>–</small></button>':
-   '<button type="button" class="clbtn'+(n===as.length?' full':n?' part':'')+'" data-clsh="'+esc(sh)+'" aria-label="Cleaning '+esc(sh)+'" title="Cleaning assigned to this shift">🧽<small>'+n+'/'+as.length+'</small></button>';
+  const btn=!as.length?'<button type="button" class="clbtn" data-clsh="'+esc(sh)+'" aria-label="Cleaning '+esc(sh)+'" title="No cleaning assigned" style="opacity:.45">🧹<small>–</small></button>':
+   '<button type="button" class="clbtn'+(n===as.length?' full':n?' part':'')+'" data-clsh="'+esc(sh)+'" aria-label="Cleaning '+esc(sh)+'" title="Cleaning assigned to this shift">🧹<small>'+n+'/'+as.length+'</small></button>';
   const tx=cf?'<span class="clcf ok" title="Confirmed by '+esc(String(cf.by||'').split(' ')[0])+'">Confirmed ✔</span>':(cleanEnded(sh)&&as.length?'<span class="clcf no">Not confirmed</span>':'');
   return '<div class="clwrap">'+btn+tx+'</div>';
 }
@@ -1766,7 +1767,7 @@ function cleanDlg(sh){
    (as.length?as.map(i=>{const x=CLEAN_ITEMS.find(q=>q[0]===i),d=c[i],ed=d&&(ov||editLeft(d)>0);return '<label class="chkl" style="display:flex;gap:12px;align-items:center;font-size:19px;font-weight:600"><input type="checkbox" data-ci="'+i+'" data-was="'+(d?1:0)+'" style="width:28px;height:28px"'+(d?' checked':'')+((d&&!ed)||!can?' disabled':'')+'><span>'+x[1]+(d?' <span class="muted small" style="font-weight:400">· '+esc(String(d.by||'').split(' ')[0])+' '+esc(d.at?fmt12(d.at):'')+(ed&&!ov?' · edit '+left5(editLeft(d)):'')+'</span>':'')+'</span></label>';}).join(''):'<div class="muted">Nothing is assigned to this shift.</div>')+'</div>'+
    '<div class="row" style="flex-wrap:nowrap"><button type="button" class="btn big cyan" style="flex:1" id="clX">'+(can?'Cancel':'Close')+'</button>'+(can&&as.length?'<button type="button" class="btn pri big" style="flex:1" id="clOk">Save</button>':'')+'</div>'+
    (cf?'<div class="muted small" style="margin-top:8px">Confirmed by '+esc(cf.by||'')+' '+esc(cf.at?fmt12(cf.at):'')+'</div>':'')+
-   '<div class="row" style="margin-top:8px;flex-wrap:wrap">'+(can&&!ov?'<button type="button" class="btn" id="clUnl">Shift leader: unlock</button>':'')+(can?'<button type="button" class="btn" id="clCf"'+(as.every(i=>c[i])?'':' disabled')+'>'+(cf?'Confirm again':'Confirm cleaning')+'</button>':'')+(lead?'<button type="button" class="btn" id="clPlan">Weekly plan</button>':'')+'</div></div>';
+   '<div class="row" style="margin-top:8px;flex-wrap:wrap">'+(can&&!ov?'<button type="button" class="btn" id="clUnl">Shift leader: unlock</button>':'')+(can?'<button type="button" class="btn" id="clCf"'+(as.length&&as.every(i=>c[i])?'':' disabled')+'>'+(cf?'Confirm again':'Confirm cleaning')+'</button>':'')+(lead?'<button type="button" class="btn" id="clPlan">Weekly plan</button>':'')+'</div></div>';
   document.body.appendChild(w);
   $('#clX').onclick=()=>w.remove();
   const pb=$('#clPlan');if(pb)pb.onclick=()=>{w.remove();cleanPlanDlg();};
@@ -2403,14 +2404,18 @@ async function sendIssue(){
   }catch(e){toast(dbErr(e),true);}
 }
 /* ---------- control room ---------- */
-const TABS=[['overview','Overview'],['trends','Trends & export'],['maint','Maintenance'],['parts','Spare parts'],['issues','Requests'],['notices','Messages'],['devices','Devices'],['setup','Setup']];
+const TABS=[['overview','Overview'],['trends','Trends & export'],['mgrp','Maintenance'],['notices','Messages'],['devices','Devices'],['setup','Setup']];
+const MGRP=['issues','maint','parts','done'];
+let lastM='issues';
+function paintSubtabs(){const el=$('#subtabs');if(!el)return;if(MGRP.indexOf(S.tab)<0){el.innerHTML='';return;}lastM=S.tab;el.innerHTML='<div class="tabs" role="tablist" style="margin-bottom:12px">'+MTABS.map(t=>'<button class="tab" role="tab" data-m="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='maint'?' <span class="chip warn" id="pmBadge" hidden></span>':'')+'</button>').join('')+'</div>';$$('[data-m]',el).forEach(b=>b.onclick=()=>{S.tab=b.dataset.m;paintSubtabs();buildTab();});paintBadge();paintLowBadge();}
 const MTABS=[['issues','Requests'],['maint','Preventive'],['parts','Spare parts'],['done','Recent maintenance done']];
 function renderAdmin(){
   if(!adminEff()){go('home');return;}
-  $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='devices'?' <span class="chip ok" id="devBadge" hidden></span>':'')+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="msgBtn" type="button" style="align-self:center">Send message</button></div><div id="tab"></div>';
+  $('#main').innerHTML='<div class="tabs" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(t[0]==='mgrp'?MGRP.indexOf(S.tab)>=0:S.tab===t[0])+'">'+t[1]+(t[0]==='mgrp'?' <span class="chip bad" id="mtBadge" hidden></span>':'')+(t[0]==='devices'?' <span class="chip ok" id="devBadge" hidden></span>':'')+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="msgBtn" type="button" style="align-self:center">Send message</button></div><div id="subtabs"></div><div id="tab"></div>';
   $('#msgBtn').onclick=()=>msgDlg();
-  $$('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;S.setupEditing=false;$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));buildTab();});
-  subAdmin();buildTab();paintDevBadge();paintLowBadge();
+  $$('#main>.tabs .tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t==='mgrp'?(MGRP.indexOf(S.tab)>=0?S.tab:lastM):b.dataset.t;S.setupEditing=false;$$('#main>.tabs .tab').forEach(x=>x.setAttribute('aria-selected',x===b));paintSubtabs();buildTab();});
+  if(S.tab==='mgrp')S.tab=lastM;
+  subAdmin();paintSubtabs();buildTab();paintDevBadge();paintLowBadge();
 }
 function renderMplace(){
   if(!(S.dev&&(S.dev.place==='maint'||S.dev.place==='all'))&&!adminEff()){go('home');return;}
@@ -2684,7 +2689,7 @@ function subAdmin(){
     S.tasks=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
     const sig=S.tasks.map(t=>t.id+t.lastDone+t.lastHour).join('|');
     if(sig!==S.pmSig){S.pmSig=sig;loadPM();}
-    if(S.tab==='maint'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
+    paintMtBadge();if(S.tab==='maint'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
   resub('devs',()=>S.db.collection('sessions').limit(60).onSnapshot(snap=>{
     S.devs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.devsAt=Date.now();paintDevBadge();if(S.tab==='devices')paintTab();},e=>{}));
   resub('parts',()=>S.db.collection('parts').limit(1500).onSnapshot(snap=>{
@@ -2694,7 +2699,10 @@ function subAdmin(){
   resub('hist',()=>S.db.collection('maint_history').orderBy('at','desc').limit(60).onSnapshot(snap=>{
     S.hist=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.tab==='maint'||S.tab==='done')paintTab();},e=>toast(dbErr(e),true)));
 }
-function paintBadge(){const n=S.issues.filter(i=>i.status==='open').length;try{document.title=(n&&(S.view==='mplace'||S.view==='admin')?'('+n+') ':'')+(S.cfg.plantName||'Plant Logbook');}catch(e){}const b=$('#issBadge');if(!b)return;b.hidden=!n;b.textContent=n;}
+function lowN(){return S.parts.filter(p=>partState(p)!=='ok'&&!((Number(p.min)||0)===0&&(Number(p.qty)||0)>0)).length;}
+function pmN(){let n=0;try{n=(S.tasks||[]).filter(t=>{const x=pmState(t);return x&&(x.status==='overdue'||x.status==='soon');}).length;}catch(e){}return n;}
+function paintMtBadge(){const mb=$('#mtBadge');if(!mb)return;const n=S.issues.filter(i=>i.status==='open').length+lowN()+pmN();mb.hidden=!n;mb.textContent=n;mb.title='Open requests + preventive due + parts to order';const pb=$('#pmBadge');if(pb){const k=pmN();pb.hidden=!k;pb.textContent=k;}}
+function paintBadge(){const n=S.issues.filter(i=>i.status==='open').length;paintMtBadge();try{document.title=(n&&(S.view==='mplace'||S.view==='admin')?'('+n+') ':'')+(S.cfg.plantName||'Plant Logbook');}catch(e){}const b=$('#issBadge');if(!b)return;b.hidden=!n;b.textContent=n;}
 async function loadPM(){
   if(!S.db||!S.tasks.length){S.mlogs={};paintTab();return;}
   const min=S.tasks.map(t=>t.lastDone||S.today).sort()[0];
@@ -2702,7 +2710,7 @@ async function loadPM(){
     const snap=await S.db.collection('logs').where('date','>=',min).limit(1000).get();
     const m={};snap.docs.forEach(d=>{m[d.id]=d.data();});S.mlogs=m;S.mTrunc=snap.size>=1000;
   }catch(e){toast(dbErr(e),true);}
-  paintTab();
+  paintMtBadge();paintTab();
 }
 function buildTab(){
   const t=$('#tab');if(!t)return;
@@ -3290,7 +3298,7 @@ const partState=p=>{const q=Number(p.qty)||0,m=Number(p.min)||0;return q<=0?'out
 const stChip=p=>{const s=partState(p);return '<span class="chip '+(s==='out'?'bad':s==='low'?'warn':'ok')+'">'+(s==='out'?'Out of stock':s==='low'?'Low':'OK')+'</span>';};
 const money=n=>(Math.round((Number(n)||0)*100)/100).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 S.parts=[];S.moves=[];S.pf={view:'stock',q:'',use:'',cat:'',low:false,n:100};S.imp=null;
-function paintLowBadge(){const n=S.parts.filter(p=>partState(p)!=='ok'&&!((Number(p.min)||0)===0&&(Number(p.qty)||0)>0)).length,b=$('#lowBadge');if(!b)return;b.hidden=!n;b.textContent=n;b.title=n+' part'+(n===1?'':'s')+' low or out of stock';}
+function paintLowBadge(){const n=lowN(),b=$('#lowBadge');paintMtBadge();if(!b)return;b.hidden=!n;b.textContent=n;b.title=n+' part'+(n===1?'':'s')+' low or out of stock';}
 /* a form dialog that also identifies who is acting (operator password, or Admin) */
 function stockDlg(o){
   return new Promise(resolve=>{
@@ -3350,13 +3358,14 @@ function bindParts(){
   $('#pfLow').onchange=e=>{f.low=e.target.checked;f.n=100;paintParts();};
   $('#pfAdd').onclick=()=>partEdit(null);
   $('#pBody').onclick=e=>{if(e.target.closest('#pMore')){f.n+=100;paintParts();return;}const b=e.target.closest('button[data-pact]');if(!b)return;partAct(b.dataset.pact,b.dataset.pid);};
+  $('#pBody').onchange=e=>{const sl=e.target.closest('select[data-psel]');if(!sl)return;const v=sl.value,id=sl.dataset.pid;sl.value='';if(v)partAct(v,id);};
 }
 const partMatch=p=>{const f=S.pf,q=f.q.trim().toLowerCase();
   if(f.use&&p.use!==f.use)return false;
   if(f.cat&&p.cat!==f.cat)return false;
   if(f.low&&partState(p)==='ok')return false;
   if(q&&!([p.uc,p.grp,p.name,p.spec,p.code,p.loc,p.supplier,p.cat,forName(p.use)].join(' ').toLowerCase().includes(q)))return false;return true;};
-const orderList=()=>S.parts.filter(p=>(Number(p.min)||0)>0&&(Number(p.qty)||0)<=Number(p.min)).map(p=>Object.assign({},p,{need:Math.max(1,Math.ceil(Number(p.min)*2-(Number(p.qty)||0)))})).sort((a,b)=>String(a.supplier||'~').localeCompare(String(b.supplier||'~'))||String(a.name).localeCompare(String(b.name)));
+const orderList=()=>S.parts.filter(p=>(Number(p.qty)||0)<=0||((Number(p.min)||0)>0&&(Number(p.qty)||0)<=Number(p.min))).map(p=>Object.assign({},p,{need:Math.max(1,Math.ceil(Number(p.min)*2-(Number(p.qty)||0)))})).sort((a,b)=>String(a.supplier||'~').localeCompare(String(b.supplier||'~'))||String(a.name).localeCompare(String(b.name)));
 function paintParts(){
   const el=$('#pBody');if(!el)return;
   const f=S.pf,adm=adminEff(),ol=orderList();
@@ -3375,11 +3384,12 @@ function stockHTML(adm){
   const low=all.filter(p=>partState(p)==='low').length,out=all.filter(p=>partState(p)==='out').length,val=all.reduce((s,p)=>s+(Number(p.qty)||0)*(Number(p.price)||0),0);
   const strip='<div class="row small"><span class="chip acc">'+all.length+' part'+(all.length===1?'':'s')+'</span>'+(low?'<span class="chip warn">'+low+' low</span>':'')+(out?'<span class="chip bad">'+out+' out of stock</span>':'')+(adm&&val>0?'<span class="chip">Stock value '+money(val)+'</span>':'')+'</div>';
   if(!all.length)return '<section class="card"><h2>Spare parts</h2><p class="muted">No parts yet. Use <b>+ Add part</b>, or <b>Import list</b> to paste your parts list from Excel.</p></section>';
-  return '<section class="card">'+strip+(list.length?'<div class="muted small" style="margin-top:8px">Showing '+Math.min(list.length,S.pf.n)+' of '+list.length+'</div><div class="tscroll" style="margin-top:6px"><table><thead><tr><th>Part</th><th>In stock</th><th>Min</th>'+(adm?'<th>Value</th>':'')+'<th></th></tr></thead><tbody>'+list.slice(0,S.pf.n).map(p=>{
+  return '<section class="card">'+strip+(list.length?'<div class="muted small" style="margin-top:8px">Showing '+Math.min(list.length,S.pf.n)+' of '+list.length+'</div><div class="tscroll" style="margin-top:6px"><table><thead><tr><th>Part</th><th>Shelf</th><th>In stock</th><th>Min</th>'+(adm?'<th>Value</th>':'')+'<th></th></tr></thead><tbody>'+list.slice(0,S.pf.n).map(p=>{
     const q=Number(p.qty)||0;
-    return '<tr><td>'+(p.uc?'<span class="chip acc mono" style="margin-right:6px">'+esc(p.uc)+'</span>':'')+'<b>'+esc(p.name)+'</b>'+(p.spec?' <span class="mono small" style="background:var(--accentbg);padding:1px 6px;border-radius:5px">'+esc(p.spec)+'</span>':'')+'<div class="muted small">'+[p.loc?'Shelf '+p.loc:'',p.cat,p.use&&p.use!=='general'?forName(p.use):'',p.grp,p.code?'Order code '+p.code:'',p.supplier].filter(Boolean).map(esc).join(' · ')+'</div></td>'+
+    return '<tr><td>'+(p.uc?'<span class="chip acc mono" style="margin-right:6px">'+esc(p.uc)+'</span>':'')+'<b>'+esc(p.name)+'</b>'+(p.spec?' <span class="mono small" style="background:var(--accentbg);padding:1px 6px;border-radius:5px">'+esc(p.spec)+'</span>':'')+'<div class="muted small">'+[p.cat,p.use&&p.use!=='general'?forName(p.use):'',p.grp,p.code?'Order code '+p.code:'',p.supplier].filter(Boolean).map(esc).join(' · ')+'</div></td>'+
+     '<td><b class="mono" style="font-size:18px;white-space:nowrap">'+(p.loc?esc(p.loc):'–')+'</b></td>'+
      '<td><b class="mono" style="font-size:18px">'+fmtQ(q)+'</b> <span class="muted small">'+esc(p.unit||'')+'</span><div>'+stChip(p)+'</div></td><td class="mono">'+(Number(p.min)?fmtQ(p.min):'–')+'</td>'+(adm?'<td class="mono small">'+(p.price?money(q*Number(p.price)):'–')+'</td>':'')+
-     '<td style="white-space:nowrap"><button class="btn sm" data-pact="out" data-pid="'+esc(p.id)+'">Take out</button> <button class="btn sm pri" data-pact="in" data-pid="'+esc(p.id)+'">Receive</button> <button class="btn sm" data-pact="edit" data-pid="'+esc(p.id)+'">Edit</button>'+(adm?' <button class="btn sm" data-pact="del" data-pid="'+esc(p.id)+'" title="Delete" aria-label="Delete">'+TRASH+'</button>':'')+'</td></tr>';}).join('')+'</tbody></table></div>'+(list.length>S.pf.n?'<div class="row" style="margin-top:10px"><button class="btn" id="pMore">Show 100 more</button></div>':''):'<p class="muted" style="margin-top:10px">No parts match the search.</p>')+'</section>';
+     '<td style="white-space:nowrap"><select data-psel data-pid="'+esc(p.id)+'" aria-label="Action" style="min-height:44px;font-weight:600;max-width:130px"><option value="">Action ▾</option><option value="out">Take out</option><option value="in">Receive</option><option value="edit">Edit</option>'+(adm?'<option value="del">Delete</option>':'')+'</select></td></tr>';}).join('')+'</tbody></table></div>'+(list.length>S.pf.n?'<div class="row" style="margin-top:10px"><button class="btn" id="pMore">Show 100 more</button></div>':''):'<p class="muted" style="margin-top:10px">No parts match the search.</p>')+'</section>';
 }
 function orderHTML(ol){
   if(!ol.length)return '<section class="card"><h2>To order</h2><p class="muted">Nothing to order. Parts appear here when stock falls to the minimum or below.</p></section>';
