@@ -317,7 +317,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v47';
+const APP_V='plant-v48';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2925,7 +2925,7 @@ const lvOn=()=>!!(S.lvl&&S.lvl.start);
 function opByName(n){const k=lvKey(n);return (S.ops||[]).find(o=>lvKey(o.name)===k)||null;}
 const isSenior=o=>!!(o&&(o.leader||o.labHead||o.tech));
 function lvPts(n){const t=S.lvl&&S.lvl.totals&&S.lvl.totals[lvKey(n)];return t?Number(t.pts)||0:0;}
-function lvOf(n){const pts=lvPts(n);let L=1;lvTh().forEach(x=>{if(pts>=x)L++;});const st=(S.lvl&&S.lvl.lv&&S.lvl.lv[lvKey(n)])||1;return Math.max(L,st);}
+function lvOf(n){const pts=lvPts(n);let L=1;lvTh().forEach(x=>{if(pts>=x)L++;});return L;}
 const lvTier=L=>L>=7?3:L>=5?2:L>=3?1:0;
 const lvIsAss=n=>{const o=opByName(n);return !!(o&&!isSenior(o)&&lvOn());};
 function lvBadge(n){const o=opByName(n);if(!o||isSenior(o)||!lvOn()||(S.lvl&&S.lvl.hide))return '';const L=lvOf(n);return '<span class="lvb t'+lvTier(L)+'" title="Level '+L+'">Lv.'+L+'</span>';}
@@ -2956,7 +2956,7 @@ async function lvUpdate(silent){
 function lvDlg(){
   const old=$('#lvDlg');if(old)old.remove();const V=S.lvl||{};let th=lvTh().slice();const w=document.createElement('div');w.id='lvDlg';w.className='ovl';
   const draw=()=>{
-    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:440px"><h2>Level programme</h2><p class="muted small">Levels are for assistant technicians only. Points are counted from the start date, one day at a time, and a level never goes down.</p>'+
+    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:440px"><h2>Level programme</h2><p class="muted small">Levels are for assistant technicians only. Points are counted from the start date, one day at a time. Levels follow each total and the numbers below, so changing a number changes the levels at once.</p>'+
      '<label class="l">Start counting from<input type="date" id="lvStart" value="'+esc(V.start||S.today)+'"></label>'+
      '<div style="display:grid;gap:6px;margin:10px 0"><b>Points needed for each level</b>'+th.map((x,i)=>'<label class="l" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>Level '+(i+2)+' at</span><input type="number" min="1" step="1" data-t="'+i+'" value="'+x+'" style="width:100px"></label>').join('')+
      '<div class="row" style="gap:8px"><button type="button" class="btn sm" id="lvAdd">+ Add a level</button><button type="button" class="btn sm" id="lvDel"'+(th.length<2?' disabled':'')+'>Remove last level</button></div></div>'+
