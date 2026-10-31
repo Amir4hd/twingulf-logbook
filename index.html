@@ -320,7 +320,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v50';
+const APP_V='plant-v51';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -3523,7 +3523,7 @@ async function scanPart(){
   const p=await scanDlg();if(!p)return;
   const act=await new Promise(res=>{
     const w=document.createElement('div');w.id='dlg';w.className='ovl';
-    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true"><h2>'+esc(p.name)+'</h2><p style="margin:0"><b>'+esc(p.uc||'')+'</b></p><div style="margin:12px 0;padding:12px;border-radius:10px;background:var(--bg2,#0001);text-align:center"><div class="muted small" style="text-transform:uppercase;letter-spacing:.06em">Shelf</div><div style="font-size:34px;font-weight:800;line-height:1.1">'+esc(p.shelf||'–')+'</div></div><p style="margin:0 0 12px"><b>'+fmtQ(p.qty)+' '+esc(p.unit||'')+'</b> in stock</p><div class="row" style="gap:10px"><button type="button" class="btn big" id="sqOut" style="flex:1;background:#c62828;border-color:#c62828;color:#fff;font-weight:700">Take out</button><button type="button" class="btn big" id="sqIn" style="flex:1;background:#00a5b8;border-color:#00a5b8;color:#fff;font-weight:700">Receive</button></div><button type="button" class="btn big" id="sqNo" style="margin-top:10px;width:100%">Cancel</button></div>';
+    w.innerHTML='<div class="dlg" role="dialog" aria-modal="true"><h2 style="margin-bottom:6px">'+esc(p.name)+(p.spec?' '+esc(p.spec):'')+'</h2><p style="margin:0"><b>'+esc(p.uc||'')+'</b></p><p class="muted" style="margin:4px 0 0">'+[p.cat,p.use&&p.use!=='general'?forName(p.use):''].filter(Boolean).map(esc).join(' · ')+'</p><div style="margin:12px 0;padding:12px;border-radius:10px;background:var(--bg2,#0001);text-align:center"><div class="muted small" style="text-transform:uppercase;letter-spacing:.06em">Shelf</div><div style="font-size:34px;font-weight:800;line-height:1.1">'+esc(p.loc||'–')+'</div></div><p style="margin:0 0 12px"><b>'+fmtQ(p.qty)+' '+esc(p.unit||'')+'</b> in stock</p><div class="row" style="gap:10px"><button type="button" class="btn big" id="sqOut" style="flex:1;white-space:nowrap;padding:0 8px;background:#c62828;border-color:#c62828;color:#fff;font-weight:700">Take out</button><button type="button" class="btn big" id="sqIn" style="flex:1;white-space:nowrap;padding:0 8px;background:#00a5b8;border-color:#00a5b8;color:#fff;font-weight:700">Receive</button></div><button type="button" class="btn big" id="sqNo" style="margin-top:10px;width:100%">Cancel</button></div>';
     document.body.appendChild(w);const f=v=>{w.remove();res(v);};
     $('#sqOut').onclick=()=>f('out');$('#sqIn').onclick=()=>f('in');$('#sqNo').onclick=()=>f(null);});
   if(act)partAct(act,p.id);
