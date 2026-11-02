@@ -338,7 +338,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v59';
+const APP_V='plant-v60';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2553,6 +2553,11 @@ const ntOpen=n=>n.status==='open';
 const ntSeenArr=n=>' · '+(n.seenAt?'seen '+esc(ntWhen(n.seenAt))+(n.seenBy?' ('+nmH(n.seenBy)+')':''):'not seen yet')+' · '+((n.arrivedAt||n.ackAt)&&!ntOpen(n)?'arrived '+esc(ntWhen(n.arrivedAt||n.ackAt))+((n.arrivedBy||n.ackBy)?' ('+nmH(n.arrivedBy||n.ackBy)+')':''):'not arrived yet');
 function noticesFor(id){return S.notices.filter(n=>n.to===id&&ntOpen(n)).slice().sort((a,b)=>((a.arriveAt||'')<(b.arriveAt||'')?-1:1));}
 const ntDeleted=n=>n.status==='deleted';
+/* an arrived message stays in its place, in another colour, for exactly 24 hours after it arrived */
+const ntGotAt=n=>{const v=n.arrivedAt||n.ackAt;return v&&!isNaN(new Date(v))?new Date(v).getTime():null;};
+const ntKeep=n=>{if(ntOpen(n))return new Date(n.ts).getTime()>=Date.now()-48*3600e3;const g=ntGotAt(n);return Date.now()-(g==null?new Date(n.ts).getTime():g)<24*3600e3;};
+const ntGotRow=n=>'<div class="ntline got"><span class="tx">ARRIVED '+esc(ntWhen(ntGotAt(n)==null?n.ts:new Date(ntGotAt(n))))+' · '+ntLine(n)+' · sent by '+nmH(n.by)+' '+esc(fmt12(n.ts))+ntSeenArr(n)+'</span></div>';
+const ntRecv=id=>S.notices.filter(n=>n.to===id&&!ntDeleted(n)&&ntKeep(n)).slice().sort((a,b)=>((a.arriveAt||a.ts)<(b.arriveAt||b.ts)?-1:1));
 /* a message reaches packaging only after the sender's edit time has finished */
 const ntReleased=n=>new Date(n.ts).getTime()+editMin()*60000<=Date.now();
 function ntApply(){
@@ -2579,7 +2584,7 @@ function ensureNoticeSub(){
   if(!want){unsub('notices');S.notices=[];S.seenN=null;return;}
   if(S.subs.notices)return;
   S.seenN=null;S.arrAl={};S.ntGone={};S.ntSig=null;S.ntRaw=null;
-  const since=new Date(Date.now()-24*3600e3).toISOString();
+  const since=new Date(Date.now()-72*3600e3).toISOString();
   resub('notices',()=>S.db.collection('notices').where('ts','>=',since).limit(100).onSnapshot(snap=>{
     S.ntRaw=snap.docs.map(d=>Object.assign({id:d.id},d.data()));ntApply();
   },e=>toast(dbErr(e),true)));
@@ -2666,7 +2671,7 @@ function paintNtBlock(){
   };
 }
 function paintNoticeUI(){
-  const cut=Date.now()-24*3600e3;S.notices=S.notices.filter(n=>new Date(n.ts).getTime()>=cut);
+  S.notices=S.notices.filter(ntKeep);
   paintNtBlock();
   if(S.view==='area'){if(PACK_FROM[S.areaId])paintNotices();if(PRESS_TO_PACK[S.areaId])paintSent();}
   if(S.view==='packm')paintPkNotices();
@@ -2711,7 +2716,7 @@ const ntEditLeft=n=>ntOpen(n)?Math.max(0,new Date(n.ts).getTime()+ntEditMin()*60
 function paintSent(){
   const el=$('#sentBox');if(!el)return;
   const all=S.notices.filter(n=>n.from===S.areaId).slice().sort((a,b)=>(a.ts<b.ts?1:-1));
-  const list=all.filter(n=>ntOpen(n)),hist=all.filter(n=>!ntOpen(n)).slice(0,6);
+  const list=all.filter(ntKeep),hist=[];
   const row=n=>{const open=ntOpen(n),due=open&&n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now(),left=ntEditLeft(n);
     return '<div class="ntsent'+(open?'':' done')+(due?' due':'')+'">Sent to packaging '+esc(ntWhen(n.ts))+' by '+nmH(n.by)+' · '+esc(ntDetail(n))+(n.edited?' · edited':'')+ntSeenArr(n)+(due?' · arrival time reached':'')+(left>0?' · reaches packaging at '+esc(fmt12(new Date(n.ts).getTime()+ntEditMin()*60000)):'')+(left>0?' <button type="button" class="btn sm" data-ne="'+esc(n.id)+'">Edit ('+Math.ceil(left/60000)+' min left)</button>':'')+(open?' <button type="button" class="btn sm ntdel" data-nd="'+esc(n.id)+'" aria-label="Delete" title="Delete this message">🗑</button>':'')+'</div>';};
   el.innerHTML=list.map(row).join('');
