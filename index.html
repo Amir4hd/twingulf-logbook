@@ -80,7 +80,7 @@ label.l{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 
 .strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:10px;row-gap:18px}
 .hb{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50px;border:2px solid var(--line);background:var(--panel2);border-radius:6px;font:500 19px var(--f-m);gap:2px;padding:2px}#strip{display:flex;flex-direction:column;gap:8px}.srow{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--bg);border-radius:12px;padding:5px 12px 5px 8px;border:2px solid transparent}.srow.cur{border-color:var(--accent)}.slab em{font:600 11px var(--f-m);font-style:normal;margin-top:1px;color:var(--mut)}.slab em.ok{color:var(--ok)}.slab em.bad{color:var(--bad)}.eyebrow{font:700 11px var(--f-b,inherit);letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}.daychip{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}.daychip small{font:600 10px var(--f-b,inherit);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}.daychip b{font:600 15px var(--f-m)}.hcard .legend{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.hb.now::after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-5px;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid var(--accent)}.sgrid{display:grid;grid-template-columns:repeat(var(--n,8),minmax(0,54px));gap:10px}.slab{display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;color:var(--mut)}.slab b{font:700 24px/1 var(--f-d);margin:0}.slab small{font:700 9px var(--f-b,inherit);letter-spacing:.14em}.slab.cur{color:var(--accent,var(--ok))}.slab.cur b{color:var(--accent)}
-.pkcl{display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0}.pkclo .clwrap{gap:1px}.pkcl .clbtn{background:rgba(255,255,255,.55);color:#1d1400;height:32px}.pkcl .clbtn b{margin:0 2px 0 3px;font:800 14px var(--f-m)}.pkcl .clcf{display:block;text-align:center}.pkcl .clcf.ok{color:#0b5a2c}.pkcl .clcf.no{color:#9b1c1c}.clwrap{display:flex;flex-direction:column;align-items:center;gap:2px}.clcf{font:700 9px var(--f-b,inherit);white-space:nowrap}.clcf.ok{color:var(--ok)}.clcf.no{color:var(--bad)}.clbtn{border:1px solid var(--line);background:transparent;border-radius:8px;min-width:34px;height:30px;padding:0 6px;font-size:15px;cursor:pointer;color:var(--mut)}.clbtn small{font:700 10px var(--f-m);margin-left:3px}.clbtn.part{border-color:var(--warn);color:var(--warn)}.clbtn.full{border-color:var(--ok);color:var(--ok)}
+.pkcl{display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0}.pkclo .clwrap{gap:1px}.pkcl .clbtn{background:rgba(255,255,255,.55);color:#1d1400;height:32px}.pkcl .clbtn b{margin:0 2px 0 3px;font:800 14px var(--f-m)}.pkcl .clcf{display:block;text-align:center}.pkcl .clcf.ok{color:#0b5a2c}.pkcl .clcf.no{color:#9b1c1c}.clcf.ok,.clcf.no{font-size:14px;line-height:1}.clwrap{display:flex;flex-direction:column;align-items:center;gap:2px}.clcf{font:700 9px var(--f-b,inherit);white-space:nowrap}.clcf.ok{color:var(--ok)}.clcf.no{color:var(--bad)}.clbtn{border:1px solid var(--line);background:transparent;border-radius:8px;min-width:34px;height:30px;padding:0 6px;font-size:15px;cursor:pointer;color:var(--mut)}.clbtn small{font:400 14px var(--f-m);margin-left:3px}.clbtn.part{border-color:var(--warn);color:var(--warn)}.clbtn{border-radius:999px}input[type=number]{-moz-appearance:textfield;appearance:textfield}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.clbtn.full,.pkcl .clbtn.full{background:#1e9e4a;border-color:#1e9e4a;color:#fff}.clbtn.bad,.pkcl .clbtn.bad{background:#d32f2f;border-color:#d32f2f;color:#fff}.clbtn .clic{font:400 14px var(--f-m);margin-left:4px;line-height:1}
 @keyframes clbl{0%,49%{background:#e53935;color:#fff;border-color:#e53935}50%,100%{background:transparent}}
 .clbtn.blink{animation:clbl 1s linear infinite}
 .hb small{font:500 10px var(--f-b);text-transform:uppercase;letter-spacing:.04em}
@@ -338,7 +338,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v55';
+const APP_V='plant-v56';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -980,7 +980,7 @@ const pkKeyMin=k=>k.charAt(0)==='s'?Math.floor(Number(k.slice(1))/60):Number(k.s
 const pkK=id=>({aid:id,date:S.pk.date,d:()=>S.pk.docs[id]});
 function paintPkClean(id){
   const el=$('#pkcl_'+id);if(!el||!S.pk)return;
-  const K=pkK(id),shs=(S.cfg.shifts||[]).slice().sort((a,b)=>a.start-b.start).map(x=>x.name);
+  const K=pkK(id),shs=(S.cfg.shifts||[]).slice().sort((a,b)=>a.start-b.start).map(x=>x.name).filter(n=>S.pk.date!==S.today||adminEff()||leaderActive()||(S.dev&&S.dev.place==='all')||n===shiftOf(nowH()));
   el.innerHTML=shs.map(n=>'<span class="pkclo">'+cleanBtnHTML(n,K,String(n).slice(-1).toUpperCase())+'</span>').join('');
   $$('.clbtn',el).forEach(b=>b.onclick=()=>cleanDlg(b.dataset.clsh,K));
 }
@@ -1178,6 +1178,11 @@ function rawItemLocked(aid,sl,it){
   if(!rawItemSaved(aid,sl,it))return false;
   if(adminEff()||leaderActive())return false;
   const o=rawOwner(aid,sl,it);return !(o&&editLeft(o)>0);
+}
+function rawField(aid,p,v,off){
+  const id=aid+'__'+p.id,kind=p.kind||'num';
+  if(kind==='select')return '<label class="fld" data-a="'+aid+'" data-p="'+esc(p.id)+'"><span class="fl">'+esc(p.label)+'</span><span class="ir"><select data-a="'+aid+'" data-p="'+esc(p.id)+'" data-k="select" style="border:0;min-height:50px;font-size:20px;background:transparent"><option value="">Choose…</option>'+(p.options||[]).map(o=>'<option'+(v===o?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select></span><span class="hint">'+(off?'line stopped · ':'')+(p.opt?'optional':'required')+'</span></label>';
+  return '<label class="fld" data-a="'+aid+'" data-p="'+esc(p.id)+'"><span class="fl">'+esc(p.label)+'</span><span class="ir"><input type="number" inputmode="decimal" step="any" data-a="'+aid+'" data-p="'+esc(p.id)+'" data-k="num" value="'+(v==null?'':esc(v))+'"><i>'+esc(p.unit)+'</i></span><span class="hint">'+(off?'line stopped · optional':(p.opt?'optional':'required'))+'</span></label>';
 }
 function rawProgHTML(n){const ok=n===RAW_ITEMS.length;return '<span class="rwprog '+(ok?'ok':'no')+'" title="'+n+' of '+RAW_ITEMS.length+' parts saved">'+n+'/'+RAW_ITEMS.length+(ok?' ✔':'')+'</span>';}
 function paintRawPanel(aid){
@@ -1832,10 +1837,11 @@ function cleanBtnHTML(sh,K,lbl){
   K=KC(K);if(DIE_LINES.indexOf(K.aid)<0&&cgrp(K)!=='pack')return '';
   const c=cleanOf(sh,K),as=cleanAssigned(sh,K),n=as.filter(i=>c[i]).length,cf=cleanConf(sh,K),lb=lbl?'<b>'+esc(lbl)+'</b>':'';
   const blink=as.indexOf('diecl')>=0&&!c.diecl&&K.date===S.today&&sh===shiftOf(nowH());
+  const ended=cleanEnded(sh,K),ok=!!cf||(as.length>0&&n===as.length),bad=!ok&&ended&&as.length>0;
+  const ic=ok?'<span class="clic" title="'+(cf?'Confirmed by '+esc(String(cf.by||'').split(' ')[0]):'All done')+'">✔</span>':(bad?'<span class="clic" title="Not confirmed">✗</span>':'');
   const btn=!as.length?'<button type="button" class="clbtn" data-clsh="'+esc(sh)+'" aria-label="Cleaning '+esc(sh)+'" title="No cleaning assigned" style="opacity:.45">🧹'+lb+'<small>–</small></button>':
-   '<button type="button" class="clbtn'+(n===as.length?' full':n?' part':'')+(blink?' blink':'')+'" data-clsh="'+esc(sh)+'" aria-label="Cleaning '+esc(sh)+'" title="'+(blink?'The die has not been cleaned':'Cleaning assigned to this shift')+'">🧹'+lb+'<small>'+n+'/'+as.length+'</small></button>';
-  const tx=cf?'<span class="clcf ok" title="Confirmed by '+esc(String(cf.by||'').split(' ')[0])+'">Confirmed ✔</span>':(cleanEnded(sh,K)&&as.length?'<span class="clcf no">Not confirmed</span>':'');
-  return '<div class="clwrap">'+btn+tx+'</div>';
+   '<button type="button" class="clbtn'+(ok?' full':bad?' bad':n?' part':'')+(blink?' blink':'')+'" data-clsh="'+esc(sh)+'" aria-label="Cleaning '+esc(sh)+'" title="'+(blink?'The die has not been cleaned':'Cleaning assigned to this shift')+'">🧹'+lb+'<small>'+n+'/'+as.length+'</small>'+ic+'</button>';
+  return '<div class="clwrap">'+btn+'</div>';
 }
 function cleanDlg(sh,K){
   K=KC(K);const old=$('#clDlg');if(old)old.remove();
@@ -1925,7 +1931,7 @@ function refreshStrip(){
   }
   const isT=S.date===S.today,nh=effH();
   const sts={};HRS().forEach(h=>{sts[h]=cellState(S.day,S.date,h,a);});
-  const html=groups.map(g=>{const f=g.hs[0],l=g.hs[g.hs.length-1],cur=isT&&g.hs.indexOf(nh)>=0;const lg=g.hs.filter(h=>['done','alarm','part','stop'].indexOf(sts[h])>=0).length,due=g.hs.filter(h=>['future','off','na'].indexOf(sts[h])<0).length,miss=g.hs.filter(h=>sts[h]==='miss').length;return '<div class="srow'+(cur?' cur':'')+'"><div class="slab'+(cur?' cur':'')+'"><small>SHIFT</small><b>'+esc(g.n.replace(/^Shift\s*/i,''))+'</b><em class="'+(miss?'bad':due&&lg===due?'ok':'')+'">'+(due?lg+'/'+due:'–')+'</em></div><div class="sgrid" style="--n:'+g.hs.length+'">'+g.b.join('')+'</div><div class="sinfo">'+cleanBtnHTML(g.n)+'</div></div>';}).join('');
+  const html=groups.map(g=>{const f=g.hs[0],l=g.hs[g.hs.length-1],cur=isT&&g.hs.indexOf(nh)>=0;const lg=g.hs.filter(h=>['done','alarm','part','stop'].indexOf(sts[h])>=0).length,due=g.hs.filter(h=>['future','off','na'].indexOf(sts[h])<0).length,miss=g.hs.filter(h=>sts[h]==='miss').length;return '<div class="srow'+(cur?' cur':'')+'"><div class="slab'+(cur?' cur':'')+'"><small>SHIFT</small><b>'+esc(g.n.replace(/^Shift\s*/i,''))+'</b><em class="'+(miss?'bad':due&&lg===due?'ok':'')+'">'+(due?lg+'/'+due:'–')+'</em></div><div class="sgrid" style="--n:'+g.hs.length+'">'+g.b.join('')+'</div><div class="sinfo">'+((!isT||adminEff()||leaderActive()||(S.dev&&S.dev.place==='all')||cur)?cleanBtnHTML(g.n):'')+'</div></div>';}).join('');
   if(el._h!==html){el._h=html;el.innerHTML=html;}
   $$('.clbtn',el).forEach(b=>b.onclick=()=>cleanDlg(b.dataset.clsh));
   $$('.hb',el).forEach(b=>b.onclick=()=>{S.hour=Number(b.dataset.h);S.dirty=false;refreshStrip();renderForm();});
