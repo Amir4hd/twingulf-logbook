@@ -338,7 +338,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v56';
+const APP_V='plant-v57';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -1820,7 +1820,7 @@ const dieClInfo=K=>{K=KC(K);if(DIE_LINES.indexOf(K.aid)<0||cgrp(K)!=='press'||!K
     return {ev:e,c:c,t:t,late:t>c||(t===c&&cleanEnded(shiftAName(),K)),done:!!(e.cl&&e.cl.d)};}}catch(x){}return null;};
 const dieClDue=K=>!!dieClInfo(K);
 const shiftAName=()=>{const a=S.cfg.shifts.find(x=>/^shift a$/i.test(x.name));return a?a.name:(S.cfg.shifts.slice().sort((x,y)=>x.start-y.start)[0]||{}).name;};
-const cleanPlan=(sh,K)=>{K=KC(K);const pl=S.cplan&&S.cplan.plan&&S.cplan.plan[K.aid]||{},dd=pl['d'+dowOf(K.date)],p=dd&&Array.isArray(dd[sh])?dd[sh]:(Array.isArray(pl[sh])?pl[sh]:null);const b=p||(cgrp(K)==='press'?CLEAN_ITEMS.map(x=>x[0]):[]);const di=dieClInfo(K);return di&&(sh===shiftAName()||di.late)&&b.indexOf('diecl')<0?b.concat(['diecl']):b;};
+const cleanPlan=(sh,K)=>{K=KC(K);const pl=S.cplan&&S.cplan.plan&&S.cplan.plan[K.aid]||{},dd=pl['d'+dowOf(K.date)],p=dd&&Array.isArray(dd[sh])?dd[sh]:(Array.isArray(pl[sh])?pl[sh]:null);const b=p||(cgrp(K)==='press'?CLEAN_ITEMS.map(x=>x[0]):[]);const di=dieClInfo(K);return di&&(sh===shiftAName()||(di.late&&!di.done))&&b.indexOf('diecl')<0?b.concat(['diecl']):b;};
 const cleanEnded=(sh,K)=>{K=KC(K);if(K.date<S.today)return true;if(K.date>S.today)return false;const hs=HRS(),g=hs.filter(h=>shiftOf(h)===sh);if(!g.length)return false;return hs.indexOf(g[g.length-1])<hs.indexOf(nowH());};
 const cleanConf=(sh,K)=>{K=KC(K);const D=K.d();return D&&D.cleanConf&&D.cleanConf[sh]||null;};
 const cleanAll=K=>{K=KC(K);const g=cgrp(K),m=S.cplan&&S.cplan.items||{};return (g==='press'?CLEAN_ITEMS.map(x=>[x[0],x[1],false]):[]).concat((()=>{const di=dieClInfo(K);return di?[['diecl',di.t>di.c?'Clean the die (late)':'Clean the die',false]]:[];})()).concat(Object.keys(m).filter(k=>m[k]&&m[k].name&&(m[k].g||'press')===g).sort().map(k=>[k,m[k].name,!!m[k].off]));};
