@@ -355,7 +355,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v63';
+const APP_V='plant-v64';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2585,7 +2585,7 @@ function beep(){S.lastBeep=Date.now();try{if(window.fully&&typeof fully.setAudio
 function alarmReasons(){
   const r=[];if(!S.dev)return r;const p=S.dev.place;
   if($('#ntBlock'))r.push('nt');
-  if(p!=='press'&&S.notices&&S.notices.some(n=>ntOpen(n)&&n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now()))r.push('arr');
+  if(p!=='press'&&S.notices&&S.notices.some(n=>ntOpen(n)&&ntRel(n)&&n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now()))r.push('arr');
   if((p==='maint'||p==='all'||p==='admin')&&S.issues&&S.issues.some(i=>i.status==='open'&&!i.claimedAt))r.push('iss');
   if(p!=='admin'&&typeof mmPending==='function'&&mmPending().length)r.push('msg');
   return r;
@@ -2627,7 +2627,7 @@ const ntTitle=n=>{if(!n.arriveAt)return ntText(n);const fa=area(n.from),st=(n.st
 const ntSub=n=>(n.arriveAt?(n.die?(n.reason==='DI change'?'new die ':'die ')+esc(n.die)+' · ':'')+(n.stick?'stick '+esc(n.stick)+(n.stickD!=null?' ('+(n.stickD>0?'+':'')+n.stickD+')':'')+' · ':''):'')+'sent by '+nmH(n.by)+' '+esc(fmt12(n.ts))+ntSeenArr(n).replace(/^ · /,' · ');
 const ntRemRow=n=>{const due=!!n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now();return '<div class="ntline'+(due?' due':'')+'"><span class="dot"></span><div class="tx"><b>'+(due?'ARRIVAL TIME REACHED · ':'From Press · ')+esc(ntTitle(n))+'</b><span>'+ntSub(n)+'</span></div>'+(n.arriveAt?'<span class="tm" title="Product arrives at packaging">'+esc(ntWhen(n.arriveAt))+'</span>':'')+'<button type="button" class="btn" data-nid="'+esc(n.id)+'">Arrived</button></div>';};
 const ntSeenArr=n=>' · '+(n.seenAt?'seen '+esc(ntWhen(n.seenAt))+(n.seenBy?' ('+nmH(n.seenBy)+')':''):'not seen yet')+' · '+((n.arrivedAt||n.ackAt)&&!ntOpen(n)?'arrived '+esc(ntWhen(n.arrivedAt||n.ackAt))+((n.arrivedBy||n.ackBy)?' ('+nmH(n.arrivedBy||n.ackBy)+')':''):'not arrived yet');
-function noticesFor(id){return S.notices.filter(n=>n.to===id&&ntOpen(n)).slice().sort((a,b)=>((a.arriveAt||'')<(b.arriveAt||'')?-1:1));}
+function noticesFor(id){return S.notices.filter(n=>n.to===id&&ntOpen(n)&&ntRel(n)).slice().sort((a,b)=>((a.arriveAt||'')<(b.arriveAt||'')?-1:1));}
 const ntDeleted=n=>n.status==='deleted';
 /* an arrived message stays in its place, in another colour, for exactly 24 hours after it arrived */
 const ntGotAt=n=>{const v=n.arrivedAt||n.ackAt;return v&&!isNaN(new Date(v))?new Date(v).getTime():null;};
@@ -2636,21 +2636,24 @@ const ntGotRow=n=>'<div class="ntline got"><span class="tx">ARRIVED '+esc(ntWhen
 const ntRecv=id=>S.notices.filter(n=>n.to===id&&!ntDeleted(n)&&ntKeep(n)).slice().sort((a,b)=>((a.arriveAt||a.ts)<(b.arriveAt||b.ts)?-1:1));
 /* a message reaches packaging only after the sender's edit time has finished */
 const ntReleased=n=>new Date(n.ts).getTime()+editMin()*60000<=Date.now();
+/* packaging side only: a message is held back until the sender's edit time has finished (the Press page always shows it at once) */
+const ntRel=n=>ntReleased(n)||!(S.dev&&(S.dev.place==='pack'||S.dev.place==='all'));
 function ntApply(){
   const list=S.ntRaw;if(!list||!S.dev)return;
   const p=S.dev.place;
   const mine=n=>p==='all'||p==='admin'||(p==='pack'&&PACK_FROM[n.to])||(p==='press'&&PRESS_TO_PACK[n.from]);
   const recv=p==='pack'||p==='all';
-  const vis=list.filter(n=>mine(n)&&!ntDeleted(n)&&(!recv||ntReleased(n)));
+  const vis=list.filter(n=>mine(n)&&!ntDeleted(n));
+  const rel=vis.filter(ntRel);
   S.ntDel=p==='admin'?list.filter(n=>mine(n)&&ntDeleted(n)):[];
-  if(S.seenN===null){S.seenN={};vis.forEach(n=>{S.seenN[n.id]=n.editedAt||1;if(ntOpen(n)&&n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now())S.arrAl[n.id]=n.arriveAt;});}
-  else{const fresh=vis.filter(n=>ntOpen(n)&&!S.seenN[n.id]),upd=vis.filter(n=>ntOpen(n)&&S.seenN[n.id]&&S.seenN[n.id]!==(n.editedAt||1));vis.forEach(n=>{S.seenN[n.id]=n.editedAt||1;});
+  if(S.seenN===null){S.seenN={};rel.forEach(n=>{S.seenN[n.id]=n.editedAt||1;if(ntOpen(n)&&n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now())S.arrAl[n.id]=n.arriveAt;});}
+  else{const fresh=rel.filter(n=>ntOpen(n)&&!S.seenN[n.id]),upd=rel.filter(n=>ntOpen(n)&&S.seenN[n.id]&&S.seenN[n.id]!==(n.editedAt||1));rel.forEach(n=>{S.seenN[n.id]=n.editedAt||1;});
     const gone=list.filter(n=>mine(n)&&ntDeleted(n)&&S.seenN[n.id]&&!S.ntGone[n.id]);gone.forEach(n=>{S.ntGone[n.id]=1;});
     if(recv&&p==='all'){
       if(upd.length)showBar('<span class="tx">Press corrected its message: '+ntLine(upd[0])+'</span>');
       if(fresh.length)showBar('<span class="tx">From press'+(fresh.length>1?' ('+fresh.length+' new)':'')+': '+ntLine(fresh[0])+' <span style="font-weight:400">(by '+nmH(fresh[0].by)+')</span></span>');
       if(gone.length)showBar('<span class="tx">Press deleted a message: '+ntLine(gone[0])+'</span>');}}
-  const sig=vis.map(n=>n.id+'|'+n.status+'|'+(n.editedAt||'')+'|'+(n.seenAt||'')).join(',')+'#'+(S.ntDel||[]).length;
+  const sig=vis.map(n=>n.id+'|'+n.status+'|'+(n.editedAt||'')+'|'+(n.seenAt||'')+'|'+(ntRel(n)?1:0)).join(',')+'#'+(S.ntDel||[]).length;
   if(sig===S.ntSig&&S.notices)return;S.ntSig=sig;
   S.notices=vis;paintNoticeUI();
 }
@@ -2725,7 +2728,7 @@ function paintNtTab(){
 const ntUnseen=n=>ntOpen(n)&&(!n.seenAt||(n.editedAt&&n.seenAt<n.editedAt));
 function paintNtBlock(){
   const need=!!(S.dev&&S.dev.place==='pack');
-  const list=need?S.notices.filter(n=>PACK_FROM[n.to]&&ntUnseen(n)).sort((a,b)=>(a.ts<b.ts?-1:1)):[];
+  const list=need?S.notices.filter(n=>PACK_FROM[n.to]&&ntUnseen(n)&&ntRel(n)).sort((a,b)=>(a.ts<b.ts?-1:1)):[];
   let w=$('#ntBlock');
   if(!list.length){if(w)w.remove();return;}
   const n=list[0],key=n.id+'|'+(n.editedAt||'');
@@ -2761,7 +2764,7 @@ function checkArrivals(){
   if(!S.dev||!S.notices.length)return;
   const p=S.dev.place;
   S.notices.forEach(n=>{
-    if(!ntOpen(n)||!n.arriveAt||S.arrAl[n.id]===n.arriveAt||new Date(n.arriveAt).getTime()>Date.now())return;
+    if(!ntOpen(n)||!ntRel(n)||!n.arriveAt||S.arrAl[n.id]===n.arriveAt||new Date(n.arriveAt).getTime()>Date.now())return;
     S.arrAl[n.id]=n.arriveAt;
     showBar('<span class="tx">'+(p==='press'?'Arrival time reached at packaging: ':'Arrival time reached — product from press: ')+ntLine(n)+'</span>');
   });
