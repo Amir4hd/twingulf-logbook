@@ -355,7 +355,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v62';
+const APP_V='plant-v63';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2718,9 +2718,9 @@ function paintNtTab(){
   const nl=S.notices.slice().sort((a,b)=>(a.ts<b.ts?1:-1));
   const am=S.amsgs||[];
   const adm='<section class="card"><div class="row" style="justify-content:space-between"><h2>Admin messages pinned on cards</h2><button type="button" class="btn pri sm" id="msgNew">Send message</button></div>'+(am.length?am.map(m=>'<div class="ntsent" style="margin:8px 0 0"><div style="white-space:pre-wrap"><b>'+esc(m.text)+'</b> <span class="chip '+(m.kind==='must'?'bad':'ok')+'">'+(m.kind==='must'?'Mandatory':'Information')+'</span></div><div class="muted small">'+esc(dlbl(m.at))+' · '+esc(msgWhen(m))+' · <b>'+esc(msgState(m))+'</b> · to '+esc((m.toNames||m.to||[]).join(', '))+'</div><div class="small" style="margin-top:4px">'+msgAckList(m)+'</div><button type="button" class="btn sm" data-msnd="'+esc(m.id)+'" style="margin-top:6px">'+(m.sound===false?'🔕 Sound off':'🔔 Sound on')+'</button> <button type="button" class="btn sm" data-mdel="'+esc(m.id)+'" style="margin-top:6px">Remove</button> <button type="button" class="btn sm" data-medit="'+esc(m.id)+'" style="margin-top:6px">Edit</button></div>').join(''):'<div class="empty">No messages pinned.</div>')+'</section>';
-  setTimeout(()=>{const nb=$('#msgNew');if(nb)nb.onclick=()=>msgDlg();$$('[data-msnd]').forEach(b=>b.onclick=()=>msgSoundToggle(b.dataset.msnd));$$('[data-medit]').forEach(b=>b.onclick=()=>msgDlg((S.amsgs||[]).find(m=>m.id===b.dataset.medit)));$$('[data-mdel]').forEach(b=>b.onclick=async()=>{try{await msgWrite((S.amsgs||[]).filter(m=>m.id!==b.dataset.mdel));toast('Message removed.');msgRefresh();}catch(e){toast(dbErr(e),true);}});},0);
+  setTimeout(()=>{$$('[data-adn]').forEach(b=>b.onclick=()=>adminDeleteNotice(b.dataset.adn));const nb=$('#msgNew');if(nb)nb.onclick=()=>msgDlg();$$('[data-msnd]').forEach(b=>b.onclick=()=>msgSoundToggle(b.dataset.msnd));$$('[data-medit]').forEach(b=>b.onclick=()=>msgDlg((S.amsgs||[]).find(m=>m.id===b.dataset.medit)));$$('[data-mdel]').forEach(b=>b.onclick=async()=>{try{await msgWrite((S.amsgs||[]).filter(m=>m.id!==b.dataset.mdel));toast('Message removed.');msgRefresh();}catch(e){toast(dbErr(e),true);}});},0);
   el.innerHTML=adm+'<section class="card"><h2>Press to packaging messages <span class="muted small" style="font-weight:400">last 24 hours</span></h2>'+(nl.length?nl.map(n=>{const open=ntOpen(n),pk=area(PRESS_TO_PACK[n.from]),fa=area(n.from);
-    return '<div class="ntsent'+(open?'':' done')+'" style="margin:8px 0 0">'+esc(dlbl(n.ts))+' · '+esc(fa?fa.name:n.from)+' → '+esc(pk?pk.name:'Packaging')+' · '+esc(ntDetail(n))+(n.edited?' · edited':'')+ntSeenArr(n)+'</div>';}).join(''):'<div class="empty">No messages in the last 24 hours.</div>')+(S.ntDel&&S.ntDel.length?'<h3 style="margin-top:12px">Deleted</h3>'+S.ntDel.slice().sort((a,b)=>(a.ts<b.ts?1:-1)).map(n=>{const fa=area(n.from);return '<div class="ntsent done" style="margin:8px 0 0">'+esc(dlbl(n.ts))+' · '+esc(fa?fa.name:n.from)+' · '+esc(ntDetail(n))+' · deleted by '+nmH(n.deletedBy||'?')+' '+esc(ntWhen(n.deletedAt))+'</div>';}).join(''):'')+'</section>';
+    return '<div class="ntsent'+(open?'':' done')+'" style="margin:8px 0 0">'+esc(dlbl(n.ts))+' · '+esc(fa?fa.name:n.from)+' → '+esc(pk?pk.name:'Packaging')+' · '+esc(ntDetail(n))+(n.edited?' · edited':'')+ntSeenArr(n)+' <button type="button" class="btn sm ntdel" data-adn="'+esc(n.id)+'" aria-label="Delete" title="Delete this message">🗑</button></div>';}).join(''):'<div class="empty">No messages in the last 24 hours.</div>')+(S.ntDel&&S.ntDel.length?'<h3 style="margin-top:12px">Deleted</h3>'+S.ntDel.slice().sort((a,b)=>(a.ts<b.ts?1:-1)).map(n=>{const fa=area(n.from);return '<div class="ntsent done" style="margin:8px 0 0">'+esc(dlbl(n.ts))+' · '+esc(fa?fa.name:n.from)+' · '+esc(ntDetail(n))+' · deleted by '+nmH(n.deletedBy||'?')+' '+esc(ntWhen(n.deletedAt))+'</div>';}).join(''):'')+'</section>';
 }
 const ntUnseen=n=>ntOpen(n)&&(!n.seenAt||(n.editedAt&&n.seenAt<n.editedAt));
 function paintNtBlock(){
@@ -2808,11 +2808,19 @@ async function deleteNotice(id){
   if(inWin){if(!(mine||who.leader)){toast('Only the person who sent it, or a shift leader, can delete it.',true);return;}}
   else if(!who.leader){toast('The edit time has passed. Only a shift leader can delete it.',true);return;}
   const cur=S.notices.find(x=>x.id===id);if(!cur||!ntOpen(cur)){toast('This message is already closed.',true);return;}
+  await ntDoDelete(n,who.name);
+}
+async function ntDoDelete(n,by){
   try{
-    await S.db.doc('notices/'+id).update({status:'deleted',deletedBy:who.name,deletedAt:new Date().toISOString()});
+    await S.db.doc('notices/'+n.id).update({status:'deleted',deletedBy:by,deletedAt:new Date().toISOString()});
     if(n.die&&DIE_LINES.indexOf(n.from)>=0){try{const ev=dieEvents(n.from).find(e=>e.src==='message'&&e.die===n.die&&e.ts&&Math.abs(new Date(e.ts).getTime()-new Date(n.ts).getTime())<3*60000);if(ev)await dieWrite(n.from,{events:{[ev.k]:null}});}catch(e2){}}
     toast('Message deleted.');
   }catch(e){toast(dbErr(e),true);}
+}
+async function adminDeleteNotice(id){
+  const n=S.notices.find(x=>x.id===id);if(!n)return;
+  const ok=await ask({title:'Delete this message?',msg:ntText(n),ok:'Yes, delete',no:'Keep it'});if(!ok)return;
+  await ntDoDelete(n,'Admin');
 }
 function stickPrev(exId,beforeTs){
   const l=S.notices.filter(x=>x.from===S.areaId&&x.id!==exId&&x.stick!=null&&x.stick!==''&&!isNaN(Number(x.stick))&&(!beforeTs||x.ts<beforeTs)).sort((a,b)=>(a.ts<b.ts?1:-1));
