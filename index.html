@@ -38,11 +38,12 @@ h2{font-size:22px;text-transform:uppercase}
 h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
 .mono{font-family:var(--f-m);font-variant-numeric:tabular-nums}
 
+#top{position:sticky;top:env(safe-area-inset-top,0px);z-index:60}
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ink);color:var(--bg);display:flex;align-items:center;gap:14px;padding:10px 16px;min-height:56px}
 .brand{font:700 20px/1 var(--f-d);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
 .bar .where{font:600 20px/1 var(--f-d);letter-spacing:.04em;text-transform:uppercase;opacity:.85;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar .sp{flex:1}.bar .brand{overflow:hidden;text-overflow:ellipsis;font-size:19px}.bar .tl{flex:0 1 auto;display:flex;flex-direction:column;gap:3px;min-width:0}.bar .sub{font:600 12px/1.1 var(--f-b,inherit);letter-spacing:.04em;text-transform:uppercase;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stk2{display:flex;flex-direction:column;gap:3px;align-items:flex-start;flex:0 0 auto}.clock{display:flex;flex-direction:column;gap:2px;line-height:1.1;align-items:center;text-align:center}.bar .bbtn{padding:6px 10px;min-height:36px;white-space:nowrap}
-.clock{font:500 16px var(--f-m);font-variant-numeric:tabular-nums;white-space:nowrap}
+.clock{font:600 17px var(--f-m);font-variant-numeric:tabular-nums;white-space:nowrap}.stk2.ctr{align-items:center}.stk2.ctr .clock{display:flex;flex-direction:column;align-items:center;gap:0}.stk2.ctr .clock span{font-size:34px;font-weight:700;line-height:1.05;letter-spacing:.03em}@media (max-width:700px){.stk2.ctr .clock span{font-size:22px}}
 .sync{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;white-space:nowrap}
 .dot{width:16px;height:16px;border-radius:50%;background:#58c184;box-shadow:0 0 0 3px rgba(88,193,132,.25)}
 .dot.off{background:#f0705f;box-shadow:0 0 0 3px rgba(240,112,95,.3)}
@@ -67,6 +68,8 @@ h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
 .chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--stopbg);color:var(--mut);white-space:nowrap}
 .lnst{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px;font-weight:700;border-width:2px}.lnst i{width:12px;height:12px;border-radius:50%;background:currentColor;display:inline-block}.lnst small{font-weight:500;opacity:.85}.lnst.run{background:var(--okbg);color:var(--ok);border-color:var(--ok)}.lnst.stop{background:var(--warnbg);color:var(--warn);border-color:var(--warn)}.pinmsg .pmb{margin-top:8px;display:flex;gap:8px}#pinMsg{position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:21}#pinMsg .pinmsg{box-shadow:0 6px 14px -6px rgba(0,0,0,.45);margin-bottom:8px}
 .pinmsg{border-left:6px solid var(--warn);background:var(--warnbg);margin:0 0 12px}.l textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.prdots{display:flex;gap:14px;align-items:center;justify-content:flex-end}.prd{display:inline-flex;align-items:center;gap:6px;font-size:12px;letter-spacing:.04em;color:var(--mut)}.prd b{font-weight:700}.prd.cur b{color:var(--ink)}.prd i{width:14px;height:14px;border-radius:50%;display:inline-block;background:#2fbf6b}.prd.no i{background:#e5484d;animation:prf 1s steps(1,end) infinite}@keyframes prf{50%{background:transparent;box-shadow:inset 0 0 0 2px #e5484d}}
+.chip.prmiss{animation:prp 1.2s ease-in-out infinite}@keyframes prp{50%{opacity:.45}}
 .chip.ok{background:var(--okbg);color:var(--ok)} .chip.warn{background:var(--warnbg);color:var(--warn)} .chip.bad{background:var(--badbg);color:var(--bad)} .chip.acc{background:var(--accentbg);color:var(--accent)}
 input[type=text],input[type=number],input[type=date],select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 11px;min-height:44px;width:100%}
 textarea{min-height:80px;resize:vertical}
@@ -355,7 +358,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v65';
+const APP_V='plant-v66';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -626,9 +629,9 @@ function renderTop(){
   const t=new Date();
   const sub=[S.dev?placeName(S.dev.place):'',where].filter(Boolean).join(' · ');
   $('#top').innerHTML='<header class="bar"><div class="tl"><span class="brand">'+esc(S.cfg.plantName||'Plant Logbook')+'</span>'+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</div><span class="sp"></span>'+
+   '<div class="stk2 ctr"><span class="clock" id="clock"><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span></span></div><span class="sp"></span>'+
    '<div class="stk2"><span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'No database')+'</span></span>'+
    '<span class="batt" id="batt" hidden></span></div>'+
-   '<div class="stk2"><span class="clock" id="clock"><span>'+topDate(t)+'</span><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span></span></div>'+
    (S.dev&&S.view!=='home'&&(S.view!=='mplace'||adminEff()||S.dev.place==='all'||S.dev.place==='maint')?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+'<button class="bbtn" id="menuBtn" data-nolang type="button" aria-label="Settings menu" aria-haspopup="true" aria-expanded="false" title="Settings">&#9776;</button></header>';
   const gh=$('#goHome');if(gh)gh.onclick=()=>go('home');
   const mb=$('#menuBtn');if(mb)mb.onclick=ev=>{ev.stopPropagation();toggleTopMenu();};
@@ -724,7 +727,7 @@ setInterval(()=>{
   try{checkArrivals();}catch(e){}
   try{msgAlertCheck();paintMmBlock();paintPinMsg();if(S.view==='admin'&&S.tab==='notices'&&!$('#msgDlg'))paintTab();}catch(e){}
   if(S.dev&&S.acct&&NEED_APPROVAL(S.dev.place)&&!approvalOk()&&!S.dirty){S.dev=null;S.gate='approve';unsub('notices');S.view='home';renderTop();renderHome();return;}
-  const t=new Date(),c=$('#clock');if(c)c.innerHTML='<span>'+topDate(t)+'</span><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span>';
+  const t=new Date(),c=$('#clock');if(c)c.innerHTML='<span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span>';
   const d=pdate(t);
   if(d!==S.today){const od=S.today;S.today=d;if(S.ovDate===od)S.ovDate=d;if(S.view==='area'&&S.date===od&&!adminEff()){S.date=d;S.day=null;S.editKey=null;subDay();}}
   if(S.view==='area'){
@@ -798,12 +801,19 @@ function paintRawCard(){
   if(!inf){el.textContent='';el.className='rawnext';return;}
   el.className='rawnext '+inf.cls;el.textContent=inf.open?'Open now · '+inf.left+' min left':'Next opening in '+durTxt(inf.wait)+' · '+t12(inf.sl.s);
 }
+function paintPrDots(){
+  const el=$('#prDots');if(!el)return;
+  if(!(prHrOn()&&S.view==='area'&&PRESS3.indexOf(S.areaId)>=0&&S.date===S.today&&S.prHr)){el.innerHTML='';return;}
+  const k=String(S.hour),L={macaroni:'Mac',spaghetti:'Spa',boiler:'Boil'};
+  el.innerHTML=PRESS3.map(id=>{const d=S.prHr[id],ok=!!(d&&d.hours&&d.hours[k]);return '<span class="prd'+(ok?' ok':' no')+(id===S.areaId?' cur':'')+'" title="'+esc(area(id).name+(ok?' saved':' not saved'))+' · '+hh(S.hour)+'"><b>'+L[id]+'</b><i></i></span>';}).join('');
+}
+function prChipHTML(id){const st=prHrState();if(!st||st[id]==null)return '';return st[id]?' <span class="chip ok">✔ '+hh(effH())+' saved</span>':' <span class="chip warn prmiss">⚠ '+hh(effH())+' missing</span>';}
 function renderHome(){
   if(!S.dev){renderGate();return;}
   const vis=S.cfg.areas.filter(canSee);
   const mergeLab=labOK();let labDone=false;
   const mergePk=packOK();let pkDone=false;
-  const cards=vis.map(a=>mergePk&&isPack(a)?(pkDone?'':(pkDone=true,packCardHTML())+(rawOK()?rawCardHTML():'')):mergeLab&&LABS.indexOf(a.id)>=0?(labDone?'':(labDone=true,'<button class="acard" data-a="__lab"><b>Lab Moisture</b><span class="muted">Macaroni and Spaghetti moisture readings, side by side</span></button><button class="acard" data-a="__rm"><b>Flour &amp; semolina tests</b><span class="muted">Gluten, ash, moisture, color, spots and granulation of raw material</span></button>')):'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(isLineTog(a)&&lineOpen(a.id)?' <span class="chip warn">not running</span>':'')+dieChipHTML(a.id)+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.filter(p=>!(isPack(a)&&p.win)).length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>'+(!mergePk&&a.id==='pack_spa'&&rawOK()?rawCardHTML():'')).join('');
+  const cards=vis.map(a=>mergePk&&isPack(a)?(pkDone?'':(pkDone=true,packCardHTML())+(rawOK()?rawCardHTML():'')):mergeLab&&LABS.indexOf(a.id)>=0?(labDone?'':(labDone=true,'<button class="acard" data-a="__lab"><b>Lab Moisture</b><span class="muted">Macaroni and Spaghetti moisture readings, side by side</span></button><button class="acard" data-a="__rm"><b>Flour &amp; semolina tests</b><span class="muted">Gluten, ash, moisture, color, spots and granulation of raw material</span></button>')):'<button class="acard" data-a="'+esc(a.id)+'"><b>'+esc(a.name)+(isLineTog(a)&&lineOpen(a.id)?' <span class="chip warn">not running</span>':'')+dieChipHTML(a.id)+prChipHTML(a.id)+(PACK_FROM[a.id]&&noticesFor(a.id).length?' <span class="chip bad">'+noticesFor(a.id).length+' from press</span>':'')+'</b><span class="muted">'+a.params.filter(p=>!(isPack(a)&&p.win)).length+(a.timed?' readings per entry (time saved automatically)':' readings every hour')+'</span></button>'+(!mergePk&&a.id==='pack_spa'&&rawOK()?rawCardHTML():'')).join('');
   const sub=adminEff()?'Admin: every area and the Control room.':'Signed in as: '+placeName(S.dev.place)+(S.acct&&S.acct.email?' ('+S.acct.email+')':'')+'.';
   $('#main').innerHTML='<div'+(adminEff()||S.dev.place==='all'?'':' class="c1w"')+'><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
@@ -835,7 +845,23 @@ const dieLeader=()=>adminEff()||!!(S.dev&&S.dev.place==='all');
 const dieLeft=(since,lim)=>{if(since==null)return '';const r=lim-Math.floor(since);return '';};
 const dieDays=d=>d==null?'–':(d<1?'today':Math.floor(d)+' d');
 const dieWhen=iso=>{const d=new Date(iso);return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+pad(d.getHours())+':'+pad(d.getMinutes());};
+const PRESS3=['macaroni','spaghetti','boiler'];
+function prHrOn(){return !!(S.db&&S.dev&&S.dev.place==='press');}
+function ensureHrSub(){
+  if(!prHrOn()){PRESS3.forEach(id=>unsub('ph_'+id));S.prHr={};return;}
+  S.prHr=S.prHr||{};
+  PRESS3.forEach(id=>{const k='ph_'+id;if(S.subs[k]&&S.prHrDate===S.today)return;resub(k,()=>S.db.doc('logs/'+id+'_'+S.today).onSnapshot(sn=>{S.prHr[id]=sn.exists?sn.data():{hours:{}};paintPrDots();if(S.view==='home'&&S.dev&&!($('#pcPw')&&$('#pcPw').value))renderHome();},e=>{}));});
+  S.prHrDate=S.today;
+}
+/* which of the 3 press cards are filled for this hour (null when not applicable) */
+function prHrState(){
+  if(!prHrOn()||!S.prHr)return null;
+  const h=String(effH()),st={};let n=0;
+  PRESS3.forEach(id=>{const d=S.prHr[id],ok=!!(d&&d.hours&&d.hours[h]);st[id]=ok;if(ok)n++;});
+  return n>0&&n<PRESS3.length?st:null;
+}
 function ensureDieSub(){
+  ensureHrSub();
   const pl=S.dev&&S.dev.place;
   if(!(S.db&&(pl==='press'||pl==='all'||pl==='admin'))){unsub('dieM');unsub('dieS');unsub('clp');return;}
   S.dies=S.dies||{};
@@ -1087,7 +1113,7 @@ function paintPkNotices(){
     const el=$('#pkn_'+id);if(!el)return;
     const list=noticesFor(id);
     el.innerHTML=list.map(ntRemRow).join('');
-    const hist=S.notices.filter(n=>n.to===id&&!ntOpen(n)).sort((a,b)=>(a.ts<b.ts?1:-1)).slice(0,3);
+    const hist=S.notices.filter(n=>n.to===id&&!ntOpen(n)&&!ntDeleted(n)&&ntKeep(n)).sort((a,b)=>(a.ts<b.ts?1:-1)).slice(0,3);
     const mh=$('#pkm_'+id);if(mh)mh.innerHTML=hist.length?'<section class="card slim"><h3>Messages from press · arrived</h3>'+hist.map(n=>'<div class="ntsent done">'+ntLine(n)+' · sent by '+nmH(n.by)+' '+esc(ntWhen(n.ts))+ntSeenArr(n)+'</div>').join('')+'</section>':'';
     $$('button[data-nid]',el).forEach(b=>b.onclick=async()=>{
       const n=list.find(x=>x.id===b.dataset.nid);
@@ -1550,10 +1576,14 @@ function paintLineBox(){
   const el=$('#lineCtl');if(!el)return;
   const a=area(S.areaId);if(!isLineTog(a)){el.innerHTML='';return;}
   const o=lineOpen(a.id),left=lineEditLeft(a.id),can=!!lineLast(a.id)&&(adminEff()||left>0);
-  const h=(o?'<button type="button" class="btn lnst stop" id="lineTg"><i></i>Stopped<small>since '+esc(dlbl(o.from))+'</small></button>':'<button type="button" class="btn lnst run" id="lineTg"><i></i>Running</button>')+(can?'<button type="button" class="btn sm" id="lineEd">Edit'+(left>0?' · '+left5(left)+' left':'')+'</button>':'');
+  const h=(o?'<button type="button" class="btn lnst stop" id="lineTg"><i></i>Stopped<small>since '+esc(dlbl(o.from))+'</small></button>':'<button type="button" class="btn lnst run" id="lineTg"><i></i>Running</button>');
   if(el.dataset.h===h)return;el.dataset.h=h;el.innerHTML=h;
-  const b1=$('#lineTg');if(b1)b1.onclick=()=>lineDlg(a.id,!!lineOpen(a.id));
-  const b3=$('#lineEd');if(b3)b3.onclick=()=>lineEdit(a.id);
+  const b1=$('#lineTg');if(b1)b1.onclick=()=>{
+    const o2=lineOpen(a.id),l2=lineEditLeft(a.id),can2=!!lineLast(a.id)&&(adminEff()||l2>0);
+    if(!can2){lineDlg(a.id,!!o2);return;}
+    const w=rmOvl('lineMenu','<h2 style="margin:0 0 10px">'+esc(a.name)+'</h2><div style="display:flex;flex-direction:column;gap:10px"><button type="button" class="btn pri big" id="lmGo">'+(o2?'Line is running again':'Line stopped')+'</button><button type="button" class="btn big" id="lmEd">Edit times'+(l2>0?' · '+left5(l2)+' left':'')+'</button><button type="button" class="btn big cyan" id="lmX">Cancel</button></div>');
+    $('#lmX').onclick=()=>w.remove();$('#lmGo').onclick=()=>{w.remove();lineDlg(a.id,!!lineOpen(a.id));};$('#lmEd').onclick=()=>{w.remove();lineEdit(a.id);};
+  };
 }
 const locDT=d=>{const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,16);};
 async function lineWrite(offs){await S.db.doc('logs/lines_status').set({offs:offs});S.lines=offs;}
@@ -1803,7 +1833,7 @@ function renderArea(){
   const legend=a.timed?'':'<div class="strip" id="strip" style="margin-top:14px"></div>';
   $('#main').innerHTML=
    '<div class="card hcard"><div class="row hhead" style="justify-content:space-between;align-items:flex-start"><div>'+(a.timed?'':'<div class="eyebrow">Hourly reading</div>')+'<div class="row" style="gap:12px;flex-wrap:wrap"><h2>'+esc(a.name)+(a.timed?' · timed entries':'')+'</h2>'+(isLineTog(a)?'<span class="row" id="lineCtl" style="gap:8px;flex-wrap:wrap"></span>':'')+'</div><div class="muted small" id="whenLine"></div></div>'+(DIE_LINES.indexOf(a.id)>=0?'<div id="dieBox" class="diehead"></div>':'')+
-   '<div class="row">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':(a.timed?'':'<div class="daychip"><small>Production day</small><b>'+esc(S.date)+'</b></div>'))+(a.timed&&adminEff()?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
+   '<div class="row">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="fDate" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':(a.timed?'':'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><div class="daychip"><small>Production day</small><b>'+esc(S.date)+'</b></div>'+(prHrOn()&&PRESS3.indexOf(a.id)>=0?'<div id="prDots" class="prdots"></div>':'')+'</div>'))+(a.timed&&adminEff()?'<button type="button" class="btn" id="newEntry" style="align-self:flex-end">New entry</button>':'')+'</div></div>'+legend+'</div>'+
    '<div id="pinMsg"></div>'+noticeBoxHTML(a)+
    
    (!hasCard(a)?'':'<section class="card" id="hourCard"><div class="ebar" id="eBar"></div><div id="hourView"></div></section>')+
@@ -1978,7 +2008,7 @@ function cleanPlanDlg(K){
   document.body.appendChild(w);draw();
 }
 function refreshStrip(){
-  const a=area(S.areaId),w=$('#whenLine');
+  const a=area(S.areaId),w=$('#whenLine');paintPrDots();
   if(a&&a.timed){if(w)w.textContent='The time is recorded automatically when you save · '+S.date;if(hasCard(a)){renderHourView();paintEntryBar();}return;}
   const el=$('#strip');if(!el)return;
   const sel=S.hour;
@@ -1995,7 +2025,7 @@ function refreshStrip(){
   if(el._h!==html){el._h=html;el.innerHTML=html;}
   $$('.clbtn',el).forEach(b=>b.onclick=()=>cleanDlg(b.dataset.clsh));
   $$('.hb',el).forEach(b=>b.onclick=()=>{S.hour=Number(b.dataset.h);S.dirty=false;refreshStrip();renderForm();});
-  if(w)w.innerHTML='Showing <b>'+pad(S.hour)+':00 – '+pad((S.hour+1)%24)+':00</b> · '+esc(shiftOf(S.hour))+(S.date===S.today?'':' · '+esc(S.date));
+  if(w)w.innerHTML=S.date===S.today?'':esc(S.date);
   renderHourView();paintEntryBar();
 }
 function viewKey(){
@@ -2627,11 +2657,11 @@ const ntTitle=n=>{if(!n.arriveAt)return ntText(n);const fa=area(n.from),st=(n.st
 const ntSub=n=>(n.arriveAt?(n.die?(n.reason==='DI change'?'new die ':'die ')+esc(n.die)+' · ':'')+(n.stick?'stick '+esc(n.stick)+(n.stickD!=null?' ('+(n.stickD>0?'+':'')+n.stickD+')':'')+' · ':''):'')+'sent by '+nmH(n.by)+' '+esc(fmt12(n.ts))+ntSeenArr(n).replace(/^ · /,' · ');
 const ntRemRow=n=>{const due=!!n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now();return '<div class="ntline'+(due?' due':'')+'"><span class="dot"></span><div class="tx"><b>'+(due?'ARRIVAL TIME REACHED · ':'From Press · ')+esc(ntTitle(n))+'</b><span>'+ntSub(n)+'</span></div>'+(n.arriveAt?'<span class="tm" title="Product arrives at packaging">'+esc(ntWhen(n.arriveAt))+'</span>':'')+'<button type="button" class="btn" data-nid="'+esc(n.id)+'">Arrived</button></div>';};
 const ntSeenArr=n=>' · '+(n.seenAt?'seen '+esc(ntWhen(n.seenAt))+(n.seenBy?' ('+nmH(n.seenBy)+')':''):'not seen yet')+' · '+((n.arrivedAt||n.ackAt)&&!ntOpen(n)?'arrived '+esc(ntWhen(n.arrivedAt||n.ackAt))+((n.arrivedBy||n.ackBy)?' ('+nmH(n.arrivedBy||n.ackBy)+')':''):'not arrived yet');
-function noticesFor(id){return S.notices.filter(n=>n.to===id&&ntOpen(n)&&ntRel(n)).slice().sort((a,b)=>((a.arriveAt||'')<(b.arriveAt||'')?-1:1));}
+function noticesFor(id){return S.notices.filter(n=>n.to===id&&ntOpen(n)&&ntRel(n)&&ntKeep(n)).slice().sort((a,b)=>((a.arriveAt||'')<(b.arriveAt||'')?-1:1));}
 const ntDeleted=n=>n.status==='deleted';
 /* an arrived message stays in its place, in another colour, for exactly 24 hours after it arrived */
 const ntGotAt=n=>{const v=n.arrivedAt||n.ackAt;return v&&!isNaN(new Date(v))?new Date(v).getTime():null;};
-const ntKeep=n=>{if(ntOpen(n))return new Date(n.ts).getTime()>=Date.now()-48*3600e3;const g=ntGotAt(n);return Date.now()-(g==null?new Date(n.ts).getTime():g)<24*3600e3;};
+const ntKeep=n=>{if(ntOpen(n))return new Date(n.ts).getTime()>=Date.now()-24*3600e3;const g=ntGotAt(n);return Date.now()-(g==null?new Date(n.ts).getTime():g)<24*3600e3;};
 const ntGotRow=n=>'<div class="ntline got"><span class="tx">ARRIVED '+esc(ntWhen(ntGotAt(n)==null?n.ts:new Date(ntGotAt(n))))+' · '+ntLine(n)+' · sent by '+nmH(n.by)+' '+esc(fmt12(n.ts))+ntSeenArr(n)+'</span></div>';
 const ntRecv=id=>S.notices.filter(n=>n.to===id&&!ntDeleted(n)&&ntKeep(n)).slice().sort((a,b)=>((a.arriveAt||a.ts)<(b.arriveAt||b.ts)?-1:1));
 /* a message reaches packaging only after the sender's edit time has finished */
@@ -2782,7 +2812,7 @@ function paintNotices(){
   const el=$('#ntBox');if(!el)return;
   const list=noticesFor(S.areaId);
   el.innerHTML=list.map(ntRemRow).join('');
-  const hist=S.notices.filter(n=>n.to===S.areaId&&!ntOpen(n)).sort((a,b)=>(a.ts<b.ts?1:-1)).slice(0,4);
+  const hist=S.notices.filter(n=>n.to===S.areaId&&!ntOpen(n)&&!ntDeleted(n)&&ntKeep(n)).sort((a,b)=>(a.ts<b.ts?1:-1)).slice(0,4);
   const mh=$('#msgHist');if(mh)mh.innerHTML=hist.length?'<section class="card slim"><h3>Messages from press · arrived</h3>'+hist.map(n=>'<div class="ntsent done">From press: '+ntLine(n)+' · sent by '+nmH(n.by)+' '+esc(ntWhen(n.ts))+ntSeenArr(n)+'</div>').join('')+'</section>':'';
   $$('button[data-nid]',el).forEach(b=>b.onclick=async()=>{
     const n=list.find(x=>x.id===b.dataset.nid);
