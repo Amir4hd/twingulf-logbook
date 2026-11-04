@@ -358,7 +358,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v66';
+const APP_V='plant-v67';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -962,7 +962,7 @@ const pkCls=aid=>aid==='pack_mac'?'mac':'spa';
 const pkBrand=t=>String(t==null?'–':t).replace(/^(MACARONI|SPAGHETTI)\s*-\s*/,'');
 function renderPk(){
   S.pk={date:S.today,docs:{pack_mac:null,pack_spa:null},edit:{pack_mac:null,pack_spa:null},dirty:{pack_mac:false,pack_spa:false}};
-  $('#main').innerHTML='<div class="card hcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="eyebrow">Production</div><h2>Packaging</h2><div class="muted small">Cartons and production type · time saved automatically · <span id="pkWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="pkDt" value="'+S.pk.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="pkTog"><button type="button" class="btn sm pri" data-d="today">Today</button><button type="button" class="btn sm" data-d="yday">Yesterday</button></div>')+'</div></div>'+
+  $('#main').innerHTML='<div class="card hcard" style="padding-top:10px;padding-bottom:10px"><div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px"><div><h2 style="margin:0">Packaging</h2><div class="muted small">Cartons and production type · time saved automatically</div></div><div style="display:flex;justify-content:center">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="pkDt" value="'+S.pk.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="pkTog"><button type="button" class="btn sm pri" data-d="today">Today</button><button type="button" class="btn sm" data-d="yday">Yesterday</button></div>')+'</div><div style="display:flex;justify-content:flex-end"><div class="daychip" id="pkWhen"></div></div></div></div>'+
    '<button type="button" class="rawban none" id="rawBan"></button><div id="pinMsg"></div><div class="pkgrid">'+PKL.map(id=>'<section class="pkcol" id="pkc_'+id+'"><h3 class="rawh '+pkCls(id)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>'+RAW_T[id]+'</span><span class="pkcl" id="pkcl_'+id+'"></span></h3><div id="pkn_'+id+'"></div><div class="card" id="pkf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="pkr_'+id+'" class="tscroll"></div></div><div id="pkm_'+id+'"></div></section>').join('')+'</div>'+
    '<section class="card slim" id="issueBox"><button type="button" class="btn big" id="isOpen" style="width:100%">Report a problem to maintenance</button></section>';
   const dt=$('#pkDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.pk.date=v;pkReset();subPk();};
@@ -974,7 +974,7 @@ function renderPk(){
 const pkRo=()=>!adminEff()&&S.pk.date!==S.today;
 function pkReset(){S.pk.docs={pack_mac:null,pack_spa:null};S.pk.edit={pack_mac:null,pack_spa:null};S.pk.dirty={pack_mac:false,pack_spa:false};PKL.forEach(id=>{paintPkForm(id);paintPkList(id);});}
 function subPk(){
-  const w=$('#pkWhen');if(w)w.textContent='production day '+S.pk.date;
+  const w=$('#pkWhen');if(w)w.innerHTML='<small>Production day</small><b>'+esc(S.pk.date)+'</b>';
   if(!S.db){PKL.forEach(id=>{S.pk.docs[id]={hours:{}};paintPkList(id);});return;}
   PKL.forEach((id,i)=>resub(i?'pkS':'pkM',()=>S.db.doc('logs/'+id+'_'+S.pk.date).onSnapshot(snap=>{S.pk.docs[id]=snap.exists?snap.data():{hours:{}};paintPkList(id);if(!S.pk.dirty[id])paintPkForm(id);},e=>toast(dbErr(e),true))));
 }
