@@ -17,6 +17,8 @@ service cloud.firestore {
     // Sanctions (employee list, codes and sanction letters): only the admin and the shift leader account can read. Only the admin can change the employee list and codes. The admin and shift leader can add sanctions; only the admin can delete them for good (the app hides deleted ones).
     function isHrAcct() { return isAdmin() || isLeaderAcct(); }
     match /hr/{id}            { allow read: if isHrAcct(); allow write: if isAdmin(); }
+    // The shift leader can add and edit employees in hr/employees but cannot make the list shorter. Deleting needs the admin (the app shows a request the admin approves).
+    match /hr/employees       { allow write: if isLeaderAcct() && request.resource.data.list.size() >= (resource == null ? 0 : resource.data.list.size()); }
     match /hr_sanctions/{id}  { allow read, create, update: if isHrAcct(); allow delete: if isAdmin(); }
 
     // Maintenance tasks and history: any signed-in account can add and update; the admin and the maintenance account can delete.
