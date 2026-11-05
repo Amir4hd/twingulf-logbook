@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v82';
+const APP_V='plant-v83';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4357,19 +4357,21 @@ const snFor=id=>S.sn.san.filter(x=>x.empId===id).sort((a,b)=>String(a.createdAt)
 const snDate=(d,lg)=>{if(!d)return '';const q=String(d).slice(0,10).split('-');if(q.length<3)return String(d);return q[2]+'-'+(lg==='fr'?['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])[Number(q[1])-1]+'-'+q[0];};
 function snSub(){
   S.sn=S.sn||{emps:[],codes:[],san:[],q:'',dept:'',emp:null,mode:'find',tab:'find'};
-  resub('hrE',()=>S.db.doc('hr/employees').onSnapshot(sn=>{S.sn.emps=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];if(S.view==='sanc')snMarkSeen();snPaint();},e=>toast(dbErr(e),true)));
+  resub('hrE',()=>S.db.doc('hr/employees').onSnapshot(sn=>{S.sn.emps=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];if(S.view==='sanc'&&adminEff()&&S.sn.tab==='emps')snMarkSeen('emp');snPaint();},e=>toast(dbErr(e),true)));
   resub('hrC',()=>S.db.doc('hr/codes').onSnapshot(sn=>{S.sn.codes=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];snPaint();},e=>{}));
-  resub('hrS',()=>S.db.collection('hr_sanctions').limit(3000).onSnapshot(snap=>{S.sn.all=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.sn.san=S.sn.all.filter(x=>!x.deleted);if(S.view==='sanc')snMarkSeen();snPaint();},e=>toast(dbErr(e),true)));
+  resub('hrS',()=>S.db.collection('hr_sanctions').limit(3000).onSnapshot(snap=>{S.sn.all=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.sn.san=S.sn.all.filter(x=>!x.deleted);S.sn.loadedS=true;snPaint();},e=>toast(dbErr(e),true)));
 }
 const snSeenGet=()=>{try{const v=JSON.parse(localStorage.getItem('snSeenIds')||'null');if(v&&Array.isArray(v.s)&&Array.isArray(v.e))return v;}catch(e){}return S._snSeen||null;};
 function snSeenPut(v){S._snSeen=v;try{localStorage.setItem('snSeenIds',JSON.stringify(v));}catch(e){}}
 const snEKey=e=>e.id+'@'+(e.at||'');
-function snMarkSeen(){
-  const old=snSeenGet()||{s:[],e:[]},s=new Set(old.s),e=new Set(old.e);
-  ((S.sn&&S.sn.all)||[]).forEach(x=>s.add(x.id));((S.sn&&S.sn.emps)||[]).forEach(x=>{if(x.by&&x.at)e.add(snEKey(x));});
+function snMarkSeen(kind){
+  const old=snSeenGet()||{s:[],e:[]},s=new Set(old.s),e=new Set(old.e),all=!kind;
+  if(all||kind==='san')((S.sn&&S.sn.all)||[]).forEach(x=>s.add(x.id));
+  if(all||kind==='emp')((S.sn&&S.sn.emps)||[]).forEach(x=>{if(x.by&&x.at)e.add(snEKey(x));});
   snSeenPut({s:[...s].slice(-4000),e:[...e].slice(-4000)});
-  if(S.sb){S.sb.san=0;S.sb.emp=0;}
+  if(S.sb){if(all||kind==='san')S.sb.san=0;if(all||kind==='emp')S.sb.emp=0;}
 }
+function snSeenAdd(id){const v=snSeenGet()||{s:[],e:[]};if(v.s.indexOf(id)<0){v.s.push(id);snSeenPut(v);}}
 function snBadgeCalc(){
   const b=S.sb;if(!b||!b.gotE||!b.gotS)return;
   let v=snSeenGet();
@@ -4377,7 +4379,7 @@ function snBadgeCalc(){
   const s=new Set(v.s),e=new Set(v.e);
   b.newSan=(b.sanDocs||[]).filter(x=>!s.has(x.id));b.newEmp=(b.empList||[]).filter(x=>!e.has(snEKey(x)));b.san=b.newSan.length;b.emp=b.newEmp.length;
 }
-function snBadgePaint(){const el=$('#snBadge');if(!el)return;snBadgeCalc();const b=S.sb||{},p=[];if(b.pend)p.push(b.pend+' delete request'+(b.pend>1?'s':''));if(b.san)p.push(b.san+' new sanction'+(b.san>1?'s':''));if(b.emp)p.push(b.emp+' employee change'+(b.emp>1?'s':''));const ln=[];(b.newSan||[]).slice(0,4).forEach(x=>ln.push('Sanction: '+x.name+' · '+(x.code||'')+' · '+snTypeLbl(x.type)+' · by '+(x.by||'?')));(b.pendList||[]).slice(0,3).forEach(x=>ln.push('Delete requested: '+snName(x)+' · by '+((x.delReq&&x.delReq.by)||'?')));(b.newEmp||[]).slice(0,3).forEach(x=>ln.push('Employee edited: '+snName(x)+' · by '+x.by));el.innerHTML=p.length?'<span class="chip bad">'+p.join(' · ')+'</span>'+ln.map(t=>'<div class="small" style="margin-top:4px;font-weight:500">• '+esc(t)+'</div>').join('')+((b.san>4)?'<div class="small muted">+ '+(b.san-4)+' more</div>':''):'';}
+function snBadgePaint(){const el=$('#snBadge');if(!el)return;snBadgeCalc();const b=S.sb||{},p=[];if(b.pend)p.push(b.pend+' delete request'+(b.pend>1?'s':''));if(b.san)p.push(b.san+' new sanction'+(b.san>1?'s':''));if(b.emp)p.push(b.emp+' employee change'+(b.emp>1?'s':''));const ln=[];(b.newSan||[]).slice(0,4).forEach(x=>ln.push('Sanction: '+x.name+' · '+(x.code||'')+' · '+snTypeLbl(x.type)+' · by '+(x.by||'?')));(b.pendList||[]).slice(0,3).forEach(x=>ln.push('Delete requested: '+snName(x)+' · by '+((x.delReq&&x.delReq.by)||'?')));(b.newEmp||[]).slice(0,3).forEach(x=>ln.push('Employee edited: '+snName(x)+' · by '+x.by));el.innerHTML=p.length?'<span class="chip warn">'+p.join(' · ')+'</span>'+ln.map(t=>'<div class="small" style="margin-top:4px;font-weight:500">• '+esc(t)+'</div>').join('')+((b.san>4)?'<div class="small muted">+ '+(b.san-4)+' more</div>':''):'';}
 function snBadgeSub(){
   if(!adminEff()||!S.db)return;
   S.sb={pend:0,emp:0,san:0,sanIds:[],empKeys:[],gotE:false,gotS:false};
@@ -4389,8 +4391,7 @@ function snBadgeSub(){
 }
 function renderSanc(){
   S.sn=S.sn||{emps:[],codes:[],san:[],q:'',dept:'',emp:null,mode:'find',tab:'find'};
-  if(adminEff()&&S.sb){snBadgeCalc();S.sn.fresh={san:(S.sb.newSan||[]).slice(),emp:(S.sb.newEmp||[]).slice()};}else S.sn.fresh=null;
-  snMarkSeen();
+  S.sn.fresh=null;S.sn.freshSet=null;S.sn.recN=50;
   if(!snOK()){go('home');return;}
   S.sn=S.sn||{emps:[],codes:[],san:[],q:'',dept:'',emp:null,mode:'find',tab:'find'};
   S.sn.all=S.sn.all||[];S.sn.san=S.sn.san||[];
@@ -4401,7 +4402,7 @@ function renderSanc(){
 const snPend=()=>(S.sn.emps||[]).filter(e=>e.delReq);
 function snTabs(){
   const t=S.sn.tab,b=(k,l)=>'<button type="button" class="btn sm'+(t===k?' pri':'')+'" data-sntab="'+k+'">'+l+'</button>';
-  return '<section class="card"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><div class="eyebrow">Shift leaders and admin only</div><h2 style="margin:0">Sanctions</h2></div><div class="seg">'+b('find','Find employee')+b('top','Top 5')+b('emps','Employees'+(snPend().length&&adminEff()?' ('+snPend().length+')':''))+(adminEff()?b('codes','Codes')+b('imp','Import'):'')+'</div></div></section>';
+  return '<section class="card"><div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><div class="eyebrow">Shift leaders and admin only</div><h2 style="margin:0">Sanctions</h2></div><div class="seg">'+b('find','Find employee')+(adminEff()?b('recent','Recent sanctions ('+((S.sn.san||[]).length)+')'):'')+b('top','Top 5')+b('emps','Employees'+(snPend().length&&adminEff()?' ('+snPend().length+')':''))+(adminEff()?b('codes','Codes')+b('imp','Import'):'')+'</div></div></section>';
 }
 function snPaint(force){
   const host=$('#snHost');if(!host||S.view!=='sanc')return;
@@ -4409,8 +4410,9 @@ function snPaint(force){
   const m=S.sn.mode,t=S.sn.tab;
   let h=snTabs();
   if(m==='emp'&&S.sn.emp)h+=snEmpHTML();
+  else if(t==='recent'&&adminEff())h+=snRecentHTML();
   else if(t==='top')h+=snTopHTML();
-  else if(t==='emps')h+=snEmpsAdminHTML();
+  else if(t==='emps'){if(adminEff())snMarkSeen('emp');h+=snEmpsAdminHTML();}
   else if(t==='codes'&&adminEff())h+=snCodesAdminHTML();
   else if(t==='imp'&&adminEff())h+=snImportHTML();
   else h+=snFindHTML();
@@ -4421,7 +4423,7 @@ function snFindHTML(){
   const q=(S.sn.q||'').toLowerCase().trim(),d=S.sn.dept||'';
   const list=S.sn.emps.filter(e=>e.active!==false&&(!d||e.dept===d)&&(!q||(e.id+' '+snName(e)).toLowerCase().indexOf(q)>=0)).sort((a,b)=>snName(a)<snName(b)?-1:1);
   const rows=list.slice(0,40).map(e=>{const n=S.sn.san.filter(x=>x.empId===e.id).length;return '<button type="button" class="snrow" data-snemp="'+esc(e.id)+'"><b>'+esc(snName(e))+'</b><span class="muted small">'+esc(e.id)+' · '+esc(e.dept)+'</span><span class="chip'+(n?' warn':'')+'">'+n+' sanction'+(n===1?'':'s')+'</span></button>';}).join('');
-  const fr=S.sn.fresh,fh=fr&&(fr.san.length||fr.emp.length)?'<section class="card" style="border-left:6px solid var(--bad)"><h3 style="margin:0 0 8px">New since your last visit</h3><div class="snlist">'+fr.san.map(x=>'<button type="button" class="snrow" data-snemp="'+esc(x.empId)+'"><b>'+esc(x.name)+'</b><span class="muted small">'+esc(x.code||'')+' · '+esc(snDate(x.date))+' · by '+esc(x.by||'?')+'</span><span class="chip warn">'+esc(snTypeLbl(x.type))+'</span></button>').join('')+fr.emp.map(x=>'<div class="snrow2"><b>'+esc(snName(x))+'</b><span class="muted small">Employee edited by '+esc(x.by)+' · '+esc(x.id)+'</span></div>').join('')+'</div></section>':'';
+  const fh='';
   return fh+'<section class="card"><div class="row" style="flex-wrap:wrap;gap:10px"><label class="l" style="flex:2;min-width:220px">Search name or ID<input type="text" id="snQ" value="'+esc(S.sn.q||'')+'" autocomplete="off" placeholder="e.g. PM-013 or a name"></label><label class="l" style="flex:1;min-width:180px">Department<select id="snD"><option value="">All departments</option>'+SN_DEPT.map(x=>'<option'+(x===d?' selected':'')+'>'+x+'</option>').join('')+'</select></label></div>'+
     (S.sn.emps.length?'':'<div class="empty" style="margin-top:12px">No employees yet. The admin adds them in the Employees tab, or imports them in the Import tab.</div>')+
     (rows?'<div class="snlist">'+rows+'</div>'+(list.length>40?'<div class="muted small" style="margin-top:8px">Showing 40 of '+list.length+'. Type more of the name or ID.</div>':''):(S.sn.emps.length?'<div class="empty" style="margin-top:12px">No employee matches.</div>':''))+'</section>';
@@ -4432,6 +4434,16 @@ function snEmpHTML(){
   const row=s=>'<div class="snh"><div class="snh-t"><b>'+esc(snDate(s.date))+'</b> <span class="chip warn">'+esc(snTypeLbl(s.type))+'</span> <span class="muted small">'+esc(s.ref||'')+'</span></div><div>'+esc(s.codeText||s.code||'')+'</div><div class="muted small">'+esc(s.reason||'')+(s.days?' · '+esc(s.days)+' day(s)':'')+'</div><div class="muted small">Shift leader: '+esc(s.leader||'?')+'</div><div class="row" style="gap:8px;margin-top:6px"><button type="button" class="btn sm" data-snprint="'+esc(s.id)+'">Print</button><button type="button" class="btn sm" data-sndel="'+esc(s.id)+'">Delete</button></div></div>';
   return '<section class="card"><div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div><h2 style="margin:0">'+esc(snName(e))+'</h2><div class="muted small">'+esc(e.id)+' · '+esc(e.dept)+(e.phone?' · '+esc(e.phone):'')+'</div></div><div class="row" style="gap:8px"><span class="chip'+(hist.length?' warn':'')+'">'+hist.length+' sanction'+(hist.length===1?'':'s')+'</span><button type="button" class="btn" id="snBack">Back</button><button type="button" class="btn pri" id="snNew">New sanction</button></div></div></section>'+
     '<section class="card"><h3 style="margin:0 0 8px">Previous sanctions</h3>'+(hist.length?hist.map(row).join(''):'<div class="muted">No previous sanctions.</div>')+'</section>';
+}
+const snDT=iso=>{const d=new Date(iso);if(isNaN(d))return '';return snDate(String(iso).slice(0,10)).replace(/^(\d+)-/,'$1-')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
+function snRecentHTML(){
+  if(!S.sn.loadedS)return '<section class="card"><div class="muted">Loading…</div></section>';
+  if(!S.sn.freshSet)S.sn.freshSet=new Set();
+  {const v=snSeenGet();if(v){const sv=new Set(v.s),add=(S.sn.all||[]).filter(x=>!x.deleted&&!sv.has(x.id)).map(x=>x.id);if(add.length){add.forEach(i=>S.sn.freshSet.add(i));snMarkSeen('san');}}else snMarkSeen('san');}
+  const fs=S.sn.freshSet,key=x=>String(x.createdAt||x.date||'');
+  const list=(S.sn.san||[]).slice().sort((a,b)=>key(a)<key(b)?1:key(a)>key(b)?-1:0),n=S.sn.recN||50;
+  const row=s=>{const nw=fs.has(s.id);return '<div class="snh"'+(nw?' style="background:var(--warnbg);border-left:5px solid var(--warn);padding-left:10px;border-radius:8px"':'')+'><div class="snh-t"><b>'+esc(s.name||s.empId)+'</b> <span class="chip warn">'+esc(snTypeLbl(s.type))+'</span>'+(nw?' <span class="chip bad">NEW</span>':'')+' <span class="muted small">'+esc(s.ref||'')+'</span></div><div>'+esc(s.codeText||s.code||'')+'</div><div class="muted small">'+esc(s.reason||'')+(s.days?' · '+esc(s.days)+' day(s)':'')+'</div><div class="muted small">'+esc(snDT(s.createdAt)||snDate(s.date))+' · '+esc(s.empId)+' · by '+esc(s.leader||s.by||'?')+'</div><div class="row" style="gap:8px;margin-top:6px"><button type="button" class="btn sm" data-snprint="'+esc(s.id)+'">Print</button><button type="button" class="btn sm" data-snemp="'+esc(s.empId)+'">Open employee</button></div></div>';};
+  return '<section class="card"><h3 style="margin:0 0 4px">Recent sanctions</h3><div class="muted small" style="margin-bottom:8px">Newest first · '+list.length+' in total'+(fs.size?' · '+fs.size+' new':'')+'</div>'+(list.length?list.slice(0,n).map(row).join(''):'<div class="muted">No sanctions saved yet.</div>')+(list.length>n?'<div class="row" style="margin-top:10px"><button type="button" class="btn" id="snMore">Show more</button></div>':'')+'</section>';
 }
 function snTopHTML(){
   const c={};S.sn.san.forEach(x=>{c[x.empId]=(c[x.empId]||0)+1;});
@@ -4460,6 +4472,7 @@ function snWire(host){
   if(q)q.oninput=()=>{S.sn.q=q.value;const p=q.selectionStart;snPaint(true);const q2=$('#snQ');if(q2){q2.focus();try{q2.setSelectionRange(p,p);}catch(e){}}};
   if(d)d.onchange=()=>{S.sn.dept=d.value;snPaint(true);};
   $$('[data-snemp]',host).forEach(b=>b.onclick=()=>{S.sn.emp=b.dataset.snemp;S.sn.mode='emp';snPaint(true);window.scrollTo({top:0});});
+  const mo=$('#snMore',host);if(mo)mo.onclick=()=>{S.sn.recN=(S.sn.recN||50)+50;snPaint(true);const y=window.scrollY;window.scrollTo({top:y});};
   const bk=$('#snBack',host);if(bk)bk.onclick=()=>{S.sn.mode='find';S.sn.emp=null;snPaint(true);};
   const nw=$('#snNew',host);if(nw)nw.onclick=()=>snForm();
   $$('[data-snprint]',host).forEach(b=>b.onclick=()=>{const s=S.sn.san.find(x=>x.id===b.dataset.snprint);if(s)snPrint(s);});
@@ -4516,7 +4529,7 @@ async function snSave(e){
   S.sn.mode='busy';
   try{
     const r=await S.db.collection('hr_sanctions').add(doc);
-    if(adminEff())snMarkSeen();
+    if(adminEff()&&r&&r.id)snSeenAdd(r.id);
     S.sn.mode='emp';toast('Sanction saved: '+doc.ref);snPaint(true);
     const pr=await ask({title:'Print the letter now?',msg:doc.ref+' · '+doc.name,ok:'Print',no:'Not now'});
     if(pr)snPrint(Object.assign({id:r&&r.id},doc));
