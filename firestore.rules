@@ -14,6 +14,11 @@ service cloud.firestore {
     function isLeaderAcct() { return signedIn() && request.auth.token.email != null && request.auth.token.email.lower().matches('(shiftleader|leader|shift)@.*'); }
     match /config/operators { allow write: if isLeaderAcct(); }
 
+    // Sanctions (employee list, codes and sanction letters): only the admin and the shift leader account can read. Only the admin can change the employee list and codes. The admin and shift leader can add sanctions; only the admin can delete them for good (the app hides deleted ones).
+    function isHrAcct() { return isAdmin() || isLeaderAcct(); }
+    match /hr/{id}            { allow read: if isHrAcct(); allow write: if isAdmin(); }
+    match /hr_sanctions/{id}  { allow read, create, update: if isHrAcct(); allow delete: if isAdmin(); }
+
     // Maintenance tasks and history: any signed-in account can add and update; the admin and the maintenance account can delete.
     function isMaintAcct() { return signedIn() && request.auth.token.email != null && request.auth.token.email.lower().matches('(maint|maintenance)@.*'); }
     match /maint_tasks/{id}   { allow read, create, update: if signedIn(); allow delete: if isAdmin() || isMaintAcct(); }
