@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v83';
+const APP_V='plant-v84';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -512,6 +512,18 @@ const roleOfEmail=em=>ROLE_OF_PREFIX[String(em||'').toLowerCase().split('@')[0].
 const NEED_APPROVAL=pl=>pl==='press'||pl==='lab'||pl==='pack';
 const LOCKED_ROLE=NEED_APPROVAL;
 const DEV=()=>{let v=lsGet('plant.devid');if(!v){v='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);lsSet('plant.devid',v);}return v;};
+const DEV_NAMES={'SM-G998':'Galaxy S21 Ultra','SM-G996':'Galaxy S21+','SM-G991':'Galaxy S21','SM-G990':'Galaxy S21 FE','SM-G781':'Galaxy S20 FE 5G','SM-G780':'Galaxy S20 FE','SM-G988':'Galaxy S20 Ultra','SM-G985':'Galaxy S20+','SM-G986':'Galaxy S20+ 5G','SM-G980':'Galaxy S20','SM-G981':'Galaxy S20 5G','SM-S901':'Galaxy S22','SM-S906':'Galaxy S22+','SM-S908':'Galaxy S22 Ultra','SM-S911':'Galaxy S23','SM-S916':'Galaxy S23+','SM-S918':'Galaxy S23 Ultra','SM-S921':'Galaxy S24','SM-S926':'Galaxy S24+','SM-S928':'Galaxy S24 Ultra','SM-G973':'Galaxy S10','SM-G975':'Galaxy S10+','SM-G970':'Galaxy S10e','SM-G960':'Galaxy S9','SM-G965':'Galaxy S9+','SM-G950':'Galaxy S8','SM-G955':'Galaxy S8+','SM-N960':'Galaxy Note9','SM-N970':'Galaxy Note10','SM-N975':'Galaxy Note10+','SM-N980':'Galaxy Note20','SM-N986':'Galaxy Note20 Ultra','SM-A515':'Galaxy A51','SM-A525':'Galaxy A52','SM-A528':'Galaxy A52s','SM-A536':'Galaxy A53','SM-A546':'Galaxy A54','SM-A715':'Galaxy A71','SM-A725':'Galaxy A72','SM-A125':'Galaxy A12','SM-A127':'Galaxy A12','SM-A135':'Galaxy A13','SM-A145':'Galaxy A14','SM-A155':'Galaxy A15','SM-A055':'Galaxy A05','SM-A057':'Galaxy A05s','SM-A245':'Galaxy A24','SM-A346':'Galaxy A34','SM-T510':'Galaxy Tab A 10.1 (2019)','SM-T515':'Galaxy Tab A 10.1 (2019)','SM-T290':'Galaxy Tab A 8.0 (2019)','SM-T295':'Galaxy Tab A 8.0 (2019)','SM-T590':'Galaxy Tab A 10.5 (2018)','SM-T595':'Galaxy Tab A 10.5 (2018)','SM-T500':'Galaxy Tab A7 10.4','SM-T505':'Galaxy Tab A7 10.4','SM-T220':'Galaxy Tab A7 Lite','SM-T225':'Galaxy Tab A7 Lite','SM-X200':'Galaxy Tab A8','SM-X205':'Galaxy Tab A8','SM-X110':'Galaxy Tab A9','SM-X115':'Galaxy Tab A9','SM-X210':'Galaxy Tab A9+','SM-X216':'Galaxy Tab A9+','SM-P610':'Galaxy Tab S6 Lite','SM-P615':'Galaxy Tab S6 Lite','SM-P613':'Galaxy Tab S6 Lite (2022)','SM-P619':'Galaxy Tab S6 Lite (2022)','SM-T720':'Galaxy Tab S5e','SM-T725':'Galaxy Tab S5e','SM-T860':'Galaxy Tab S6','SM-T865':'Galaxy Tab S6','SM-T870':'Galaxy Tab S7','SM-T875':'Galaxy Tab S7','SM-T970':'Galaxy Tab S7+','SM-T976':'Galaxy Tab S7+','SM-X700':'Galaxy Tab S8','SM-X706':'Galaxy Tab S8','SM-X800':'Galaxy Tab S8+','SM-X806':'Galaxy Tab S8+','SM-X900':'Galaxy Tab S8 Ultra','SM-X906':'Galaxy Tab S8 Ultra','SM-X710':'Galaxy Tab S9','SM-X716':'Galaxy Tab S9','SM-X510':'Galaxy Tab S9 FE','SM-X516':'Galaxy Tab S9 FE','SM-T830':'Galaxy Tab S4','SM-T835':'Galaxy Tab S4'};
+const devFriendly=c=>{c=String(c||'').trim();if(!c)return '';const u=c.toUpperCase().split('/')[0];const n=DEV_NAMES[u.slice(0,7)];return n?n+' ('+u+')':c;};
+let DEVMODEL='';
+(async function initDevModel(){try{
+  const ua=navigator.userAgent||'',ud=navigator.userAgentData;let m='';
+  if(ud&&ud.getHighEntropyValues){try{const v=await ud.getHighEntropyValues(['model']);m=(v&&v.model)||'';}catch(e){}}
+  if(!m){const x=/;\s*([A-Za-z0-9][A-Za-z0-9\-_ ]*?)\s+Build\//.exec(ua)||/Android[^;)]*;\s*([^;)]+)[;)]/.exec(ua);m=x?x[1].trim():'';}
+  if(m==='K'||m==='Android')m='';
+  if(!m&&window.fully&&typeof fully.getDeviceModel==='function'){try{m=fully.getDeviceModel()||'';}catch(e){}}
+  if(!m){m=/iPad/.test(ua)?'iPad':/iPhone/.test(ua)?'iPhone':/Windows/.test(ua)?'Windows PC':/Macintosh/.test(ua)?'Mac':/Android/.test(ua)?'Android device':'';}
+  DEVMODEL=String(m).slice(0,40);
+}catch(e){}})();
 const SID=()=>{let v=ssGet('plant.sid');if(!v){v='s'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);ssSet('plant.sid',v);}return v;};
 const tabsRead=()=>{try{return JSON.parse(lsGet('plant.tabs')||'{}')||{};}catch(e){return {};}};
 const tabsTouch=()=>{try{const m=tabsRead(),now=Date.now();Object.keys(m).forEach(k=>{if(!m[k]||now-m[k].t>300000)delete m[k];});m[SID()]={t:now,x:!!window.__plantExtra};lsSet('plant.tabs',JSON.stringify(m));}catch(e){}};
@@ -709,7 +721,7 @@ async function beat(){
   if(!S.db||!S.acct||!S.acct.role)return;
   if(LOCKED_ROLE(S.acct.role)&&!S.sessionOk)return;
   const iso=new Date().toISOString();
-  const bd={sid:SID(),dev:DEV(),place:S.acct.role,email:S.acct.email,ts:iso,sts:S.db.serverTime||iso,ready:!!S.dev,batt:S.batt?Math.round(S.batt.level*100):null};try{try{await S.db.doc(sessPath()).update(bd);}catch(e1){await S.db.doc(sessPath()).set(bd);}}catch(e){}
+  const bd={sid:SID(),dev:DEV(),model:DEVMODEL||'',place:S.acct.role,email:S.acct.email,ts:iso,sts:S.db.serverTime||iso,ready:!!S.dev,batt:S.batt?Math.round(S.batt.level*100):null};try{try{await S.db.doc(sessPath()).update(bd);}catch(e1){await S.db.doc(sessPath()).set(bd);}}catch(e){}
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)beat();});
 window.addEventListener('online',()=>{beat();});
@@ -2734,7 +2746,7 @@ function paintDevices(){
   const plName=pl=>pl==='all'?'Shift leader':placeName(pl);
   const sorted=rows.slice().sort((a,b)=>{const ka={on:0,wait:1,off:2}[st(a)],kb={on:0,wait:1,off:2}[st(b)];if(ka!==kb)return ka-kb;const oa=order.indexOf(a.place),ob=order.indexOf(b.place);return oa!==ob?oa-ob:T(b)-T(a);});
   const rowH=x=>{const k=st(x),me=x.dev===DEV()&&x.sid===SID(),bt=x.batt!=null?'<span class="dvbt'+(x.batt<=20?' low':'')+'">'+esc(x.batt)+'%</span>':'<span class="dvbt">–</span>';
-    return '<div class="dvt-r dv-'+k+'"><i class="dot dt-'+k+'"></i><div class="dvt-n"><b>'+esc(plName(x.place))+'</b><span class="muted small">'+esc(un(x.email))+' · device '+esc(String(x.dev||'').slice(-4))+(me?' · <span class="chip acc">this device</span>':'')+'</span></div><div class="dvt-s small">'+(k==='on'?'Online':k==='wait'?'Sign-in screen':'Offline')+' · '+esc(rel(age(x)))+'</div>'+bt+(me?'<span></span>':'<button type="button" class="btn sm ghost" data-kill="'+esc(x.id)+'">Log out</button>')+'</div>';};
+    return '<div class="dvt-r dv-'+k+'"><i class="dot dt-'+k+'"></i><div class="dvt-n"><b>'+esc(plName(x.place))+'</b><span class="muted small">'+esc(un(x.email))+(x.model?' · '+esc(devFriendly(x.model)):'')+' · device '+esc(String(x.dev||'').slice(-4))+(me?' · <span class="chip acc">this device</span>':'')+'</span></div><div class="dvt-s small">'+(k==='on'?'Online':k==='wait'?'Sign-in screen':'Offline')+' · '+esc(rel(age(x)))+'</div>'+bt+(me?'<span></span>':'<button type="button" class="btn sm ghost" data-kill="'+esc(x.id)+'">Log out</button>')+'</div>';};
   const idle=order.filter(pl=>!rows.some(x=>x.place===pl));
   let h='<section class="card dvbar"><div class="dvpill"><i class="dot dt-on"></i><b>'+nOn+'</b> online</div>'+(nWt?'<div class="dvpill"><i class="dot dt-wait"></i><b>'+nWt+'</b> at sign-in</div>':'')+'<span class="sp"></span><span class="muted small">Updates by itself</span><button type="button" class="btn sm bad" id="dvAll"'+(others?'':' disabled')+'>Log out all other devices</button></section>'+
     '<section class="card dvt">'+(sorted.length?sorted.map(rowH).join(''):'<div class="empty">No device has signed in yet.</div>')+'</section>'+
