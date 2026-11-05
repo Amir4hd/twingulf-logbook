@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v81';
+const APP_V='plant-v82';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4375,19 +4375,21 @@ function snBadgeCalc(){
   let v=snSeenGet();
   if(!v){snSeenPut({s:b.sanIds.slice(),e:b.empKeys.slice()});v=snSeenGet();}
   const s=new Set(v.s),e=new Set(v.e);
-  b.san=b.sanIds.filter(i=>!s.has(i)).length;b.emp=b.empKeys.filter(k=>!e.has(k)).length;
+  b.newSan=(b.sanDocs||[]).filter(x=>!s.has(x.id));b.newEmp=(b.empList||[]).filter(x=>!e.has(snEKey(x)));b.san=b.newSan.length;b.emp=b.newEmp.length;
 }
-function snBadgePaint(){const el=$('#snBadge');if(!el)return;snBadgeCalc();const b=S.sb||{},p=[];if(b.pend)p.push(b.pend+' delete request'+(b.pend>1?'s':''));if(b.san)p.push(b.san+' new sanction'+(b.san>1?'s':''));if(b.emp)p.push(b.emp+' employee change'+(b.emp>1?'s':''));el.innerHTML=p.length?'<span class="chip bad">'+p.join(' · ')+'</span>':'';}
+function snBadgePaint(){const el=$('#snBadge');if(!el)return;snBadgeCalc();const b=S.sb||{},p=[];if(b.pend)p.push(b.pend+' delete request'+(b.pend>1?'s':''));if(b.san)p.push(b.san+' new sanction'+(b.san>1?'s':''));if(b.emp)p.push(b.emp+' employee change'+(b.emp>1?'s':''));const ln=[];(b.newSan||[]).slice(0,4).forEach(x=>ln.push('Sanction: '+x.name+' · '+(x.code||'')+' · '+snTypeLbl(x.type)+' · by '+(x.by||'?')));(b.pendList||[]).slice(0,3).forEach(x=>ln.push('Delete requested: '+snName(x)+' · by '+((x.delReq&&x.delReq.by)||'?')));(b.newEmp||[]).slice(0,3).forEach(x=>ln.push('Employee edited: '+snName(x)+' · by '+x.by));el.innerHTML=p.length?'<span class="chip bad">'+p.join(' · ')+'</span>'+ln.map(t=>'<div class="small" style="margin-top:4px;font-weight:500">• '+esc(t)+'</div>').join('')+((b.san>4)?'<div class="small muted">+ '+(b.san-4)+' more</div>':''):'';}
 function snBadgeSub(){
   if(!adminEff()||!S.db)return;
   S.sb={pend:0,emp:0,san:0,sanIds:[],empKeys:[],gotE:false,gotS:false};
   resub('hrB',()=>{
-    const u1=S.db.doc('hr/employees').onSnapshot(sn=>{const l=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];S.sb.pend=l.filter(e=>e.delReq).length;S.sb.empKeys=l.filter(e=>e.by&&e.by!=='Admin'&&e.at).map(snEKey);S.sb.gotE=true;snBadgePaint();},e=>{});
-    const u2=S.db.collection('hr_sanctions').orderBy('createdAt','desc').limit(150).onSnapshot(snap=>{S.sb.sanIds=snap.docs.filter(d=>!d.data().deleted).map(d=>d.id);S.sb.gotS=true;snBadgePaint();},e=>{});
+    const u1=S.db.doc('hr/employees').onSnapshot(sn=>{const l=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];S.sb.pend=l.filter(e=>e.delReq).length;S.sb.empList=l.filter(e=>e.by&&e.by!=='Admin'&&e.at);S.sb.empKeys=S.sb.empList.map(snEKey);S.sb.pendList=l.filter(e=>e.delReq);S.sb.gotE=true;snBadgePaint();},e=>{});
+    const u2=S.db.collection('hr_sanctions').orderBy('createdAt','desc').limit(150).onSnapshot(snap=>{S.sb.sanDocs=snap.docs.filter(d=>!d.data().deleted).map(d=>Object.assign({id:d.id},d.data()));S.sb.sanIds=S.sb.sanDocs.map(x=>x.id);S.sb.gotS=true;snBadgePaint();},e=>{});
     return ()=>{try{u1();}catch(e){}try{u2();}catch(e){}};
   });
 }
 function renderSanc(){
+  S.sn=S.sn||{emps:[],codes:[],san:[],q:'',dept:'',emp:null,mode:'find',tab:'find'};
+  if(adminEff()&&S.sb){snBadgeCalc();S.sn.fresh={san:(S.sb.newSan||[]).slice(),emp:(S.sb.newEmp||[]).slice()};}else S.sn.fresh=null;
   snMarkSeen();
   if(!snOK()){go('home');return;}
   S.sn=S.sn||{emps:[],codes:[],san:[],q:'',dept:'',emp:null,mode:'find',tab:'find'};
@@ -4419,7 +4421,8 @@ function snFindHTML(){
   const q=(S.sn.q||'').toLowerCase().trim(),d=S.sn.dept||'';
   const list=S.sn.emps.filter(e=>e.active!==false&&(!d||e.dept===d)&&(!q||(e.id+' '+snName(e)).toLowerCase().indexOf(q)>=0)).sort((a,b)=>snName(a)<snName(b)?-1:1);
   const rows=list.slice(0,40).map(e=>{const n=S.sn.san.filter(x=>x.empId===e.id).length;return '<button type="button" class="snrow" data-snemp="'+esc(e.id)+'"><b>'+esc(snName(e))+'</b><span class="muted small">'+esc(e.id)+' · '+esc(e.dept)+'</span><span class="chip'+(n?' warn':'')+'">'+n+' sanction'+(n===1?'':'s')+'</span></button>';}).join('');
-  return '<section class="card"><div class="row" style="flex-wrap:wrap;gap:10px"><label class="l" style="flex:2;min-width:220px">Search name or ID<input type="text" id="snQ" value="'+esc(S.sn.q||'')+'" autocomplete="off" placeholder="e.g. PM-013 or a name"></label><label class="l" style="flex:1;min-width:180px">Department<select id="snD"><option value="">All departments</option>'+SN_DEPT.map(x=>'<option'+(x===d?' selected':'')+'>'+x+'</option>').join('')+'</select></label></div>'+
+  const fr=S.sn.fresh,fh=fr&&(fr.san.length||fr.emp.length)?'<section class="card" style="border-left:6px solid var(--bad)"><h3 style="margin:0 0 8px">New since your last visit</h3><div class="snlist">'+fr.san.map(x=>'<button type="button" class="snrow" data-snemp="'+esc(x.empId)+'"><b>'+esc(x.name)+'</b><span class="muted small">'+esc(x.code||'')+' · '+esc(snDate(x.date))+' · by '+esc(x.by||'?')+'</span><span class="chip warn">'+esc(snTypeLbl(x.type))+'</span></button>').join('')+fr.emp.map(x=>'<div class="snrow2"><b>'+esc(snName(x))+'</b><span class="muted small">Employee edited by '+esc(x.by)+' · '+esc(x.id)+'</span></div>').join('')+'</div></section>':'';
+  return fh+'<section class="card"><div class="row" style="flex-wrap:wrap;gap:10px"><label class="l" style="flex:2;min-width:220px">Search name or ID<input type="text" id="snQ" value="'+esc(S.sn.q||'')+'" autocomplete="off" placeholder="e.g. PM-013 or a name"></label><label class="l" style="flex:1;min-width:180px">Department<select id="snD"><option value="">All departments</option>'+SN_DEPT.map(x=>'<option'+(x===d?' selected':'')+'>'+x+'</option>').join('')+'</select></label></div>'+
     (S.sn.emps.length?'':'<div class="empty" style="margin-top:12px">No employees yet. The admin adds them in the Employees tab, or imports them in the Import tab.</div>')+
     (rows?'<div class="snlist">'+rows+'</div>'+(list.length>40?'<div class="muted small" style="margin-top:8px">Showing 40 of '+list.length+'. Type more of the name or ID.</div>':''):(S.sn.emps.length?'<div class="empty" style="margin-top:12px">No employee matches.</div>':''))+'</section>';
 }
