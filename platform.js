@@ -85,7 +85,7 @@
       location.href=location.pathname;},
     setAccountPassword:async(email,password)=>{
       const u=await signedIn();const tok=await u.getIdToken();
-      let r;try{r=await fetch('/.netlify/functions/set-password',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify({email,password})});}catch(e){throw new Error('No connection to the server.');}
+      let r;try{r=await fetch('/api/set-password',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify({email,password})});}catch(e){throw new Error('No connection to the server.');}
       let j={};try{j=await r.json();}catch(e){}
       if(!r.ok)throw new Error(j.error||('The server refused (code '+r.status+'). The one-time server setup may be missing.'));
       return true;},
