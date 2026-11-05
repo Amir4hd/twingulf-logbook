@@ -69,6 +69,7 @@ h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
 .lnst{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px;font-weight:700;border-width:2px}.lnst i{width:12px;height:12px;border-radius:50%;background:currentColor;display:inline-block}.lnst small{font-weight:500;opacity:.85}.lnst.run{background:var(--okbg);color:var(--ok);border-color:var(--ok)}.lnst.stop{background:var(--warnbg);color:var(--warn);border-color:var(--warn)}.pinmsg .pmb{margin-top:8px;display:flex;gap:8px}#pinMsg{position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:21}#pinMsg .pinmsg{box-shadow:0 6px 14px -6px rgba(0,0,0,.45);margin-bottom:8px}
 .pinmsg{border-left:6px solid var(--warn);background:var(--warnbg);margin:0 0 12px}.l textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
 .prdots{display:flex;gap:14px;align-items:center;justify-content:flex-end}.prd{display:inline-flex;align-items:center;gap:6px;font-size:12px;letter-spacing:.04em;color:var(--mut)}.prd b{font-weight:700}.prd.cur b{color:var(--ink)}.prd i{width:14px;height:14px;border-radius:50%;display:inline-block;background:#2fbf6b}.prd.no i{background:#e5484d;animation:prf 1s steps(1,end) infinite}@keyframes prf{50%{background:transparent;box-shadow:inset 0 0 0 2px #e5484d}}
+.dvbar{display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap}.dvbar .sp{flex:1}.dvpill{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:99px;background:var(--stopbg);font-size:14px}.dvpill b{font-size:17px}.dvt{padding:4px 14px}.dvt-r{display:grid;grid-template-columns:14px 1fr 190px 58px 84px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}.dvt-r:last-child{border-bottom:0}.dvt-r.dv-off{opacity:.55}.dvt-n{display:flex;flex-direction:column;gap:1px;min-width:0}.dvt-n b{font-size:16px}.dvt-s{color:var(--mut);white-space:nowrap}.dvbt{font:600 13px var(--f-m,monospace);text-align:right;color:var(--mut)}.dvbt.low{color:var(--bad)}.btn.ghost{background:transparent}.dvidle{padding:4px 4px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center}@media (max-width:640px){.dvt-r{grid-template-columns:14px 1fr 54px 76px}.dvt-s{display:none}}
 .chip.prmiss{animation:prp 1.2s ease-in-out infinite}@keyframes prp{50%{opacity:.45}}
 .chip.ok{background:var(--okbg);color:var(--ok)} .chip.warn{background:var(--warnbg);color:var(--warn)} .chip.bad{background:var(--badbg);color:var(--bad)} .chip.acc{background:var(--accentbg);color:var(--accent)}
 input[type=text],input[type=number],input[type=date],select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 11px;min-height:44px;width:100%}
@@ -358,7 +359,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v72';
+const APP_V='plant-v73';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2722,20 +2723,15 @@ function paintDevices(){
   const order=['press','lab','pack','all','maint','admin'];
   const nOn=rows.filter(x=>st(x)==='on').length,nWt=rows.filter(x=>st(x)==='wait').length;
   const others=rows.filter(x=>st(x)!=='off'&&!(x.dev===DEV()&&x.sid===SID())).length;
-  let h='<section class="card dvsum"><div class="dvbig">'+nOn+'</div><div class="dvtx"><h2>Devices online now</h2><div class="muted small">'+(nOn===1?'1 device':nOn+' devices')+' connected and signed in'+(nWt?' · '+nWt+' at the sign-in screen':'')+'</div><div class="muted small">Updates by itself. A device counts as online when it has reported in during the last 3 minutes.</div></div><button type="button" class="btn bad" id="dvAll"'+(others?'':' disabled')+'>Log out all other devices</button></section>';
-  const card=pl=>{
-    const list=rows.filter(x=>x.place===pl).sort((a,b)=>T(b)-T(a));
-    const on=list.some(x=>st(x)==='on'),wt=list.some(x=>st(x)==='wait');
-    const top=on?'on':wt?'wait':'off',nOnL=list.filter(x=>st(x)==='on').length;
-    const emails=[...new Set(list.map(x=>x.email).filter(Boolean))];
-    const dev=x=>{const k=st(x),me=x.dev===DEV()&&x.sid===SID(),bt=x.batt!=null?'<span class="bt'+(x.batt<=20?' low':'')+'">'+esc(x.batt)+'%</span>':'';
-      return '<div class="dvr dv-'+k+'"><i class="dot dt-'+k+'"></i><div class="dvi"><b>Device '+esc(String(x.dev||'').slice(-4))+'</b>'+(me?' <span class="chip acc">this device</span>':'')+'<div class="muted small">Last seen '+esc(rel(age(x)))+(bt?' · battery '+bt:'')+'</div></div>'+chip(k)+(me?'':'<button type="button" class="btn sm bad" data-kill="'+esc(x.id)+'">Log out</button>')+'</div>';};
-    const shown=list.slice(0,3),more=list.slice(3);
-    return '<section class="card dvc dc-'+top+'"><div class="dvh"><h3>'+esc(pl==='all'?'Shift leader':placeName(pl))+'</h3>'+chip(top)+(nOnL>1?' <span class="chip acc">'+nOnL+' online</span>':'')+'</div>'+(emails.length?'<div class="dvm">'+emails.map(esc).join(' · ')+'</div>':'')+(list.length?shown.map(dev).join('')+(more.length?'<details class="dvmore"><summary>'+more.length+' older device'+(more.length>1?'s':'')+'</summary>'+more.map(dev).join('')+'</details>':''):'<p class="muted small" style="margin:10px 0 0">No device has signed in here yet.</p>')+'</section>';
-  };
-  const act=order.filter(pl=>rows.some(x=>x.place===pl&&st(x)!=='off')),idle=order.filter(pl=>act.indexOf(pl)<0);
-  if(act.length)h+='<h3 class="dvsec">Active now <span class="chip ok">'+act.length+'</span></h3><div class="split">'+act.map(card).join('')+'</div>';
-  if(idle.length)h+='<h3 class="dvsec">Not signed in <span class="chip">'+idle.length+'</span></h3><div class="split">'+idle.map(card).join('')+'</div>';
+  const un=e=>String(e||'').replace(/@local\.com$/,'');
+  const plName=pl=>pl==='all'?'Shift leader':placeName(pl);
+  const sorted=rows.slice().sort((a,b)=>{const ka={on:0,wait:1,off:2}[st(a)],kb={on:0,wait:1,off:2}[st(b)];if(ka!==kb)return ka-kb;const oa=order.indexOf(a.place),ob=order.indexOf(b.place);return oa!==ob?oa-ob:T(b)-T(a);});
+  const rowH=x=>{const k=st(x),me=x.dev===DEV()&&x.sid===SID(),bt=x.batt!=null?'<span class="dvbt'+(x.batt<=20?' low':'')+'">'+esc(x.batt)+'%</span>':'<span class="dvbt">–</span>';
+    return '<div class="dvt-r dv-'+k+'"><i class="dot dt-'+k+'"></i><div class="dvt-n"><b>'+esc(plName(x.place))+'</b><span class="muted small">'+esc(un(x.email))+' · device '+esc(String(x.dev||'').slice(-4))+(me?' · <span class="chip acc">this device</span>':'')+'</span></div><div class="dvt-s small">'+(k==='on'?'Online':k==='wait'?'Sign-in screen':'Offline')+' · '+esc(rel(age(x)))+'</div>'+bt+(me?'<span></span>':'<button type="button" class="btn sm ghost" data-kill="'+esc(x.id)+'">Log out</button>')+'</div>';};
+  const idle=order.filter(pl=>!rows.some(x=>x.place===pl));
+  let h='<section class="card dvbar"><div class="dvpill"><i class="dot dt-on"></i><b>'+nOn+'</b> online</div>'+(nWt?'<div class="dvpill"><i class="dot dt-wait"></i><b>'+nWt+'</b> at sign-in</div>':'')+'<span class="sp"></span><span class="muted small">Updates by itself</span><button type="button" class="btn sm bad" id="dvAll"'+(others?'':' disabled')+'>Log out all other devices</button></section>'+
+    '<section class="card dvt">'+(sorted.length?sorted.map(rowH).join(''):'<div class="empty">No device has signed in yet.</div>')+'</section>'+
+    (idle.length?'<div class="dvidle muted small">Not signed in yet: '+idle.map(pl=>'<span class="chip">'+esc(plName(pl))+'</span>').join(' ')+'</div>':'');
   el.innerHTML=h;
   const kill=async(ids,msg)=>{
     if(!await ask({title:'Log out?',msg:msg,ok:'Yes, log out'}))return;
