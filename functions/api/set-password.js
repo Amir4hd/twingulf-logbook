@@ -67,9 +67,10 @@ export async function onRequestPost({ request, env }) {
   try {
     const r = await fetch('https://identitytoolkit.googleapis.com/v1/projects/' + PROJECT + '/accounts:lookup', { method: 'POST', headers: H, body: JSON.stringify({ email: [email] }) });
     const j = await r.json();
-    if (!r.ok || !j.users || !j.users[0]) return json(404, { error: 'No account with that email.' });
+    if (!r.ok) return json(500, { error: 'Firebase lookup failed (' + r.status + '): ' + String((j.error && j.error.message) || '').slice(0, 120) });
+    if (!j.users || !j.users[0]) return json(404, { error: 'No account with that email in Firebase Authentication.' });
     uid = j.users[0].localId;
-  } catch (e) { return json(404, { error: 'No account with that email.' }); }
+  } catch (e) { return json(500, { error: 'Firebase lookup failed.' }); }
   try { if (await isAdminDoc(uid, tok)) return json(403, { error: 'An admin account cannot be changed here.' }); } catch (e) { return json(500, { error: 'Could not check the account.' }); }
   const r = await fetch('https://identitytoolkit.googleapis.com/v1/projects/' + PROJECT + '/accounts:update', { method: 'POST', headers: H, body: JSON.stringify({ localId: uid, password }) });
   if (!r.ok) return json(500, { error: 'Firebase refused the change.' });
