@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v80';
+const APP_V='plant-v81';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4361,16 +4361,29 @@ function snSub(){
   resub('hrC',()=>S.db.doc('hr/codes').onSnapshot(sn=>{S.sn.codes=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];snPaint();},e=>{}));
   resub('hrS',()=>S.db.collection('hr_sanctions').limit(3000).onSnapshot(snap=>{S.sn.all=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.sn.san=S.sn.all.filter(x=>!x.deleted);if(S.view==='sanc')snMarkSeen();snPaint();},e=>toast(dbErr(e),true)));
 }
-const snSeen=()=>{try{return localStorage.getItem('snSeen')||'';}catch(e){return S._snSeen||'';}};
-function snMarkSeen(){let t=new Date().toISOString();const mx=(a,k)=>(a||[]).reduce((m,x)=>String(x[k]||'')>m?String(x[k]):m,'');const m1=mx(S.sn&&S.sn.all,'createdAt'),m2=mx(S.sn&&S.sn.emps,'at');if(m1>t)t=m1;if(m2>t)t=m2;S._snSeen=t;try{localStorage.setItem('snSeen',t);}catch(e){}if(S.sb){S.sb.san=0;S.sb.emp=0;}}
-function snBadgePaint(){const el=$('#snBadge');if(!el)return;const b=S.sb||{},p=[];if(b.pend)p.push(b.pend+' delete request'+(b.pend>1?'s':''));if(b.san)p.push(b.san+' new sanction'+(b.san>1?'s':''));if(b.emp)p.push(b.emp+' employee change'+(b.emp>1?'s':''));el.innerHTML=p.length?'<span class="chip bad">'+p.join(' · ')+'</span>':'';}
+const snSeenGet=()=>{try{const v=JSON.parse(localStorage.getItem('snSeenIds')||'null');if(v&&Array.isArray(v.s)&&Array.isArray(v.e))return v;}catch(e){}return S._snSeen||null;};
+function snSeenPut(v){S._snSeen=v;try{localStorage.setItem('snSeenIds',JSON.stringify(v));}catch(e){}}
+const snEKey=e=>e.id+'@'+(e.at||'');
+function snMarkSeen(){
+  const old=snSeenGet()||{s:[],e:[]},s=new Set(old.s),e=new Set(old.e);
+  ((S.sn&&S.sn.all)||[]).forEach(x=>s.add(x.id));((S.sn&&S.sn.emps)||[]).forEach(x=>{if(x.by&&x.at)e.add(snEKey(x));});
+  snSeenPut({s:[...s].slice(-4000),e:[...e].slice(-4000)});
+  if(S.sb){S.sb.san=0;S.sb.emp=0;}
+}
+function snBadgeCalc(){
+  const b=S.sb;if(!b||!b.gotE||!b.gotS)return;
+  let v=snSeenGet();
+  if(!v){snSeenPut({s:b.sanIds.slice(),e:b.empKeys.slice()});v=snSeenGet();}
+  const s=new Set(v.s),e=new Set(v.e);
+  b.san=b.sanIds.filter(i=>!s.has(i)).length;b.emp=b.empKeys.filter(k=>!e.has(k)).length;
+}
+function snBadgePaint(){const el=$('#snBadge');if(!el)return;snBadgeCalc();const b=S.sb||{},p=[];if(b.pend)p.push(b.pend+' delete request'+(b.pend>1?'s':''));if(b.san)p.push(b.san+' new sanction'+(b.san>1?'s':''));if(b.emp)p.push(b.emp+' employee change'+(b.emp>1?'s':''));el.innerHTML=p.length?'<span class="chip bad">'+p.join(' · ')+'</span>':'';}
 function snBadgeSub(){
   if(!adminEff()||!S.db)return;
-  const seen=snSeen()||new Date(Date.now()-7*864e5).toISOString();
-  S.sb=S.sb||{pend:0,emp:0,san:0};
+  S.sb={pend:0,emp:0,san:0,sanIds:[],empKeys:[],gotE:false,gotS:false};
   resub('hrB',()=>{
-    const u1=S.db.doc('hr/employees').onSnapshot(sn=>{const l=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];S.sb.pend=l.filter(e=>e.delReq).length;S.sb.emp=l.filter(e=>e.by&&e.by!=='Admin'&&String(e.at||'')>seen).length;snBadgePaint();},e=>{});
-    const u2=S.db.collection('hr_sanctions').where('createdAt','>',seen).onSnapshot(snap=>{S.sb.san=snap.docs.filter(d=>!d.data().deleted).length;snBadgePaint();},e=>{});
+    const u1=S.db.doc('hr/employees').onSnapshot(sn=>{const l=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];S.sb.pend=l.filter(e=>e.delReq).length;S.sb.empKeys=l.filter(e=>e.by&&e.by!=='Admin'&&e.at).map(snEKey);S.sb.gotE=true;snBadgePaint();},e=>{});
+    const u2=S.db.collection('hr_sanctions').orderBy('createdAt','desc').limit(150).onSnapshot(snap=>{S.sb.sanIds=snap.docs.filter(d=>!d.data().deleted).map(d=>d.id);S.sb.gotS=true;snBadgePaint();},e=>{});
     return ()=>{try{u1();}catch(e){}try{u2();}catch(e){}};
   });
 }
