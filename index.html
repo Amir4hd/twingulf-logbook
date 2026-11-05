@@ -358,7 +358,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v69';
+const APP_V='plant-v70';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4216,7 +4216,7 @@ function saveArea(id){
   },'this area');
 }
 /* tablet account passwords (Firebase sign-in accounts), changed by the admin through a small server function */
-const ACCT_LIST=[['press@local.com','Press'],['lab@local.com','Laboratory'],['pack@local.com','Packaging'],['shiftleader@local.com','Shift leader'],['maint@local.com','Maintenance']];
+const ACCT_LIST=[['press@local.com','Press'],['lab@local.com','Laboratory'],['pack@local.com','Packaging'],['leader@local.com','Shift leader'],['maint@local.com','Maintenance']];
 function acctPanel(host){
   const can=!!(S.user&&typeof S.user.setAccountPassword==='function');
   host.innerHTML='<section class="card"><h2>Tablet account passwords</h2><p class="muted small">These are the passwords used to sign a tablet in (the email and password on the sign-in screen). Passwords are never shown, only replaced. A tablet that is already signed in stays signed in; the new password is needed the next time it signs in. At least 6 characters.</p>'+(can?'':'<p class="status warn">Preview only: changing these works in the real tablet app after the one-time server setup.</p>')+
