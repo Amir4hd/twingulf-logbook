@@ -16,11 +16,10 @@ Everything below is free (Firebase "Spark" plan is enough for this factory).
 7. Project settings (gear icon) > **Your apps** > click the web icon `</>` > register app `logbook` > copy the `firebaseConfig` values.
 8. Open `firebase-config.js` in this folder with Notepad. Paste the values over the PASTE-... parts. Save.
 
-## Part 2: Put the app online (one of these)
-**Easiest: Netlify Drop**
-1. Go to https://app.netlify.com/drop and drag this whole folder onto the page.
-2. You get an address like `https://something.netlify.app`. That is your app address.
-3. In Firebase, **Authentication > Settings > Authorized domains > Add domain**, add that address (without https://).
+## Part 2: Put the app online
+The app is hosted on Cloudflare Pages (https://twingulf-logbook.pages.dev), connected to the GitHub repository. Every push to the `main` branch becomes the live app.
+1. Cloudflare > Workers & Pages > Create > Pages > Connect to Git > choose this repository. No build command; output folder `/`.
+2. In Firebase, **Authentication > Settings > Authorized domains > Add domain**, add the Pages address (without https://).
 
 **Or Firebase Hosting** (needs Node.js): `npm i -g firebase-tools`, `firebase login`, `firebase init hosting` (public folder `.`, do not overwrite index.html), `firebase deploy`.
 
@@ -55,7 +54,7 @@ Every screen has a small **Sign out** button at the bottom-left. It asks to conf
 ## Part 5: Let the admin change tablet account passwords (one time, optional)
 The Control room > Setup > "Tablet account passwords" page needs a small server function. Without this step that page shows a warning and everything else works normally.
 1. Firebase console > Project settings (gear) > **Service accounts** > **Generate new private key** > Generate. A `.json` file downloads. Keep it secret; never put it in GitHub.
-2. Netlify > your site > **Site configuration > Environment variables > Add a variable**. Key: `FIREBASE_SERVICE_ACCOUNT`. Value: open the downloaded `.json` file with Notepad, select everything, copy, paste. Save.
-3. Netlify > **Deploys > Trigger deploy > Deploy site**.
+2. Cloudflare > Workers & Pages > your project > **Settings > Variables and Secrets > Add**. Type **Secret**, name `FIREBASE_SERVICE_ACCOUNT`. Value: open the downloaded `.json` file with Notepad, select everything, copy, paste. Save.
+3. Cloudflare > **Deployments** > latest Production row > **Retry deployment**.
 4. Open the app as admin, Control room > Setup > Tablet account passwords > Set new password.
 The new password needs at least 6 characters. A tablet already signed in stays signed in; the new password is used the next time it signs in.
