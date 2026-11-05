@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v76';
+const APP_V='plant-v77';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4516,7 +4516,7 @@ function snLetter(s){
    '<p class="snl-subj"><b>Subject: '+esc(SN_SUBJ[s.type]||'')+' Disciplinary Sanction</b></p>'+
    '<p class="snl-dear">Dear '+nm+',</p><p class="snl-intro">This notice formally records '+lv.k+' as described below, following a review of the reported incident.</p>'+
    '<table class="snl-t"><tr><td>Sanction code</td><td>'+esc(s.codeText||s.code)+'</td></tr><tr><td>Incident / sanction details</td><td>'+esc(s.reason)+'</td></tr><tr><td>Sanction level</td><td>'+esc(snTypeLbl(s.type))+'</td></tr><tr><td>Effective date</td><td>'+esc(snDate(s.date))+'</td></tr>'+(s.days?'<tr><td>Sanction duration</td><td>'+esc(s.days)+' day(s)</td></tr>':'')+'</table>'+
-   '<p class="snl-h3"><b>Required corrective action</b></p><p style="margin-bottom:8px">'+esc(lv.a)+'</p>'+(act?'<p style="margin-bottom:8px">'+esc(act)+'</p>':'')+'<p style="margin-bottom:14px">'+esc(lv.f)+'</p>'+
+   '<p class="snl-h3"><b>Required corrective action</b></p><p style="margin-bottom:8px">'+esc(lv.a)+'</p><p style="margin-bottom:14px">'+esc(lv.f)+'</p>'+
    '<p class="snl-h3"><b>Employee acknowledgment</b></p><p style="margin-bottom:16px">I acknowledge receipt of this notice. My signature confirms receipt, not necessarily agreement with its contents.</p>'+
    '<div class="snl-sg"><div class="snl-r">Employee Name: '+nm+'<br>Employee Signature'+U.slice(0,22)+'<br>Shift leader: '+esc(s.leader||'')+'<br>Shift leader Signature: '+U.slice(0,20)+'</div><div class="snl-l">Approved by: '+U.slice(0,22)+'<br>Signature: '+U.slice(0,25)+'</div></div>'+
    '<div class="snl-foot">TWINGULF INDUSTRIES &nbsp;|&nbsp; Confidential personnel record</div></div>';
