@@ -50,11 +50,11 @@
       auth.onAuthStateChanged(u=>{
         const old=document.getElementById('lg');if(old)old.remove();
         if(u){res(u);return;}
-        const f=el('<div id="lg"><form><h1>Twin Gulf Plant Logbook</h1><label>Email<input id="lgE" type="email" autocomplete="username" required></label><label>Password<input id="lgP" type="password" autocomplete="current-password" required></label><div class="e" id="lgX"></div><button type="submit">Sign in</button></form></div>');
+        const f=el('<div id="lg"><form><h1>Twin Gulf Plant Logbook</h1><label>User name<input id="lgE" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label><label>Password<input id="lgP" type="password" autocomplete="current-password" required></label><div class="e" id="lgX"></div><button type="submit">Sign in</button></form></div>');
         document.body.appendChild(f);
         f.querySelector('form').onsubmit=async ev=>{ev.preventDefault();
-          try{await auth.signInWithEmailAndPassword(f.querySelector('#lgE').value.trim(),f.querySelector('#lgP').value);}
-          catch(e){f.querySelector('#lgX').textContent=(navigator.onLine?'Wrong email or password.':'No internet. You must be online for the first sign-in.');}};
+          try{let un=f.querySelector('#lgE').value.trim().toLowerCase();if(un.indexOf('@')<0)un+='@local.com';await auth.signInWithEmailAndPassword(un,f.querySelector('#lgP').value);}
+          catch(e){f.querySelector('#lgX').textContent=(navigator.onLine?'Wrong user name or password.':'No internet. You must be online for the first sign-in.');}};
       });
     });
     return ready;
@@ -66,10 +66,10 @@
     const st=document.createElement('style');
     st.textContent='#lgOut{position:fixed;left:8px;bottom:8px;z-index:9000;font:13px system-ui,sans-serif;padding:8px 12px;border-radius:8px;border:1px solid #9aa89d;background:rgba(251,252,250,.92);color:#17211c;opacity:.75}#lgOut:hover,#lgOut:focus{opacity:1}@media (prefers-color-scheme:dark){#lgOut{background:rgba(23,33,28,.92);color:#e9ece7;border-color:#56645b}}';
     document.head.appendChild(st);
-    const b=document.createElement('button');b.id='lgOut';b.type='button';b.textContent='Sign out';b.title=u.email||'';
+    const b=document.createElement('button');b.id='lgOut';b.type='button';b.textContent='Sign out';b.title=(u.email||'').replace(/@local\.com$/,'');
     b.onclick=async()=>{
       if(!navigator.onLine){alert('No internet. Signing out is blocked, because signing in again needs internet and unsent entries must be uploaded first.');return;}
-      if(!confirm('Sign out '+(u.email||'this account')+'?\n\nThis tablet will need the account email and password and internet to sign in again.'))return;
+      if(!confirm('Sign out '+((u.email||'').replace(/@local\.com$/,'')||'this account')+'?\n\nThis tablet will need the user name and password and internet to sign in again.'))return;
       try{await auth.signOut();}catch(e){}
       try{localStorage.removeItem('plant.view');}catch(e){}
       location.href=location.pathname;};
