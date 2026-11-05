@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v79';
+const APP_V='plant-v80';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4357,12 +4357,12 @@ const snFor=id=>S.sn.san.filter(x=>x.empId===id).sort((a,b)=>String(a.createdAt)
 const snDate=(d,lg)=>{if(!d)return '';const q=String(d).slice(0,10).split('-');if(q.length<3)return String(d);return q[2]+'-'+(lg==='fr'?['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])[Number(q[1])-1]+'-'+q[0];};
 function snSub(){
   S.sn=S.sn||{emps:[],codes:[],san:[],q:'',dept:'',emp:null,mode:'find',tab:'find'};
-  resub('hrE',()=>S.db.doc('hr/employees').onSnapshot(sn=>{S.sn.emps=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];snPaint();},e=>toast(dbErr(e),true)));
+  resub('hrE',()=>S.db.doc('hr/employees').onSnapshot(sn=>{S.sn.emps=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];if(S.view==='sanc')snMarkSeen();snPaint();},e=>toast(dbErr(e),true)));
   resub('hrC',()=>S.db.doc('hr/codes').onSnapshot(sn=>{S.sn.codes=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];snPaint();},e=>{}));
-  resub('hrS',()=>S.db.collection('hr_sanctions').limit(3000).onSnapshot(snap=>{S.sn.all=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.sn.san=S.sn.all.filter(x=>!x.deleted);snPaint();},e=>toast(dbErr(e),true)));
+  resub('hrS',()=>S.db.collection('hr_sanctions').limit(3000).onSnapshot(snap=>{S.sn.all=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.sn.san=S.sn.all.filter(x=>!x.deleted);if(S.view==='sanc')snMarkSeen();snPaint();},e=>toast(dbErr(e),true)));
 }
 const snSeen=()=>{try{return localStorage.getItem('snSeen')||'';}catch(e){return S._snSeen||'';}};
-function snMarkSeen(){const t=new Date().toISOString();S._snSeen=t;try{localStorage.setItem('snSeen',t);}catch(e){}if(S.sb){S.sb.san=0;S.sb.emp=0;}}
+function snMarkSeen(){let t=new Date().toISOString();const mx=(a,k)=>(a||[]).reduce((m,x)=>String(x[k]||'')>m?String(x[k]):m,'');const m1=mx(S.sn&&S.sn.all,'createdAt'),m2=mx(S.sn&&S.sn.emps,'at');if(m1>t)t=m1;if(m2>t)t=m2;S._snSeen=t;try{localStorage.setItem('snSeen',t);}catch(e){}if(S.sb){S.sb.san=0;S.sb.emp=0;}}
 function snBadgePaint(){const el=$('#snBadge');if(!el)return;const b=S.sb||{},p=[];if(b.pend)p.push(b.pend+' delete request'+(b.pend>1?'s':''));if(b.san)p.push(b.san+' new sanction'+(b.san>1?'s':''));if(b.emp)p.push(b.emp+' employee change'+(b.emp>1?'s':''));el.innerHTML=p.length?'<span class="chip bad">'+p.join(' · ')+'</span>':'';}
 function snBadgeSub(){
   if(!adminEff()||!S.db)return;
