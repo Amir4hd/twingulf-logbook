@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v77';
+const APP_V='plant-v78';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4353,7 +4353,7 @@ const snName=e=>[e.first,e.middle,e.last].filter(Boolean).join(' ');
 const snCodes=()=>(S.sn&&S.sn.codes&&S.sn.codes.length)?S.sn.codes:SN_CODES0;
 const snSteps=c=>String((c&&c.steps)||'').match(/S[1-5]/g)||[];
 const snFor=id=>S.sn.san.filter(x=>x.empId===id).sort((a,b)=>String(a.createdAt)<String(b.createdAt)?1:-1);
-const snDate=d=>{if(!d)return '';const q=String(d).slice(0,10).split('-');if(q.length<3)return String(d);return q[2]+'-'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(q[1])-1]+'-'+q[0];};
+const snDate=(d,lg)=>{if(!d)return '';const q=String(d).slice(0,10).split('-');if(q.length<3)return String(d);return q[2]+'-'+(lg==='fr'?['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])[Number(q[1])-1]+'-'+q[0];};
 function snSub(){
   S.sn=S.sn||{emps:[],codes:[],san:[],q:'',dept:'',emp:null,mode:'find',tab:'find'};
   resub('hrE',()=>S.db.doc('hr/employees').onSnapshot(sn=>{S.sn.emps=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];snPaint();},e=>toast(dbErr(e),true)));
@@ -4507,23 +4507,44 @@ S2:{k:'a written warning',a:'This is a formal written warning and a copy is kept
 S3:{k:'a final written warning',a:'This is a final written warning. No further warning will be given before stronger action is taken. You are required to correct the behavior described above immediately and permanently.',f:'Any further violation may result in suspension, salary deduction or termination of employment in accordance with company policy and applicable law.'},
 S4:{k:'a salary deduction',a:'A deduction will be made from your salary as stated above, in accordance with company policy and applicable law. You are required to correct the behavior described above and to avoid any repeat.',f:'Further violations may result in more serious disciplinary action, up to suspension or termination of employment, in accordance with company policy and applicable law.'},
 S5:{k:'a suspension from work',a:'You are suspended from work for the period stated above. You must not attend work during the suspension, and you must report to your shift leader on the first working day after it ends. You are required to correct the behavior described above.',f:'Further violations may result in termination of employment in accordance with company policy and applicable law.'}};
-function snLetter(s){
-  const nm=esc(s.name),c=snCodes().find(x=>x.code===s.code),lv=SN_LV[s.type]||SN_LV.S2,act=SN_ACT[c&&c.cat]||'';
+const SN_FR_LV={
+S1:{k:'un avertissement verbal',a:"Ceci est un avertissement de premier niveau, donné verbalement. Vous devez corriger immédiatement le comportement décrit ci-dessus et respecter dorénavant les règles et les instructions de l'entreprise.",f:"Une répétition de cette violation ou d'une violation similaire peut entraîner un avertissement écrit."},
+S2:{k:'un avertissement écrit',a:"Ceci est un avertissement écrit officiel et une copie est conservée dans votre dossier personnel. Vous devez corriger immédiatement le comportement décrit ci-dessus et faire preuve d'une amélioration durable.",f:"Toute nouvelle violation peut entraîner un dernier avertissement écrit ou une autre mesure disciplinaire, conformément à la politique de l'entreprise et à la loi applicable."},
+S3:{k:'un dernier avertissement écrit',a:"Ceci est un dernier avertissement écrit. Aucun autre avertissement ne sera donné avant une mesure plus sévère. Vous devez corriger immédiatement et durablement le comportement décrit ci-dessus.",f:"Toute nouvelle violation peut entraîner une mise à pied, une retenue sur salaire ou la rupture du contrat de travail, conformément à la politique de l'entreprise et à la loi applicable."},
+S4:{k:'une retenue sur salaire',a:"Une retenue sera effectuée sur votre salaire, comme indiqué ci-dessus, conformément à la politique de l'entreprise et à la loi applicable. Vous devez corriger le comportement décrit ci-dessus et éviter toute répétition.",f:"Toute nouvelle violation peut entraîner une mesure disciplinaire plus sévère, pouvant aller jusqu'à la mise à pied ou à la rupture du contrat de travail, conformément à la politique de l'entreprise et à la loi applicable."},
+S5:{k:'une mise à pied',a:"Vous êtes mis à pied pour la période indiquée ci-dessus. Vous ne devez pas vous présenter au travail pendant la mise à pied et vous devez vous présenter à votre chef d'équipe le premier jour ouvrable suivant sa fin. Vous devez corriger le comportement décrit ci-dessus.",f:"Toute nouvelle violation peut entraîner la rupture du contrat de travail, conformément à la politique de l'entreprise et à la loi applicable."}};
+const SN_FR_TYPE={S1:'Avertissement verbal',S2:'Avertissement écrit',S3:'Dernier avertissement écrit',S4:'Retenue sur salaire',S5:'Mise à pied'};
+const SN_FR_RULE={'AT-01':'Arrivée en retard au travail','AT-02':'Absence sans autorisation','AT-03':'Départ anticipé sans autorisation','SH-01':'Chaussures de sécurité sales ou malodorantes','SH-02':'Manger ou boire dans la zone de production','SH-03':'Dormir dans la zone de travail','SH-04':"Ne pas porter les chaussures de sécurité ou les EPI",'WD-01':'Utilisation du téléphone pendant le travail sans raison','WD-02':'Rapport journalier non rédigé à temps','WD-03':"Perturbation de l'environnement de travail",'WD-04':"Détérioration de l'équipement par négligence",'WD-05':'Non-respect des instructions de travail','WD-06':"Modification des réglages d'une machine sans autorisation",'WD-07':'Contournement des dispositifs de sécurité','WB-01':'Bagarre avec des collègues','WB-02':'Manque de respect envers des collègues ou des superviseurs','WB-03':"Harcèlement ou menaces envers d'autres personnes",'IP-01':'Faux rapport ou information inexacte','IP-02':"Vol ou usage abusif des biens de l'entreprise"};
+const SN_TX={
+en:{title:'EMPLOYEE DISCIPLINARY SANCTION NOTICE',date:'Date: ',ref:'Reference: ',emp:'Employee: ',id:'Employee ID: ',subj:(x)=>'Subject: '+x+' Disciplinary Sanction',dear:(n)=>'Dear '+n+',',intro:(k)=>'This notice formally records '+k+' as described below, following a review of the reported incident.',code:'Sanction code',det:'Incident / sanction details',lvl:'Sanction level',eff:'Effective date',dur:'Sanction duration',days:(n)=>n+' day(s)',cor:'Required corrective action',ack:'Employee acknowledgment',ackt:'I acknowledge receipt of this notice. My signature confirms receipt, not necessarily agreement with its contents.',en:'Employee Name: ',es:'Employee Signature',sl:'Shift leader: ',ss:'Shift leader Signature: ',ap:'Approved by: ',sg:'Signature: ',foot:'Confidential personnel record'},
+fr:{title:'AVIS DE SANCTION DISCIPLINAIRE',date:'Date : ',ref:'Référence : ',emp:'Employé(e) : ',id:'Matricule : ',subj:(x)=>'Objet : '+x+' – Sanction disciplinaire',dear:(n)=>'Madame, Monsieur '+n+',',intro:(k)=>'La présente notification consigne officiellement '+k+', selon les détails ci-dessous, à la suite de l\'examen de l\'incident signalé.',code:'Code de sanction',det:'Incident / détails de la sanction',lvl:'Niveau de sanction',eff:"Date d'effet",dur:'Durée de la sanction',days:(n)=>n+' jour(s)',cor:'Mesure corrective requise',ack:"Prise de connaissance de l'employé(e)",ackt:"Je reconnais avoir reçu cette notification. Ma signature confirme la réception, et non nécessairement mon accord avec son contenu.",en:"Nom de l'employé(e) : ",es:"Signature de l'employé(e)",sl:"Chef d'équipe : ",ss:"Signature du chef d'équipe : ",ap:'Approuvé par : ',sg:'Signature : ',foot:'Dossier du personnel confidentiel'}};
+function snLetter(s,lang){
+  const fr=lang==='fr',T=SN_TX[fr?'fr':'en'],nm=esc(s.name),c=snCodes().find(x=>x.code===s.code),lv=(fr?SN_FR_LV:SN_LV)[s.type]||(fr?SN_FR_LV:SN_LV).S2;
   const U='__________________________';
+  const codeTxt=fr&&c?(c.code+' – '+(c.ruleFr||SN_FR_RULE[c.code]||c.rule)):(s.codeText||s.code);
+  const lvl=fr?'['+s.type+'] '+(SN_FR_TYPE[s.type]||''):snTypeLbl(s.type);
+  const subj=fr?(SN_FR_TYPE[s.type]||''):(SN_SUBJ[s.type]||'');
   return '<div class="prsheet snl"><img class="snl-stamp" src="'+SN_STAMP+'" alt=""><img class="snl-logo" src="'+SN_LOGO+'" alt="">'+
-   '<div class="snl-head"><h1>TWINGULF INDUSTRIES</h1><h2>EMPLOYEE DISCIPLINARY SANCTION NOTICE</h2></div>'+
-   '<div class="snl-grid"><div>Date: '+esc(snDate(String(s.createdAt||s.date).slice(0,10)))+'</div><div>'+(s.ref?'Reference: '+esc(s.ref):'')+'</div><div>Employee: '+nm+'</div><div>Employee ID: '+esc(s.empId)+'</div></div>'+
-   '<p class="snl-subj"><b>Subject: '+esc(SN_SUBJ[s.type]||'')+' Disciplinary Sanction</b></p>'+
-   '<p class="snl-dear">Dear '+nm+',</p><p class="snl-intro">This notice formally records '+lv.k+' as described below, following a review of the reported incident.</p>'+
-   '<table class="snl-t"><tr><td>Sanction code</td><td>'+esc(s.codeText||s.code)+'</td></tr><tr><td>Incident / sanction details</td><td>'+esc(s.reason)+'</td></tr><tr><td>Sanction level</td><td>'+esc(snTypeLbl(s.type))+'</td></tr><tr><td>Effective date</td><td>'+esc(snDate(s.date))+'</td></tr>'+(s.days?'<tr><td>Sanction duration</td><td>'+esc(s.days)+' day(s)</td></tr>':'')+'</table>'+
-   '<p class="snl-h3"><b>Required corrective action</b></p><p style="margin-bottom:8px">'+esc(lv.a)+'</p><p style="margin-bottom:14px">'+esc(lv.f)+'</p>'+
-   '<p class="snl-h3"><b>Employee acknowledgment</b></p><p style="margin-bottom:16px">I acknowledge receipt of this notice. My signature confirms receipt, not necessarily agreement with its contents.</p>'+
-   '<div class="snl-sg"><div class="snl-r">Employee Name: '+nm+'<br>Employee Signature'+U.slice(0,22)+'<br>Shift leader: '+esc(s.leader||'')+'<br>Shift leader Signature: '+U.slice(0,20)+'</div><div class="snl-l">Approved by: '+U.slice(0,22)+'<br>Signature: '+U.slice(0,25)+'</div></div>'+
-   '<div class="snl-foot">TWINGULF INDUSTRIES &nbsp;|&nbsp; Confidential personnel record</div></div>';
+   '<div class="snl-head"><h1>TWINGULF INDUSTRIES</h1><h2>'+T.title+'</h2></div>'+
+   '<div class="snl-grid"><div>'+T.date+esc(snDate(String(s.createdAt||s.date).slice(0,10),lang))+'</div><div>'+(s.ref?T.ref+esc(s.ref):'')+'</div><div>'+T.emp+nm+'</div><div>'+T.id+esc(s.empId)+'</div></div>'+
+   '<p class="snl-subj"><b>'+esc(T.subj(subj))+'</b></p>'+
+   '<p class="snl-dear">'+T.dear(nm)+'</p><p class="snl-intro">'+esc(T.intro(lv.k))+'</p>'+
+   '<table class="snl-t"><tr><td>'+T.code+'</td><td>'+esc(codeTxt)+'</td></tr><tr><td>'+T.det+'</td><td>'+esc(s.reason)+'</td></tr><tr><td>'+T.lvl+'</td><td>'+esc(lvl)+'</td></tr><tr><td>'+T.eff+'</td><td>'+esc(snDate(s.date,lang))+'</td></tr>'+(s.days?'<tr><td>'+T.dur+'</td><td>'+esc(T.days(s.days))+'</td></tr>':'')+'</table>'+
+   '<p class="snl-h3"><b>'+T.cor+'</b></p><p style="margin-bottom:8px">'+esc(lv.a)+'</p><p style="margin-bottom:14px">'+esc(lv.f)+'</p>'+
+   '<p class="snl-h3"><b>'+T.ack+'</b></p><p style="margin-bottom:16px">'+esc(T.ackt)+'</p>'+
+   '<div class="snl-sg"><div class="snl-r">'+T.en+nm+'<br>'+T.es+U.slice(0,22)+'<br>'+T.sl+esc(s.leader||'')+'<br>'+T.ss+U.slice(0,20)+'</div><div class="snl-l">'+T.ap+U.slice(0,22)+'<br>'+T.sg+U.slice(0,25)+'</div></div>'+
+   '<div class="snl-foot">TWINGULF INDUSTRIES &nbsp;|&nbsp; '+T.foot+'</div></div>';
 }
 function snPrint(s){
+  const w=rmOvl('snLang','<h2 style="margin:0 0 6px">Print the letter</h2><p class="muted" style="margin:0 0 12px">Which language?</p><div class="row" style="gap:12px"><button type="button" class="btn pri big" id="snLEn" style="flex:1">English</button><button type="button" class="btn pri big" id="snLFr" style="flex:1">Français</button></div><div class="row" style="margin-top:10px"><button type="button" class="btn" id="snLX">Cancel</button></div>');
+  const dlg=w.firstChild;dlg.style.maxWidth='420px';
+  $('#snLX').onclick=()=>w.remove();
+  $('#snLEn').onclick=()=>{w.remove();snPrintGo(s,'en');};
+  $('#snLFr').onclick=()=>{w.remove();snPrintGo(s,'fr');};
+}
+function snPrintGo(s,lang){
   let r=$('#prRoot');if(!r){r=document.createElement('div');r.id='prRoot';document.body.appendChild(r);}
-  r.innerHTML=snLetter(s);
+  r.innerHTML=snLetter(s,lang);
   let pst=$('#prPage');if(!pst){pst=document.createElement('style');pst.id='prPage';document.head.appendChild(pst);}
   pst.textContent='@page{size:210mm 297mm;margin:20mm 20mm 18mm 20mm}';
   const clean=()=>{r.innerHTML='';window.removeEventListener('afterprint',clean);};
@@ -4569,10 +4590,10 @@ async function snEmpReject(id){
 /* ---- admin: codes ---- */
 function snCodeDlg(i){
   const cs=snCodes().slice(),ex=i>=0?cs[i]:null;
-  const w=rmOvl('snDlg','<h2 style="margin:0 0 8px">'+(ex?'Edit code':'Add code')+'</h2><div class="snform"><label class="l">Category<input type="text" id="scG" value="'+esc(ex?ex.cat:'')+'" list="scGl"></label><datalist id="scGl">'+[...new Set(cs.map(c=>c.cat))].map(c=>'<option value="'+esc(c)+'">').join('')+'</datalist><label class="l">Code (e.g. AT-04)<input type="text" id="scC" value="'+esc(ex?ex.code:'')+'"></label><label class="l">Rule (simple description)<input type="text" id="scR" value="'+esc(ex?ex.rule:'')+'"></label><label class="l">Note (optional)<input type="text" id="scN" value="'+esc(ex?ex.note:'')+'"></label><label class="l">Steps (e.g. S1 → S2 → S3)<input type="text" id="scS" value="'+esc(ex?ex.steps:'S1 → S2 → S3')+'"></label></div><div class="row" style="margin-top:12px"><button type="button" class="btn big cyan" id="scX">Cancel</button><button type="button" class="btn pri big" id="scOk">Save</button></div>');
+  const w=rmOvl('snDlg','<h2 style="margin:0 0 8px">'+(ex?'Edit code':'Add code')+'</h2><div class="snform"><label class="l">Category<input type="text" id="scG" value="'+esc(ex?ex.cat:'')+'" list="scGl"></label><datalist id="scGl">'+[...new Set(cs.map(c=>c.cat))].map(c=>'<option value="'+esc(c)+'">').join('')+'</datalist><label class="l">Code (e.g. AT-04)<input type="text" id="scC" value="'+esc(ex?ex.code:'')+'"></label><label class="l">Rule (simple description)<input type="text" id="scR" value="'+esc(ex?ex.rule:'')+'"></label><label class="l">Rule in French (for French letters)<input type="text" id="scRF" value="'+esc(ex?(ex.ruleFr||SN_FR_RULE[ex.code]||''):'')+'"></label><label class="l">Note (optional)<input type="text" id="scN" value="'+esc(ex?ex.note:'')+'"></label><label class="l">Steps (e.g. S1 → S2 → S3)<input type="text" id="scS" value="'+esc(ex?ex.steps:'S1 → S2 → S3')+'"></label></div><div class="row" style="margin-top:12px"><button type="button" class="btn big cyan" id="scX">Cancel</button><button type="button" class="btn pri big" id="scOk">Save</button></div>');
   $('#scX').onclick=()=>w.remove();
   $('#scOk').onclick=async()=>{
-    const o={cat:$('#scG').value.trim(),code:$('#scC').value.trim().toUpperCase(),rule:$('#scR').value.trim(),note:$('#scN').value.trim(),steps:$('#scS').value.trim()};
+    const o={cat:$('#scG').value.trim(),code:$('#scC').value.trim().toUpperCase(),rule:$('#scR').value.trim(),ruleFr:$('#scRF').value.trim(),note:$('#scN').value.trim(),steps:$('#scS').value.trim()};
     if(!o.cat||!o.code||!o.rule||!snSteps(o).length){toast('Category, code, rule and at least one step (S1 to S5) are required.',true);return;}
     if(cs.some((c,k)=>c.code===o.code&&k!==i)){toast('That code already exists.',true);return;}
     if(ex)cs[i]=o;else cs.push(o);
