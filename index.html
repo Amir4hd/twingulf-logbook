@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v78';
+const APP_V='plant-v79';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -773,7 +773,7 @@ function go(view,areaId,tab){
   if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done'&&S.tab!=='parts'&&S.tab!=='jobs')S.tab='issues';
   if(view==='mplace'&&S.tab==='parts'&&!S.partsOnly)S.tab='issues';
   if(view==='mplace'&&S.partsOnly)S.tab='parts';
-  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');unsub('rawM');unsub('rawS');unsub('rawG');unsub('pkM');unsub('pkS');if(view!=='sanc'){unsub('hrE');unsub('hrC');unsub('hrS');}if(view!=='rm')S.rm=null;if(view!=='raw')S.raw=null;if(view!=='packm')S.pk=null;S.opsDraft=null;S.acctDraft=null;
+  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');unsub('rawM');unsub('rawS');unsub('rawG');unsub('pkM');unsub('pkS');if(view!=='sanc'){unsub('hrE');unsub('hrC');unsub('hrS');}if(view!=='home')unsub('hrB');if(view!=='rm')S.rm=null;if(view!=='raw')S.raw=null;if(view!=='packm')S.pk=null;S.opsDraft=null;S.acctDraft=null;
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
   if(tab)S.tab=tab;
   if(view==='area'){S.date=S.today;S.hour=effH();S.lastHour=effH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;S.entryOpen=false;lsSet('plant.view','area:'+areaId);}
@@ -825,8 +825,9 @@ function renderHome(){
   $('#main').innerHTML='<div'+(adminEff()||S.dev.place==='all'?'':' class="c1w"')+'><h1 style="font-size:34px;text-transform:uppercase">Choose area</h1><p class="muted" style="margin:6px 0 0">'+esc(sub)+'</p></div>'+
    (S.db?'':'<div class="empty">The database is not available in this view. Check the internet connection and sign in again.</div>')+
    (vis.length||adminEff()||S.dev.place==='maint'?'':'<div class="empty">No areas are set up for this place.</div>')+
-   '<div class="areas '+(adminEff()||S.dev.place==='all'?'cols2':'cols1')+'">'+cards+(S.dev.place==='all'?'<button class="acard sum" data-a="__ops"><b>Operators and passwords</b><span>Add, remove or change operator passwords</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__sanc"><b>Sanctions</b><span>Employee sanctions: find an employee, record a sanction and print the letter</span></button>':'')+(adminEff()||S.dev.place==='all'||S.dev.place==='maint'?'<button class="acard sum" data-a="__maint"><b>Maintenance</b><span>Requests, preventive maintenance, planned jobs, recent maintenance done</span></button>':'')+(adminEff()||S.dev.place==='all'||S.dev.place==='maint'?'<button class="acard sum" data-a="__parts"><b>Spare parts</b><span>Stock, take out, receive, scan QR</span></button>':'')+(S.dev.place==='maint'?'<button class="acard sum" data-a="__scan"><b>'+CAM+' Scan QR</b><span>Scan a spare part label to take out or receive</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
+   '<div class="areas '+(adminEff()||S.dev.place==='all'?'cols2':'cols1')+'">'+cards+(S.dev.place==='all'?'<button class="acard sum" data-a="__ops"><b>Operators and passwords</b><span>Add, remove or change operator passwords</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__summary"><b>Summary</b><span>Production, raw materials and line hours for today or yesterday</span></button>':'')+(adminEff()||S.dev.place==='all'?'<button class="acard sum" data-a="__sanc"><b>Sanctions</b><span>Employee sanctions: find an employee, record a sanction and print the letter</span><span id="snBadge"></span></button>':'')+(adminEff()||S.dev.place==='all'||S.dev.place==='maint'?'<button class="acard sum" data-a="__maint"><b>Maintenance</b><span>Requests, preventive maintenance, planned jobs, recent maintenance done</span></button>':'')+(adminEff()||S.dev.place==='all'||S.dev.place==='maint'?'<button class="acard sum" data-a="__parts"><b>Spare parts</b><span>Stock, take out, receive, scan QR</span></button>':'')+(S.dev.place==='maint'?'<button class="acard sum" data-a="__scan"><b>'+CAM+' Scan QR</b><span>Scan a spare part label to take out or receive</span></button>':'')+(adminEff()?'<button class="acard ctl" data-a="__admin"><b>Control room</b><span>Dashboard, trends, maintenance, setup</span></button>':'')+'</div>';
   $$('.acard').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='__lab')go('lab');else if(a==='__rm')go('rm');else if(a==='__raw')go('raw');else if(a==='__pack')go('packm');else if(a==='__admin')go('admin',null,'overview');else if(a==='__summary')go('summary');else if(a==='__ops')go('ops');else if(a==='__sanc')go('sanc');else if(a==='__maint'){S.partsOnly=false;go('mplace');}else if(a==='__scan'){scanPart();}else if(a==='__parts'){S.partsOnly=true;S.tab='parts';go('mplace',null,'parts');}else go('area',a);});
+  if(adminEff()){snBadgePaint();snBadgeSub();}
   paintRawCard();
 }
 
@@ -4360,7 +4361,21 @@ function snSub(){
   resub('hrC',()=>S.db.doc('hr/codes').onSnapshot(sn=>{S.sn.codes=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];snPaint();},e=>{}));
   resub('hrS',()=>S.db.collection('hr_sanctions').limit(3000).onSnapshot(snap=>{S.sn.all=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.sn.san=S.sn.all.filter(x=>!x.deleted);snPaint();},e=>toast(dbErr(e),true)));
 }
+const snSeen=()=>{try{return localStorage.getItem('snSeen')||'';}catch(e){return S._snSeen||'';}};
+function snMarkSeen(){const t=new Date().toISOString();S._snSeen=t;try{localStorage.setItem('snSeen',t);}catch(e){}if(S.sb){S.sb.san=0;S.sb.emp=0;}}
+function snBadgePaint(){const el=$('#snBadge');if(!el)return;const b=S.sb||{},p=[];if(b.pend)p.push(b.pend+' delete request'+(b.pend>1?'s':''));if(b.san)p.push(b.san+' new sanction'+(b.san>1?'s':''));if(b.emp)p.push(b.emp+' employee change'+(b.emp>1?'s':''));el.innerHTML=p.length?'<span class="chip bad">'+p.join(' · ')+'</span>':'';}
+function snBadgeSub(){
+  if(!adminEff()||!S.db)return;
+  const seen=snSeen()||new Date(Date.now()-7*864e5).toISOString();
+  S.sb=S.sb||{pend:0,emp:0,san:0};
+  resub('hrB',()=>{
+    const u1=S.db.doc('hr/employees').onSnapshot(sn=>{const l=sn.exists&&Array.isArray(sn.data().list)?sn.data().list:[];S.sb.pend=l.filter(e=>e.delReq).length;S.sb.emp=l.filter(e=>e.by&&e.by!=='Admin'&&String(e.at||'')>seen).length;snBadgePaint();},e=>{});
+    const u2=S.db.collection('hr_sanctions').where('createdAt','>',seen).onSnapshot(snap=>{S.sb.san=snap.docs.filter(d=>!d.data().deleted).length;snBadgePaint();},e=>{});
+    return ()=>{try{u1();}catch(e){}try{u2();}catch(e){}};
+  });
+}
 function renderSanc(){
+  snMarkSeen();
   if(!snOK()){go('home');return;}
   S.sn=S.sn||{emps:[],codes:[],san:[],q:'',dept:'',emp:null,mode:'find',tab:'find'};
   S.sn.all=S.sn.all||[];S.sn.san=S.sn.san||[];
@@ -4485,6 +4500,7 @@ async function snSave(e){
   S.sn.mode='busy';
   try{
     const r=await S.db.collection('hr_sanctions').add(doc);
+    if(adminEff())snMarkSeen();
     S.sn.mode='emp';toast('Sanction saved: '+doc.ref);snPaint(true);
     const pr=await ask({title:'Print the letter now?',msg:doc.ref+' · '+doc.name,ok:'Print',no:'Not now'});
     if(pr)snPrint(Object.assign({id:r&&r.id},doc));
