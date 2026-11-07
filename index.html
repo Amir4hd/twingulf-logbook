@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v89';
+const APP_V='plant-v90';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -710,11 +710,102 @@ function helpPress(){
   ];
   return '<div class="hlp" data-nolang><div class="hh"><h2>'+T('Press — Operator Guide','Presse — Guide opérateur')+'</h2><div class="muted">'+T('Your hourly routine, step by step','Votre routine horaire, étape par étape')+'</div></div>'+routine+S_.map((s,i)=>'<div class="hs"><span class="hn">'+(i+1)+'</span><div><b>'+s[0]+' '+s[1]+'</b><p>'+s[2]+'</p></div></div>').join('')+'<div class="hf">Twin Gulf Industries</div></div>';
 }
+/* ---------- other help guides (Lab, Packaging, Maintenance, Shift leader, Admin) ---------- */
+function helpBuild(fr,title,sub,routine,secs){
+  const P=p=>fr?p[1]:p[0];
+  const rt='<div class="rt">'+routine.map((r,i)=>'<div><span>'+r[0]+'</span><em>'+(fr?'ÉTAPE':'STEP')+' '+(i+1)+'</em>'+P(r[1])+'</div>').join('')+'</div>';
+  return '<div class="hlp" data-nolang><div class="hh"><h2>'+P(title)+'</h2><div class="muted">'+P(sub)+'</div></div>'+rt+secs.map((s,i)=>'<div class="hs"><span class="hn">'+(i+1)+'</span><div><b>'+s[0]+' '+P(s[1])+'</b><p>'+P(s[2])+'</p>'+(s[3]||'')+'</div></div>').join('')+'<div class="hf">Twin Gulf Industries</div></div>';
+}
+const hgLg=(box,t,d)=>'<div>'+box+'<span><b>'+t+'</b> — '+d+'</span></div>';
+const hgChip=(c,t)=>'<span class="chip '+c+'">'+t+'</span>';
+const hgTip=t=>'<div class="tip">'+t+'</div>';
+const hgTablet=[ '📶',['Tablet problem?','Problème de tablette ?'],['The dot at the top left must be green (online). If it is red, tell the shift leader. If the screen looks old: ☰ menu → Refresh app.','Le point en haut à gauche doit être vert (en ligne). S\'il est rouge, prévenez le chef d\'équipe. Si l\'écran semble ancien : menu ☰ → Refresh app.'] ];
+const hgReport=[ '🛠️',['Report a machine problem','Signaler un problème de machine'],['Use the button at the bottom of the page: Send a request to maintenance. Choose the equipment, describe what is wrong, then press Send to maintenance. You can edit or delete your own request for a few minutes.','Utilisez le bouton en bas de la page : Envoyer une demande à la maintenance. Choisissez l\'équipement, décrivez le problème, puis appuyez sur Envoyer à la maintenance. Vous pouvez modifier ou supprimer votre demande pendant quelques minutes.'] ];
+function helpLab(){
+  const fr=(typeof LANG!=='undefined'&&LANG==='fr'),M=editMin();
+  const tp=(en,f)=>[en,f];
+  return helpBuild(fr,['Laboratory — Operator Guide','Laboratoire — Guide opérateur'],['Moisture, flour tests and Reverse Osmosis','Humidité, tests de farine et osmose inverse'],
+   [['🧪',['Choose the zone','Choisissez la zone']],['✍️',['Type the result','Saisissez le résultat']],['⚠️',['Check the hint','Vérifiez l\'indication']],['✅',['Press Save','Appuyez sur Enregistrer']]],
+   [
+    ['🧪',['Lab Moisture','Humidité du labo'],['Two columns: Macaroni on one side, Spaghetti on the other. Macaroni zones: A1, Shaker, A2, S, Final. Spaghetti zones: Dryer, Pre-dryer, Final. The time is saved automatically when you press Save.','Deux colonnes : Macaroni d\'un côté, Spaghetti de l\'autre. Zones Macaroni : A1, Shaker, A2, S, Final. Zones Spaghetti : Dryer, Pre-dryer, Final. L\'heure est enregistrée automatiquement quand vous appuyez sur Enregistrer.']],
+    ['✍️',['Enter a reading','Saisir un relevé'],['Choose the Zone, type the Moisture result in %, add a note if needed (optional), then press Save. Take a new sample any time: there is no fixed hour.','Choisissez la Zone, saisissez le résultat d\'humidité en %, ajoutez une note si besoin (facultatif), puis appuyez sur Enregistrer. Vous pouvez prélever à tout moment : il n\'y a pas d\'heure fixe.']],
+    ['⚠️',['High or low moisture','Humidité haute ou basse'],['Under the result box a small hint shows the allowed range. If the result is out of range, the box changes colour and says Above or Below the limit. Check the sample again, then you can still save.','Sous la case du résultat, une petite indication montre la plage autorisée. Si le résultat est hors plage, la case change de couleur et indique Au-dessus ou En dessous de la limite. Vérifiez à nouveau l\'échantillon, vous pouvez quand même enregistrer.']],
+    ['✏️',['Made a mistake?','Une erreur ?'],['After saving you can change the entry for '+M+' minutes (the screen shows how long is left). After that it is locked: only the lab head or a shift leader can change it. Press New entry to start a fresh reading.','Après l\'enregistrement, vous pouvez modifier la saisie pendant '+M+' minutes (l\'écran indique le temps restant). Ensuite elle est verrouillée : seul le chef de labo ou un chef d\'équipe peut la modifier. Appuyez sur Nouvelle saisie pour un nouveau relevé.']],
+    ['🌾',['Flour & semolina tests','Tests de farine et semoule'],['Open Flour & semolina tests. Choose the test type: Batch received (test every batch that arrives) or Supplier sample. Press Enter data and fill in the results: gluten, ash, moisture, colour, spots and granulation. Saved tests appear in the list below.','Ouvrez Tests de farine et semoule. Choisissez le type : Lot reçu (testez chaque lot reçu) ou Échantillon fournisseur. Appuyez sur Saisir les données et remplissez les résultats : gluten, cendres, humidité, couleur, impuretés et granulométrie. Les tests enregistrés apparaissent dans la liste ci-dessous.']],
+    ['💧',['Reverse Osmosis (RO)','Osmose inverse (RO)'],['Fill the RO readings once per shift (A, B, C). The time is saved automatically. Pressure drops, feed flow and recovery are calculated for you, so do not type them. Do not forget the daily backwash time.','Remplissez les relevés RO une fois par équipe (A, B, C). L\'heure est enregistrée automatiquement. Les chutes de pression, le débit d\'alimentation et le taux de récupération sont calculés pour vous : ne les saisissez pas. N\'oubliez pas l\'heure du rétrolavage quotidien.']],
+    hgReport,hgTablet
+   ]);
+}
+function helpPack(){
+  const fr=(typeof LANG!=='undefined'&&LANG==='fr'),M=editMin();
+  const chips='<div class="lg">'+hgLg(hgChip('ok',fr?'enregistré':'saved'),fr?'Enregistré':'Saved',fr?'cette fenêtre est terminée':'this window is done')+hgLg(hgChip('ok',fr?'ouvert · 25 min':'open · 25 min left'),fr?'Ouvert':'Open',fr?'remplissez maintenant ; le temps restant est affiché':'fill it now; the time left is shown')+hgLg(hgChip('warn',fr?'partiel':'partly saved'),fr?'Partiel':'Partly saved',fr?'il manque des valeurs':'some values are missing')+hgLg(hgChip('bad',fr?'manqué':'missed'),fr?'Manqué':'Missed',fr?'la fenêtre s\'est fermée avant l\'enregistrement':'the window closed before it was saved')+'</div>';
+  return helpBuild(fr,['Packaging — Operator Guide','Conditionnement — Guide opérateur'],['Cartons, messages from press and raw materials','Cartons, messages de la presse et matières premières'],
+   [['📣',['Read messages from press','Lisez les messages de la presse']],['📦',['Save cartons and type','Enregistrez cartons et type']],['🧵',['Raw materials in the window','Matières premières dans la fenêtre']],['🛠️',['Report problems','Signalez les problèmes']]],
+   [
+    ['📦',['Production','Production'],['Macaroni is on the left and Spaghetti on the right. Enter Cartons completed and the Production type (for example AL-TAJ), add a note if something is unusual, then press Save production. The time is saved automatically. Use Today or Yesterday at the top; yesterday is read only.','Macaroni est à gauche et Spaghetti à droite. Saisissez les Cartons terminés et le Type de production (par exemple AL-TAJ), ajoutez une note si quelque chose est inhabituel, puis appuyez sur Enregistrer la production. L\'heure est enregistrée automatiquement. Utilisez Aujourd\'hui ou Hier en haut ; hier est en lecture seule.']],
+    ['✏️',['Made a mistake?','Une erreur ?'],['Tap your entry in the list under the form, change it and press Save changes. This works for '+M+' minutes. After that, ask the shift leader.','Touchez votre saisie dans la liste sous le formulaire, modifiez-la et appuyez sur Enregistrer les modifications. Cela fonctionne pendant '+M+' minutes. Ensuite, demandez au chef d\'équipe.']],
+    ['⏹️',['Line stopped','Ligne arrêtée'],['Press the Stopped button. Enter the time it stopped and the time it started again, then save.','Appuyez sur le bouton Arrêtée. Indiquez l\'heure d\'arrêt et l\'heure de redémarrage, puis enregistrez.']],
+    ['📣',['Messages from press','Messages de la presse'],['When the press has a die change, power cut, breakdown or product change, a red chip such as 2 from press appears on the Packaging card and the message is pinned at the top, with a sound. When the product has arrived, press Arrived on the message (Has the product arrived?).','Quand la presse a un changement de filière, une coupure, une panne ou un changement de produit, une pastille rouge comme 2 de la presse apparaît sur la carte Conditionnement et le message reste en haut, avec un son. Quand le produit est arrivé, appuyez sur Arrivé sur le message (Le produit est-il arrivé ?).']],
+    ['🧵',['Raw materials (3 times a day)','Matières premières (3 fois par jour)'],['Open Raw materials. It has fixed windows three times a day; the banner shows Open and how many minutes are left, or when the next window opens. Fill Film wastage, Scotch used, Damaged carton, Flour, Semolina and Regrinding for Macaroni and Spaghetti. Regrinding is shared by both lines. The chips show the state of each window:','Ouvrez Matières premières. Il y a des fenêtres fixes trois fois par jour ; la bannière indique Ouvert et les minutes restantes, ou l\'ouverture de la prochaine fenêtre. Remplissez Perte de film, Scotch utilisé, Carton endommagé, Farine, Semoule et Rebroyage pour Macaroni et Spaghetti. Le rebroyage est partagé par les deux lignes. Les pastilles montrent l\'état de chaque fenêtre :'],chips],
+    hgReport,
+    ['🔒',['Locked?','Verrouillé ?'],['If the window is closed or the edit time has passed, ask the shift leader to unlock it with a password.','Si la fenêtre est fermée ou si le délai de modification est dépassé, demandez au chef d\'équipe de la déverrouiller avec un mot de passe.']],
+    hgTablet
+   ]);
+}
+function helpMaint(){
+  const fr=(typeof LANG!=='undefined'&&LANG==='fr');
+  const pm='<div class="lg">'+hgLg(hgChip('bad',fr?'en retard':'Overdue'),fr?'En retard':'Overdue',fr?'l\'entretien est en retard — à faire en premier':'the service is late — do it first')+hgLg(hgChip('warn',fr?'bientôt':'Due soon'),fr?'Bientôt':'Due soon',fr?'à planifier':'plan it')+hgLg(hgChip('ok','OK'),'OK',fr?'rien à faire pour l\'instant':'nothing to do yet')+'</div>';
+  const pt='<div class="lg">'+hgLg(hgChip('warn',fr?'bas':'low'),fr?'Bas':'Low',fr?'le stock baisse — la pièce va dans la liste À commander':'stock is getting low — it goes on the To order list')+hgLg(hgChip('bad',fr?'épuisé':'out of stock'),fr?'Épuisé':'Out of stock',fr?'plus aucune':'none left')+'</div>';
+  return helpBuild(fr,['Maintenance — Guide','Maintenance — Guide'],['Requests, preventive work, jobs and spare parts','Demandes, préventif, travaux et pièces de rechange'],
+   [['🔔',['Alarm rings','L\'alarme sonne']],['🙋',['I will handle it','Je m\'en occupe']],['🔧',['Repair and write what was done','Réparez et notez le travail']],['✅',['Press Done','Appuyez sur Terminé']]],
+   [
+    ['🔔',['Requests tab','Onglet Demandes'],['When an operator sends a request, an alarm sounds every 30 seconds until someone claims it. Each row shows the area, equipment, the problem, who sent it and how long it has been waiting.','Quand un opérateur envoie une demande, une alarme sonne toutes les 30 secondes jusqu\'à ce que quelqu\'un la prenne. Chaque ligne indique la zone, l\'équipement, le problème, l\'expéditeur et le temps d\'attente.']],
+    ['🙋',['Take it and finish it','Prenez-la et terminez-la'],['Press I will handle it: the alarm stops and everyone sees your name. When the repair is finished, type what was done (optional) and press Done. The operator sees that it is fixed.','Appuyez sur Je m\'en occupe : l\'alarme s\'arrête et tout le monde voit votre nom. Quand la réparation est terminée, notez le travail effectué (facultatif) et appuyez sur Terminé. L\'opérateur voit que c\'est réparé.']],
+    ['🗓️',['Preventive tab','Onglet Préventif'],['Regular services by running hours or by days, with a progress bar for each task. The tab shows a red number for overdue tasks and an amber number for tasks due soon. When you finish a task, press Mark done; the app asks which spare parts you used and takes them out of stock. Marked done by mistake? Press Undo mark done. Add a new task in the box at the top (Add maintenance task).','Entretiens réguliers par heures de marche ou par jours, avec une barre de progression pour chaque tâche. L\'onglet affiche un chiffre rouge pour les tâches en retard et un chiffre ambre pour celles à venir. Quand vous terminez une tâche, appuyez sur Marquer fait ; l\'application demande les pièces utilisées et les retire du stock. Marqué par erreur ? Appuyez sur Annuler. Ajoutez une tâche dans la boîte en haut (Ajouter une tâche de maintenance).'],pm],
+    ['📋',['Planned jobs','Travaux planifiés'],['For bigger jobs such as replacing a conveyor belt. Open Add planned job, write the job, choose the area and date, say who will do it, and save. An amber number on the tab shows jobs that need attention.','Pour les gros travaux, comme remplacer un tapis. Ouvrez Ajouter un travail planifié, écrivez le travail, choisissez la zone et la date, indiquez qui le fera, puis enregistrez. Un chiffre ambre sur l\'onglet signale les travaux à traiter.']],
+    ['📦',['Spare parts','Pièces de rechange'],['Search by UC code, name, size, shelf or supplier. Use Low or out only to see what is missing. Press Scan QR to scan a part label with the camera, then take out or receive. The To order view lists parts to buy, and Movements shows who took what.','Recherchez par code UC, nom, taille, étagère ou fournisseur. Utilisez Bas ou épuisé seulement pour voir ce qui manque. Appuyez sur Scanner QR pour scanner l\'étiquette d\'une pièce avec la caméra, puis sortez ou recevez. La vue À commander liste les pièces à acheter et Mouvements montre qui a pris quoi.'],pt],
+    ['✅',['Recent maintenance done','Maintenance récente effectuée'],['A list of finished requests and jobs, so you can check what was done before and by whom.','Une liste des demandes et travaux terminés, pour voir ce qui a été fait avant et par qui.']],
+    hgTablet
+   ]);
+}
+function helpLeader(){
+  const fr=(typeof LANG!=='undefined'&&LANG==='fr');
+  return helpBuild(fr,['Shift Leader — Guide','Chef d\'équipe — Guide'],['Control your shift: unlock, confirm, manage','Pilotez votre équipe : déverrouiller, confirmer, gérer'],
+   [['🔓',['Unlock when needed','Déverrouillez si besoin']],['🧹',['Confirm cleaning','Confirmez le nettoyage']],['👥',['Manage operators','Gérez les opérateurs']],['📊',['Check the summary','Consultez le résumé']]],
+   [
+    ['🏠',['Your home screen','Votre écran d\'accueil'],['You can open every area: the press lines, Boiler & Chiller, Packaging, Laboratory and Reverse Osmosis. You also have Operators and passwords, Summary, Sanctions, Maintenance and Spare parts.','Vous pouvez ouvrir toutes les zones : lignes de presse, Chaudière et refroidisseur, Conditionnement, Laboratoire et Osmose inverse. Vous avez aussi Opérateurs et mots de passe, Résumé, Sanctions, Maintenance et Pièces de rechange.']],
+    ['🔓',['Unlock a locked screen','Déverrouiller un écran'],['When the entry window is closed or the edit time has passed, an operator asks you to unlock. Enter your shift leader password. The screen locks again by itself after 1 minute without use. Then add the missed reading or correct the entry.','Quand la fenêtre de saisie est fermée ou que le délai de modification est dépassé, un opérateur vous demande de déverrouiller. Saisissez votre mot de passe de chef d\'équipe. L\'écran se verrouille de nouveau après 1 minute sans utilisation. Ajoutez ensuite le relevé manquant ou corrigez la saisie.']],
+    ['🧹',['Cleaning and die changes','Nettoyage et changements de filière'],['Only you can confirm the cleaning: open the 🧹 button of the shift, check what the operator ticked and press Confirm cleaning. You also change the cleaning plan and record a Teflon change. Look at the red ✗ marks: they mean a shift ended without confirmed cleaning.','Vous seul pouvez confirmer le nettoyage : ouvrez le bouton 🧹 de l\'équipe, vérifiez ce que l\'opérateur a coché et appuyez sur Confirmer le nettoyage. Vous modifiez aussi le plan de nettoyage et enregistrez un changement de Téflon. Regardez les ✗ rouges : ils signalent une équipe terminée sans nettoyage confirmé.']],
+    ['👥',['Operators and passwords','Opérateurs et mots de passe'],['Add an operator, change a password, make someone inactive or remove them. Every change asks for your shift leader password. Passwords are numbers only, at least 5 digits, and cannot be shared with another person. Shift leaders and lab heads are managed by the admin.','Ajoutez un opérateur, changez un mot de passe, rendez quelqu\'un inactif ou supprimez-le. Chaque changement demande votre mot de passe de chef d\'équipe. Les mots de passe sont uniquement des chiffres, au moins 5, et ne peuvent pas être partagés avec une autre personne. Les chefs d\'équipe et chefs de labo sont gérés par l\'admin.']],
+    ['📊',['Summary','Résumé'],['Production, raw materials and line hours for today or yesterday, all on one page.','Production, matières premières et heures de ligne pour aujourd\'hui ou hier, sur une seule page.']],
+    ['⚖️',['Sanctions','Sanctions'],['Find the employee by name or by department, record the sanction and print the letter in English or French. You can add and edit employees. Deleting an employee needs the admin to approve. A deleted sanction keeps its reference number; new ones continue after the highest.','Trouvez l\'employé par nom ou par département, enregistrez la sanction et imprimez la lettre en anglais ou en français. Vous pouvez ajouter et modifier des employés. La suppression d\'un employé doit être approuvée par l\'admin. Une sanction supprimée garde son numéro de référence ; les nouvelles continuent après le plus élevé.']],
+    ['🔧',['Maintenance and spare parts','Maintenance et pièces'],['You can see requests, preventive work, planned jobs and spare parts, the same as the maintenance team.','Vous voyez les demandes, le préventif, les travaux planifiés et les pièces, comme l\'équipe de maintenance.']],
+    hgTablet
+   ]);
+}
+function helpAdmin(){
+  const fr=(typeof LANG!=='undefined'&&LANG==='fr');
+  const dv='<div class="lg">'+hgLg(hgChip('ok',fr?'en ligne':'Online'),fr?'En ligne':'Online',fr?'la tablette fonctionne':'the tablet is working')+hgLg(hgChip('warn',fr?'écran de connexion':'At sign-in screen'),fr?'Écran de connexion':'At sign-in screen',fr?'l\'application est ouverte mais personne n\'est connecté':'the app is open but nobody is signed in')+hgLg(hgChip('',fr?'hors ligne':'Offline'),fr?'Hors ligne':'Offline',fr?'pas vue depuis 3 minutes ou plus':'not seen for 3 minutes or more')+'</div>';
+  return helpBuild(fr,['Admin — Control Room Guide','Admin — Guide de la salle de contrôle'],['See everything, send messages and set up the plant','Tout voir, envoyer des messages et configurer l\'usine'],
+   [['📈',['Overview of the day','Aperçu de la journée']],['🔔',['Check red badges','Vérifiez les pastilles rouges']],['📣',['Send a message','Envoyez un message']],['⚙️',['Setup when needed','Configurez si besoin']]],
+   [
+    ['🏠',['Your home screen','Votre écran d\'accueil'],['You can open every area, plus Summary, Sanctions, Maintenance, Spare parts and the Control room. On any area you can pick a date up to 3 days back and correct entries without unlocking.','Vous pouvez ouvrir toutes les zones, plus Résumé, Sanctions, Maintenance, Pièces de rechange et la Salle de contrôle. Dans chaque zone, vous pouvez choisir une date jusqu\'à 3 jours en arrière et corriger sans déverrouiller.']],
+    ['📈',['Overview','Aperçu'],['Pick any date, back to the very first day, with the arrows ◀ ▶ or the date box, or press Today, and see how each line ran. Older days take a moment to load.','Choisissez n\'importe quelle date, jusqu\'au tout premier jour, avec les flèches ◀ ▶ ou la case date, ou appuyez sur Aujourd\'hui, et voyez comment chaque ligne a fonctionné. Les jours plus anciens mettent un instant à charger.']],
+    ['📉',['Trends & export','Tendances et export'],['See how a reading changes over days and export the data.','Voyez comment un relevé évolue sur plusieurs jours et exportez les données.']],
+    ['🔧',['Maintenance','Maintenance'],['Requests, Preventive, Planned jobs, Spare parts and Recent maintenance done. A red badge on the tab means open requests or overdue tasks. A new request rings an alarm every 30 seconds until someone claims it; you can switch the sound on or off in the ☰ menu.','Demandes, Préventif, Travaux planifiés, Pièces de rechange et Maintenance récente effectuée. Une pastille rouge sur l\'onglet signale des demandes ouvertes ou des tâches en retard. Une nouvelle demande déclenche une alarme toutes les 30 secondes jusqu\'à ce que quelqu\'un la prenne ; vous pouvez activer ou couper le son dans le menu ☰.']],
+    ['🏆',['Points','Points'],['A ranking of the operators by points: this week, last week, this month or last month, with medals for the top three.','Un classement des opérateurs par points : cette semaine, la semaine dernière, ce mois ou le mois dernier, avec des médailles pour les trois premiers.']],
+    ['📣',['Messages','Messages'],['Press Send message to pin a note at the top of the cards you choose. Choose Information only, or Mandatory (the operator must accept it with a password). You can add a sound every 30 seconds until accepted, and choose how long to show it: until you remove it, for some minutes, until a time, or between two times.','Appuyez sur Envoyer un message pour épingler une note en haut des cartes choisies. Choisissez Information seulement ou Obligatoire (l\'opérateur doit l\'accepter avec un mot de passe). Vous pouvez ajouter un son toutes les 30 secondes jusqu\'à l\'acceptation, et choisir la durée : jusqu\'à suppression, quelques minutes, jusqu\'à une heure ou entre deux heures.']],
+    ['📱',['Devices','Appareils'],['Every tablet seen in the last 7 days, with its place, model, battery and status:','Chaque tablette vue ces 7 derniers jours, avec son emplacement, son modèle, sa batterie et son état :'],dv],
+    ['⚙️',['Setup','Configuration'],['Plant: name, shift start hours and the hourly entry window. Operators and passwords. Tablet account passwords. For each line or area: the normal min and max of each reading (values outside are flagged), which readings are totals (Σ) and the equipment list. Blank limits are not checked.','Usine : nom, heures de début des équipes et fenêtre de saisie horaire. Opérateurs et mots de passe. Mots de passe des comptes tablettes. Pour chaque ligne ou zone : le min et le max normaux de chaque relevé (les valeurs hors plage sont signalées), les relevés qui sont des totaux (Σ) et la liste des équipements. Les limites vides ne sont pas vérifiées.']],
+    ['⚖️',['Sanctions','Sanctions'],['The Sanctions card shows an amber number for new sanctions. Open the Recent sanctions tab to see them newest first; the new ones are highlighted once, then the number clears. You also approve employee deletions requested by shift leaders.','La carte Sanctions affiche un chiffre ambre pour les nouvelles sanctions. Ouvrez l\'onglet Sanctions récentes pour les voir, les plus récentes en premier ; les nouvelles sont surlignées une fois, puis le chiffre disparaît. Vous approuvez aussi les suppressions d\'employés demandées par les chefs d\'équipe.']]
+   ]);
+}
+
 function helpDlg(){
   if(!$('#hlpCss')){const st=document.createElement('style');st.id='hlpCss';st.textContent=HELP_CSS;document.head.appendChild(st);}
   const pl=S.dev?S.dev.place:'',fr=(typeof LANG!=='undefined'&&LANG==='fr');
   const soon='<div class="hlp" data-nolang><h2>'+(fr?'Aide':'Help')+'</h2><div class="hs" style="--c:#2f7de1"><span class="hn">?</span><div><b>'+(fr?'Le guide de ce compte arrive bientôt':'The guide for this account is coming soon')+'</b><p>'+(fr?'En attendant : menu ☰ → Refresh app si l\'écran semble ancien, et demandez au chef d\'équipe en cas de doute.':'Meanwhile: ☰ menu → Refresh app if the screen looks old, and ask the shift leader if you are not sure.')+'</p></div></div></div>';
-  const w=rmOvl('helpOvl',(pl==='press'||pl==='admin'?helpPress():soon)+'<div class="row" style="margin-top:14px"><button type="button" class="btn pri big" id="hlpX" style="flex:1">'+(fr?'Compris':'Got it')+'</button></div>');
+  const w=rmOvl('helpOvl',(pl==='press'?helpPress():pl==='lab'?helpLab():pl==='pack'?helpPack():pl==='maint'?helpMaint():pl==='all'?helpLeader():pl==='admin'?helpAdmin():soon)+'<div class="row" style="margin-top:14px"><button type="button" class="btn pri big" id="hlpX" style="flex:1">'+(fr?'Compris':'Got it')+'</button></div>');
   $('#hlpX').onclick=()=>w.remove();
   w.onclick=ev=>{if(ev.target===w)w.remove();};
 }
@@ -3011,10 +3102,15 @@ async function sendNotice(){
     if(warn.length)showBar('<span class="tx">NO CONNECTION: '+esc(warn.join(' and '))+'. Go to the packaging team and tell them about the stop yourself.</span>');
   }catch(e){toast(dbErr(e),true);}
 }
+function ovLoad(v){
+  if(!S.db||!v||v>=addDays(S.today,-6))return;
+  S.ovOld=S.ovOld||{};if(S.ovOld[v])return;S.ovOld[v]=1;
+  S.db.collection('logs').where('date','==',v).get().then(snap=>{S.ovLogs=S.ovLogs||{};snap.docs.forEach(d=>{S.ovLogs[d.id]=d.data();S.logs[d.id]=d.data();});paintTab();}).catch(e=>{delete S.ovOld[v];toast(dbErr(e),true);});
+}
 function subAdmin(){
   const from=addDays(S.today,-6);
   resub('logs',()=>S.db.collection('logs').where('date','>=',from).limit(200).onSnapshot(snap=>{
-    const m={};snap.docs.forEach(d=>{m[d.id]=d.data();});S.logs=m;paintTab();},e=>toast(dbErr(e),true)));
+    const m={};snap.docs.forEach(d=>{m[d.id]=d.data();});S.logs=Object.assign({},S.ovLogs||{},m);paintTab();},e=>toast(dbErr(e),true)));
   resub('issues',()=>S.db.collection('issues').orderBy('ts','desc').limit(80).onSnapshot(snap=>{
     notifyIssues(snap);S.issues=snap.docs.map(d=>Object.assign({id:d.id},d.data()));paintBadge();if(S.tab==='issues'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
   resub('tasks',()=>S.db.collection('maint_tasks').onSnapshot(snap=>{
@@ -3056,7 +3152,7 @@ async function loadPM(){
 }
 function buildTab(){
   const t=$('#tab');if(!t)return;
-  if(S.tab==='overview')t.innerHTML='<div class="ctlrow" style="margin-bottom:12px"><button class="btn" id="ovPrev" aria-label="Previous day" style="align-self:flex-end;min-width:52px;font-size:20px">&#9664;</button><label class="l">Date<input type="date" id="ovDate" value="'+S.ovDate+'" min="'+addDays(S.today,-6)+'" max="'+S.today+'"></label><button class="btn" id="ovNext" aria-label="Next day" style="align-self:flex-end;min-width:52px;font-size:20px">&#9654;</button><button class="btn" id="ovToday">Today</button></div><div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
+  if(S.tab==='overview')t.innerHTML='<div class="ctlrow" style="margin-bottom:12px"><button class="btn" id="ovPrev" aria-label="Previous day" style="align-self:flex-end;min-width:52px;font-size:20px">&#9664;</button><label class="l">Date<input type="date" id="ovDate" value="'+S.ovDate+'" max="'+S.today+'"></label><button class="btn" id="ovNext" aria-label="Next day" style="align-self:flex-end;min-width:52px;font-size:20px">&#9654;</button><button class="btn" id="ovToday">Today</button></div><div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
   if(S.tab==='trends')t.innerHTML=trendShell();
   if(S.tab==='maint')t.innerHTML=maintShell();
   if(S.tab==='jobs')t.innerHTML=jobsShell();
@@ -3084,13 +3180,13 @@ function paintTab(){
 }
 function bindTab(){
   if(S.tab==='overview'){
-    const ovSet=v=>{const lo=addDays(S.today,-6);if(v<lo)v=lo;if(v>S.today)v=S.today;S.ovDate=v;$('#ovDate').value=v;S.sel=null;ovBtns();paintTab();};
-    const ovBtns=()=>{$('#ovPrev').disabled=S.ovDate<=addDays(S.today,-6);$('#ovNext').disabled=S.ovDate>=S.today;};
+    const ovSet=v=>{if(v>S.today)v=S.today;S.ovDate=v;$('#ovDate').value=v;S.sel=null;ovBtns();ovLoad(v);paintTab();};
+    const ovBtns=()=>{$('#ovPrev').disabled=false;$('#ovNext').disabled=S.ovDate>=S.today;};
     $('#ovDate').onchange=e=>{if(e.target.value)ovSet(e.target.value);};
     $('#ovToday').onclick=()=>ovSet(S.today);
     $('#ovPrev').onclick=()=>ovSet(addDays(S.ovDate,-1));
     $('#ovNext').onclick=()=>ovSet(addDays(S.ovDate,1));
-    ovBtns();
+    ovBtns();ovLoad(S.ovDate);
   }
   if(S.tab==='trends')bindTrend();
   if(S.tab==='maint')bindMaint();
