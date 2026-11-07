@@ -97,7 +97,7 @@ label.l{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 .hb.part{background:var(--panel2);border:2px dashed var(--ok);color:var(--ok)}
 .hb.miss{border-color:var(--bad);color:var(--bad);background:var(--badbg)}
 .hb.future{opacity:.4;cursor:not-allowed}.hb.off{background:repeating-linear-gradient(135deg,transparent 0 5px,rgba(120,130,125,.2) 5px 10px);border-color:var(--line);color:var(--mut)}.cell.off{background:repeating-linear-gradient(135deg,var(--panel2) 0 4px,var(--line) 4px 8px);border-color:var(--line)}
-.hb.now.sel{outline:none}@keyframes hbc{0%{border-color:#14b8d4}50%{border-color:rgba(20,184,212,0)}}.hb.now,.hb.cur{background:color-mix(in srgb,#14b8d4 22%,var(--panel2))!important;color:#14b8d4!important;animation:hbc 1s steps(1,end) infinite}@keyframes hbf{0%{background:var(--accent);color:var(--bg)}50%{background:var(--panel2);color:var(--ink)}}.cdbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.cdchip{display:inline-flex;align-items:center;gap:5px;padding:3px 12px;border-radius:99px;background:var(--warnbg);color:var(--warn);font-weight:600;font-size:13px;white-space:nowrap}.cdbar b{font-family:var(--f-m)}
+.hb.now.sel{outline:none}@keyframes hbc{0%{border-color:#14b8d4}50%{border-color:rgba(20,184,212,0)}}.hb.now,.hb.cur{background:color-mix(in srgb,#14b8d4 22%,var(--panel2))!important;color:#14b8d4!important}.hb.now{animation:hbc 1s steps(1,end) infinite}.hb.cur:not(.now){border-color:#14b8d4!important;animation:none}@keyframes hbf{0%{background:var(--accent);color:var(--bg)}50%{background:var(--panel2);color:var(--ink)}}.cdbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.cdchip{display:inline-flex;align-items:center;gap:5px;padding:3px 12px;border-radius:99px;background:var(--warnbg);color:var(--warn);font-weight:600;font-size:13px;white-space:nowrap}.cdbar b{font-family:var(--f-m)}
 .hb.sel{outline:3px solid var(--accent);outline-offset:1px}
 
 .grp{border:1px solid var(--line);border-radius:8px;padding:12px 14px 14px;margin:0;min-width:0}
@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v88';
+const APP_V='plant-v89';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -679,7 +679,8 @@ function helpPress(){
    lg(mb('d','09'),T('Green','Vert'),T('readings saved','relevés enregistrés')),
    lg(mb('d','10','<i class="u">▲</i>'),'▲',T('a reading was too high','un relevé était trop haut')),
    lg(mb('d','11','<i class="l">▼</i>'),'▼',T('a reading was too low','un relevé était trop bas')),
-   lg(mb('c','13'),T('Cyan, blinking outline','Cyan, contour clignotant'),T('this is the current hour','c\'est l\'heure en cours')),
+   lg(mb('c','13'),T('Cyan, blinking outline','Cyan, contour clignotant'),T('current hour, not saved yet','heure en cours, pas encore enregistrée')),
+   lg(mb('c','13'),T('Cyan, steady outline','Cyan, contour fixe'),T('current hour, saved','heure en cours, enregistrée')),
    lg(mb('p','12'),T('Dashed green','Vert pointillé'),T('only some cards saved','seules certaines cartes enregistrées')),
    lg(mb('s','14'),T('Stopped','Arrêtée'),T('line was stopped','la ligne était à l\'arrêt')),
    lg(mb('m','08'),T('Red','Rouge'),T('hour was missed','heure manquée')),
@@ -695,7 +696,7 @@ function helpPress(){
    ['3',T('Check ▲ ▼ arrows','Vérifiez les flèches ▲ ▼'),'⚠️'],
    ['4',T('Press Save','Appuyez sur Enregistrer'),'✅']].map(r=>'<div><span>'+r[2]+'</span><em>'+T('STEP','ÉTAPE')+' '+r[0]+'</em>'+r[1]+'</div>').join('')+'</div>';
   const S_=[
-   ['🕐',T('Every hour','Chaque heure'),T('Enter the readings in the first '+E+' minutes of each hour. Tap the current hour box (cyan, blinking outline), fill in the numbers, then press Save.','Saisissez les relevés pendant les '+E+' premières minutes de chaque heure. Touchez la case de l\'heure en cours (cyan, contour clignotant), remplissez les chiffres, puis appuyez sur Enregistrer.')],
+   ['🕐',T('Every hour','Chaque heure'),T('Enter the readings in the first '+E+' minutes of each hour. Tap the current hour box (cyan; the outline blinks until you save), fill in the numbers, then press Save.','Saisissez les relevés pendant les '+E+' premières minutes de chaque heure. Touchez la case de l\'heure en cours (cyan ; le contour clignote tant que vous n\'avez pas enregistré), remplissez les chiffres, puis appuyez sur Enregistrer.')],
    ['🍝',T('Three cards','Trois cartes'),T('Macaroni, Spaghetti and Boiler/Chiller. All three must be saved every hour. The dots at the top show the status: green = saved, red flashing = still missing.','Macaroni, Spaghetti et Chaudière/Refroidisseur. Les trois doivent être enregistrées chaque heure. Les points en haut indiquent l\'état : vert = enregistré, rouge clignotant = il manque encore.')+dots],
    ['🎨',T('Hour box guide','Guide des cases d\'heure'),T('Each box in the hour strip tells you its status at a glance:','Chaque case de la bande d\'heures indique son état d\'un coup d\'œil :')+legend],
    ['⚠️',T('High or low value','Valeur haute ou basse'),T('If a reading is out of range, the hour box shows a small amber arrow: ▲ too high, ▼ too low. Check the machine, then you can still save. The totals are shown under the hour boxes.','Si un relevé est hors plage, la case de l\'heure affiche une petite flèche ambre : ▲ trop haut, ▼ trop bas. Vérifiez la machine, vous pouvez quand même enregistrer. Les totaux sont affichés sous les cases.')],
