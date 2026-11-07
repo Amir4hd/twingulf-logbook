@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v86';
+const APP_V='plant-v87';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4441,12 +4441,12 @@ function snPaint(force){
   snWire(host);
 }
 function snFindHTML(){
-  const q=(S.sn.q||'').toLowerCase().trim();
-  const list=q?S.sn.emps.filter(e=>e.active!==false&&(e.id+' '+snName(e)).toLowerCase().indexOf(q)>=0).sort((a,b)=>snName(a)<snName(b)?-1:1):[];
-  const rows=list.slice(0,10).map(e=>{const n=S.sn.san.filter(x=>x.empId===e.id).length;return '<button type="button" class="snrow" data-snemp="'+esc(e.id)+'"><b>'+esc(snName(e))+'</b><span class="muted small">'+esc(e.id)+' · '+esc(e.dept)+'</span><span class="chip'+(n?' warn':'')+'">'+n+' sanction'+(n===1?'':'s')+'</span></button>';}).join('');
-  return '<section class="card"><label class="l" style="font-size:15px">Find an employee<input type="text" id="snQ" value="'+esc(S.sn.q||'')+'" autocomplete="off" placeholder="Type a name or ID, e.g. PM-013" style="font-size:20px;min-height:56px"></label>'+
+  const q=(S.sn.q||'').toLowerCase().trim(),d=S.sn.dept||'',lim=q?10:60;
+  const list=(q||d)?S.sn.emps.filter(e=>e.active!==false&&(!d||e.dept===d)&&(!q||(e.id+' '+snName(e)).toLowerCase().indexOf(q)>=0)).sort((a,b)=>snName(a)<snName(b)?-1:1):[];
+  const rows=list.slice(0,lim).map(e=>{const n=S.sn.san.filter(x=>x.empId===e.id).length;return '<button type="button" class="snrow" data-snemp="'+esc(e.id)+'"><b>'+esc(snName(e))+'</b><span class="muted small">'+esc(e.id)+' · '+esc(e.dept)+'</span><span class="chip'+(n?' warn':'')+'">'+n+' sanction'+(n===1?'':'s')+'</span></button>';}).join('');
+  return '<section class="card"><div class="row" style="flex-wrap:wrap;gap:10px;align-items:flex-end"><label class="l" style="flex:2;min-width:220px;font-size:15px">Find an employee<input type="text" id="snQ" value="'+esc(S.sn.q||'')+'" autocomplete="off" placeholder="Type a name or ID, e.g. PM-013" style="font-size:20px;min-height:56px"></label><label class="l" style="flex:1;min-width:180px;font-size:15px">Department<select id="snD" style="min-height:56px"><option value="">All departments</option>'+SN_DEPT.map(x=>'<option'+(x===d?' selected':'')+'>'+x+'</option>').join('')+'</select></label></div>'+
     (S.sn.emps.length?'':'<div class="empty" style="margin-top:12px">No employees yet. The admin adds them in the Employees tab, or imports them in the Import tab.</div>')+
-    (q?(rows?'<div class="snlist">'+rows+'</div>'+(list.length>10?'<div class="muted small" style="margin-top:8px">Showing 10 of '+list.length+'. Type more of the name.</div>':''):'<div class="empty" style="margin-top:12px">No employee matches.</div>'):(S.sn.emps.length?'<div class="muted" style="margin-top:12px">Start typing to see the employee, then record a sanction.</div>':''))+'</section>';
+    ((q||d)?(rows?'<div class="snlist">'+rows+'</div>'+(list.length>lim?'<div class="muted small" style="margin-top:8px">Showing '+lim+' of '+list.length+'. Type more of the name.</div>':''):'<div class="empty" style="margin-top:12px">No employee matches.</div>'):(S.sn.emps.length?'<div class="muted" style="margin-top:12px">Type a name, or choose a department, to see the employees.</div>':''))+'</section>';
 }
 function snEmpHTML(){
   const e=S.sn.emps.find(x=>x.id===S.sn.emp);if(!e)return snFindHTML();
