@@ -361,7 +361,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v84';
+const APP_V='plant-v85';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2606,7 +2606,7 @@ async function sendIssue(){
 const TABS=[['overview','Overview'],['trends','Trends & export'],['mgrp','Maintenance'],['points','Points'],['notices','Messages'],['devices','Devices'],['setup','Setup']];
 const MGRP=['issues','maint','jobs','parts','done'];
 let lastM='issues';
-function paintSubtabs(){const el=$('#subtabs');if(!el)return;if(MGRP.indexOf(S.tab)<0){el.innerHTML='';return;}lastM=S.tab;el.innerHTML='<div class="tabs" role="tablist" style="margin-bottom:12px">'+MTABS.map(t=>'<button class="tab" role="tab" data-m="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='maint'?' <span class="chip warn" id="pmBadge" hidden></span>':'')+(t[0]==='jobs'?' <span class="chip warn" id="jbBadge" hidden></span>':'')+'</button>').join('')+'</div>';$$('[data-m]',el).forEach(b=>b.onclick=()=>{S.tab=b.dataset.m;paintSubtabs();buildTab();});paintBadge();paintLowBadge();}
+function paintSubtabs(){const el=$('#subtabs');if(!el)return;if(MGRP.indexOf(S.tab)<0){el.innerHTML='';return;}lastM=S.tab;el.innerHTML='<div class="tabs" role="tablist" style="margin-bottom:12px">'+MTABS.map(t=>'<button class="tab" role="tab" data-m="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='maint'?' <span class="chip bad prmiss" id="pmBadge" hidden></span> <span class="chip warn" id="pmSoon" hidden></span>':'')+(t[0]==='jobs'?' <span class="chip warn" id="jbBadge" hidden></span>':'')+'</button>').join('')+'</div>';$$('[data-m]',el).forEach(b=>b.onclick=()=>{S.tab=b.dataset.m;paintSubtabs();buildTab();});paintBadge();paintLowBadge();}
 const MTABS=[['issues','Requests'],['maint','Preventive'],['jobs','Planned jobs'],['parts','Spare parts'],['done','Recent maintenance done']];
 function renderAdmin(){
   if(!adminEff()){go('home');return;}
@@ -2619,7 +2619,7 @@ function renderAdmin(){
 function renderMplace(){
   if(!(S.dev&&(S.dev.place==='maint'||S.dev.place==='all'))&&!adminEff()){go('home');return;}
   S.partsOnly=!!S.partsOnly;
-  $('#main').innerHTML='<div class="tabs" role="tablist">'+MTABS.filter(t=>S.partsOnly?t[0]==='parts':t[0]!=='parts').map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="sndBtn" type="button" style="align-self:center'+(adminEff()?'':';display:none')+'"></button></div><div id="tab"></div>';
+  $('#main').innerHTML='<div class="tabs" role="tablist">'+MTABS.filter(t=>S.partsOnly?t[0]==='parts':t[0]!=='parts').map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='maint'?' <span class="chip bad prmiss" id="pmBadge" hidden></span> <span class="chip warn" id="pmSoon" hidden></span>':'')+(t[0]==='jobs'?' <span class="chip warn" id="jbBadge" hidden></span>':'')+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="sndBtn" type="button" style="align-self:center'+(adminEff()?'':';display:none')+'"></button></div><div id="tab"></div>';
   $$('.tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;$$('.tab').forEach(x=>x.setAttribute('aria-selected',x===b));buildTab();});
   const sb=$('#sndBtn');const paintSnd=()=>{sb.textContent=soundOn()?'Sound: on':'Sound: off';};paintSnd();
   sb.onclick=()=>{lsSet('plant.sound',soundOn()?'0':'1');paintSnd();if(soundOn())beep();};
@@ -2983,7 +2983,16 @@ function subAdmin(){
 function lowN(){return S.parts.filter(p=>partState(p)!=='ok'&&!((Number(p.min)||0)===0&&(Number(p.qty)||0)>0)).length;}
 function jobN(){return (S.jobs||[]).length;}
 function pmN(){let n=0;try{n=(S.tasks||[]).filter(t=>{const x=pmState(t);return x&&(x.status==='overdue'||x.status==='soon');}).length;}catch(e){}return n;}
-function paintMtBadge(){const mb=$('#mtBadge');if(!mb)return;const n=S.issues.filter(i=>i.status==='open').length+lowN()+pmN()+jobN();mb.hidden=!n;mb.textContent=n;mb.title='Open requests + preventive due + planned jobs + parts to order';const jb=$('#jbBadge');if(jb){const k=jobN();jb.hidden=!k;jb.textContent=k;}const pb=$('#pmBadge');if(pb){const k=pmN();pb.hidden=!k;pb.textContent=k;}}
+function pmCounts(){let o=0,s=0;try{(S.tasks||[]).forEach(t=>{const x=pmState(t);if(!x)return;if(x.status==='overdue')o++;else if(x.status==='soon')s++;});}catch(e){}return {o:o,s:s};}
+function paintPmBadge(){
+  const c=pmCounts(),pb=$('#pmBadge'),ps=$('#pmSoon'),jb=$('#jbBadge');
+  if(pb){pb.hidden=!c.o;pb.textContent=c.o;pb.title=c.o+' preventive task'+(c.o===1?'':'s')+' overdue';}
+  if(ps){ps.hidden=!c.s;ps.textContent=c.s;ps.title=c.s+' preventive task'+(c.s===1?'':'s')+' due soon';}
+  if(jb){const k=jobN();jb.hidden=!k;jb.textContent=k;}
+  const key=c.o+'/'+c.s;
+  if((c.o||c.s)&&(S.view==='mplace'||S.view==='admin')&&S._pmSeenKey!==key&&S.tasks&&S.tasks.length&&S.mlogs){S._pmSeenKey=key;toast('Preventive maintenance: '+(c.o?c.o+' overdue':'')+(c.o&&c.s?' · ':'')+(c.s?c.s+' due soon':''),!!c.o);}
+}
+function paintMtBadge(){paintPmBadge();const mb=$('#mtBadge');if(!mb)return;const n=S.issues.filter(i=>i.status==='open').length+lowN()+pmN()+jobN();mb.hidden=!n;mb.textContent=n;mb.title='Open requests + preventive due + planned jobs + parts to order';}
 function paintBadge(){const n=S.issues.filter(i=>i.status==='open').length;paintMtBadge();try{document.title=(n&&(S.view==='mplace'||S.view==='admin')?'('+n+') ':'')+(S.cfg.plantName||'Plant Logbook');}catch(e){}const b=$('#issBadge');if(!b)return;b.hidden=!n;b.textContent=n;}
 async function loadPM(){
   if(!S.db||!S.tasks.length){S.mlogs={};paintTab();return;}
