@@ -400,7 +400,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v106';
+const APP_V='plant-v107';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -3869,7 +3869,7 @@ function printDlg(){
     pst.textContent='@page{size:'+((PR_TYPES.find(q=>q[0]===$('#pr_t').value)||['','','l'])[2]==='l'?'297mm 210mm':'210mm 297mm')+';margin:8mm}';
     const clean=()=>{r.innerHTML='';window.removeEventListener('afterprint',clean);};
     window.addEventListener('afterprint',clean);
-    try{window.print();}catch(e){toast('Printing is not available here.',true);}
+    safePrint();
   };
   load();
 }
@@ -4930,6 +4930,21 @@ function snPrint(s){
   $('#snLEn').onclick=()=>{w.remove();snPrintGo(s,'en');};
   $('#snLFr').onclick=()=>{w.remove();snPrintGo(s,'fr');};
 }
+function safePrint(){
+  try{
+    const kiosk=/FullyKiosk|FKB\//i.test(navigator.userAgent)||typeof window.fully!=='undefined';
+    if(kiosk){
+      if(window.fully&&typeof window.fully.print==='function'){
+        window.fully.print();
+        setTimeout(()=>{const r=document.getElementById('prRoot');if(r)r.innerHTML='';},60000);
+        return;
+      }
+      const r=document.getElementById('prRoot');if(r)r.innerHTML='';
+      toast('To print from this tablet, turn on Enable JavaScript Interface in the Fully Kiosk settings (Advanced Web Settings).',true);return;
+    }
+    window.print();
+  }catch(e){toast('Printing is not available here.',true);}
+}
 function snPrintGo(s,lang){
   let r=$('#prRoot');if(!r){r=document.createElement('div');r.id='prRoot';document.body.appendChild(r);}
   r.innerHTML=snLetter(s,lang);
@@ -4937,7 +4952,7 @@ function snPrintGo(s,lang){
   pst.textContent='@page{size:210mm 297mm;margin:20mm 20mm 18mm 20mm}';
   const clean=()=>{r.innerHTML='';window.removeEventListener('afterprint',clean);};
   window.addEventListener('afterprint',clean);
-  const go=()=>{try{window.print();}catch(e){toast('Printing is not available here.',true);}};
+  const go=()=>{safePrint();};
   const imgs=[...r.querySelectorAll('img')];
   Promise.all(imgs.map(i=>i.decode?i.decode().catch(()=>0):0)).then(()=>setTimeout(go,150));
 }
