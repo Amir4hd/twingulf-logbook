@@ -394,7 +394,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v99';
+const APP_V='plant-v100';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2818,8 +2818,7 @@ function paintSubtabs(){const el=$('#subtabs');if(!el)return;if(MGRP.indexOf(S.t
 const MTABS=[['issues','Requests'],['maint','Preventive'],['jobs','Planned jobs'],['parts','Spare parts'],['done','Recent maintenance done']];
 function renderAdmin(){
   if(!adminEff()){go('home');return;}
-  $('#main').innerHTML='<div class="abar"><div class="tabs pro" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(t[0]==='mgrp'?MGRP.indexOf(S.tab)>=0:S.tab===t[0])+'"><span class="ti" aria-hidden="true">'+t[2]+'</span>'+t[1]+(t[0]==='mgrp'?' <span class="chip bad" id="mtBadge" hidden></span>':'')+(t[0]==='devices'?' <span class="chip ok" id="devBadge" hidden></span>':'')+'</button>').join('')+'</div><button class="btn pri" id="msgBtn" type="button">✉️ Send message</button></div><div id="subtabs"></div><div id="tab"></div>';
-  $('#msgBtn').onclick=()=>msgDlg();
+  $('#main').innerHTML='<div class="abar"><div class="tabs pro" role="tablist">'+TABS.map(t=>'<button class="tab" role="tab" data-t="'+t[0]+'" aria-selected="'+(t[0]==='mgrp'?MGRP.indexOf(S.tab)>=0:S.tab===t[0])+'"><span class="ti" aria-hidden="true">'+t[2]+'</span>'+t[1]+(t[0]==='mgrp'?' <span class="chip bad" id="mtBadge" hidden></span>':'')+(t[0]==='devices'?' <span class="chip ok" id="devBadge" hidden></span>':'')+'</button>').join('')+'</div></div><div id="subtabs"></div><div id="tab"></div>';
   $$('#main .abar .tab').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t==='mgrp'?(MGRP.indexOf(S.tab)>=0?S.tab:lastM):b.dataset.t;S.setupEditing=false;$$('#main .abar .tab').forEach(x=>x.setAttribute('aria-selected',x===b));paintSubtabs();buildTab();});
   if(S.tab==='mgrp')S.tab=lastM;
   subAdmin();paintSubtabs();buildTab();paintDevBadge();paintLowBadge();
