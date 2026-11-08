@@ -74,6 +74,7 @@ h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
 .prsheet.snl{position:relative;font:14.67px/1.32 'Times New Roman','Liberation Serif','Tinos',Times,serif;color:#000;background:#fff;min-height:259mm}.snl p{margin:0 0 12px}.snl-logo{display:block;margin:0 auto 4px;width:25.3mm;height:auto}.snl-head{text-align:center;font-family:Aptos,'Segoe UI',Inter,Roboto,Arial,sans-serif}.snl h1{font:700 21.33px/1.38 Aptos,'Segoe UI',Inter,Roboto,Arial,sans-serif;margin:0 0 4px;color:#000;letter-spacing:0}.snl h2{font:700 16px/1.38 Aptos,'Segoe UI',Inter,Roboto,Arial,sans-serif;margin:0 0 19px;color:#000}.snl-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}.snl-grid>div{margin-bottom:7px}.snl-grid>div:nth-child(even){text-align:right}.snl-subj{margin:6px 0 16px!important}.snl-dear{margin-bottom:11px!important}.snl-intro{margin-bottom:13px!important}.snl-t{width:100%;border-collapse:collapse;margin:0 0 13px;table-layout:fixed}.snl-t td{padding:2px 6px;vertical-align:middle;text-align:left;border:1px solid #000;font-size:14.67px;line-height:1.32}.snl-t td:first-child{width:30.6%;font-weight:700}#prRoot .snl .snl-t td{text-align:left!important;padding:3px 6px!important}.snl-h3{margin:0 0 7px!important}.snl-logo,.snl-stamp{-webkit-print-color-adjust:exact;print-color-adjust:exact}.snl-stamp{position:absolute;left:14mm;top:139mm;width:98.7mm;opacity:.22;pointer-events:none;mix-blend-mode:multiply}.snl-sg{display:grid;grid-template-columns:1fr 1fr;margin-top:4px}.snl-sg>div{line-height:2.3}.snl-sg .snl-r{grid-column:2;grid-row:1}.snl-sg .snl-l{grid-column:1;grid-row:2;line-height:3.2;align-self:end;padding-left:4mm;margin-top:-8px}.snl-sg b{font-weight:700}.snl-foot{position:absolute;left:0;right:0;bottom:0;text-align:center;font:10.67px Aptos,'Segoe UI',Inter,Roboto,Arial,sans-serif;color:#6E747C}
 .chip.prmiss{animation:prp 1.2s ease-in-out infinite}@keyframes prp{50%{opacity:.45}}
 .chip.ok{background:var(--okbg);color:var(--ok)} .chip.warn{background:var(--warnbg);color:var(--warn)} .chip.bad{background:var(--badbg);color:var(--bad)} .chip.acc{background:var(--accentbg);color:var(--accent)}
+select option,select optgroup{background-color:var(--panel);color:var(--ink)}select{color-scheme:inherit}
 input[type=text],input[type=number],input[type=date],select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 11px;min-height:44px;width:100%}
 textarea{min-height:80px;resize:vertical}
 label.l{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mut);font-weight:500;min-width:0}
@@ -394,7 +395,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v101';
+const APP_V='plant-v102';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
