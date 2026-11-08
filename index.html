@@ -39,7 +39,7 @@ h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
 .mono{font-family:var(--f-m);font-variant-numeric:tabular-nums}
 
 #top{position:sticky;top:env(safe-area-inset-top,0px);z-index:60}
-.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ink);color:var(--bg);display:flex;align-items:center;gap:14px;padding:10px 16px;min-height:56px}
+.bar{--ink:#17211c;--bg:#e9ece7;--mut:#9aa89f;--line:#2c3833;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:#0d1311;color:#e4ebe6;border-bottom:1px solid #26332d;display:flex;align-items:center;gap:14px;padding:10px 16px;min-height:56px}
 .brand{font:700 20px/1 var(--f-d);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
 .bar .where{font:600 20px/1 var(--f-d);letter-spacing:.04em;text-transform:uppercase;opacity:.85;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar .sp{flex:1}.bar .brand{overflow:hidden;text-overflow:ellipsis;font-size:19px}.bar .tl{flex:0 1 auto;display:flex;flex-direction:column;gap:3px;min-width:0}.bar .sub{font:600 12px/1.1 var(--f-b,inherit);letter-spacing:.04em;text-transform:uppercase;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stk2{display:flex;flex-direction:column;gap:3px;align-items:flex-start;flex:0 0 auto}.clock{display:flex;flex-direction:column;gap:2px;line-height:1.1;align-items:center;text-align:center}.bar .bbtn{padding:6px 10px;min-height:36px;white-space:nowrap}
@@ -110,7 +110,7 @@ label.l{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu
 .snav .sng{gap:4px 26px;border-bottom:1px solid var(--line)}.snav .sngl{border:0;color:color-mix(in srgb,var(--ink) 70%,transparent);font-size:12px}
 .snav .sub{padding-top:6px;border-top:0}.snav .sns{display:contents}
 .snav .sns button{display:inline-flex;align-items:center;min-height:46px;margin:0 0 -1px;padding:12px 2px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:color-mix(in srgb,var(--ink) 78%,transparent);font:400 17px var(--f-d);letter-spacing:.03em;cursor:pointer}.snav .sns button:hover,.snav .sns button.on{color:var(--ink)}.snav .sns button.on{border-bottom-color:var(--accent);font-weight:700}
-.abar{display:flex;gap:12px;align-items:center;margin:0 0 12px}.abar>.tabs{flex:1;min-width:0}.abar>.btn{flex:none;white-space:nowrap}
+.abar{--ink:#e4ebe6;--mut:#aab6ae;--line:#2c3833;--accent:#4fc2b6;--panel2:#1e2723;display:flex;gap:12px;align-items:center;margin:0 0 12px;padding:0 16px;border-radius:12px;background:#0d1311;position:sticky;top:calc(var(--topH,56px) + env(safe-area-inset-top,0px));z-index:15;box-shadow:0 6px 14px -8px rgba(0,0,0,.45)}.abar>.tabs{flex:1;min-width:0}.abar>.btn{flex:none;white-space:nowrap}
 .tabs.pro{display:flex;flex-wrap:wrap;gap:4px 26px;padding:0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;overflow:visible}
 .tabs.pro .tab{display:inline-flex;align-items:center;gap:8px;margin:0 0 -1px;padding:12px 2px;min-height:46px;border:0;border-bottom:3px solid transparent;border-radius:0;font:400 17px var(--f-d);letter-spacing:.03em;text-transform:none;color:color-mix(in srgb,var(--ink) 78%,transparent);background:transparent}
 .tabs.pro .tab .ti{display:none}.tabs.pro .tab[aria-selected=true]{background:transparent;color:var(--ink);border-bottom-color:var(--accent);font-weight:700}.tabs.pro .tab[aria-selected=false]:hover{background:transparent;color:var(--ink)}
@@ -394,7 +394,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v100';
+const APP_V='plant-v101';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -673,6 +673,7 @@ function restoreView(){
 /* ---------- top bar ---------- */
 function setBH(){const b=document.querySelector('header.bar');if(b)document.documentElement.style.setProperty('--bh',b.offsetHeight+'px');}
 window.addEventListener('resize',()=>setBH());
+try{const _t=document.getElementById('top');if(_t&&window.ResizeObserver)new ResizeObserver(()=>document.documentElement.style.setProperty('--topH',_t.offsetHeight+'px')).observe(_t);}catch(e){}
 function renderTop(){
   const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':(S.view==='mplace'?'Maintenance':(S.view==='lab'?'Lab Moisture':S.view==='rm'?'Flour & semolina tests':S.view==='raw'?'Raw materials':S.view==='packm'?'Packaging':S.view==='summary'?'Summary':(S.view==='ops'?'Operators':''))));
   const t=new Date();
