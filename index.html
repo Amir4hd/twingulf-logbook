@@ -332,6 +332,15 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .pkgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.pkcol{min-width:0}.pkcol .rawcell{margin-bottom:8px}.pkpair{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pkpair .rawcell{padding:6px}.pkpair .fld input,.pkpair .fld select{font-size:15px}.pkt .chip{font-size:10px;padding:1px 6px}.pkby{font-size:10px;font-weight:600}.pkdf{font-size:12px;color:var(--muted,#667);font-family:inherit}.pknew{background:#fff!important;color:#1d1400!important;border:2px solid #1d1400!important;font-weight:700;margin-left:8px;padding:2px 8px;min-height:0;height:26px;font-size:11px;text-transform:none;letter-spacing:0}.pkt td,.pkt th{padding:6px 4px;font-size:13px}
 .rawh.mac{background:#e8a93d;color:#1d1400;border-color:#e8a93d}
 .rawh.spa{background:#4fa3d9;color:#001522;border-color:#4fa3d9}
+.pkgrid{gap:16px}.pkcol{display:flex;flex-direction:column;gap:16px}
+.pkcol .rawh{margin:0;padding:10px 14px;border-radius:10px;font-size:20px;text-transform:uppercase;color:var(--ink);background:rgba(232,169,61,.14);border:1px solid #e8a93d}
+.pkcol .rawh.spa{background:rgba(79,162,217,.14);border-color:#4fa3d9}
+.pkcol .rawcell,.pkcol .rawcell.mac,.pkcol .rawcell.spa{background:transparent;border-left:0;padding:0;margin:0}
+.pkcol .pkpair{gap:12px}.pkpair .fld input,.pkpair .fld select{font-size:inherit}
+.pkcol .pkcl .clbtn{background:transparent;color:var(--ink);border-color:color-mix(in srgb,var(--ink) 35%,transparent);height:30px}
+.pkcol .pkcl .clcf.ok{color:var(--ok)}.pkcol .pkcl .clcf.no{color:var(--bad)}
+.pkcol .pknew{background:transparent!important;color:var(--ink)!important;border:1px solid var(--accent)!important;color:var(--accent)!important}
+
 .rawh .chip{background:rgba(0,0,0,.2);color:inherit;border-color:rgba(0,0,0,.35)}
 .mx th.mac{color:#c98a10;border-bottom:3px solid #e8a93d}.mx th.spa{color:#2f86bd;border-bottom:3px solid #4fa3d9}
 .rawh{font-weight:800;font-size:20px;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px}
@@ -400,7 +409,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v107';
+const APP_V='plant-v108';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
