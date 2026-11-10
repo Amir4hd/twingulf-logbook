@@ -346,7 +346,17 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .pkov{flex-direction:column;align-items:flex-start;gap:2px}.pkho.r .pkov{align-items:flex-end}
 .pkon{font-size:13px}.pkor input.need,.pkor select.need{border:2px solid #d32f2f;background:var(--badbg);box-shadow:0 0 0 3px rgba(211,47,47,.3)}.pkom{font-size:12px}.pked{font-style:normal;color:inherit}.pkof{opacity:.8}
 .pkog2{display:flex;flex-direction:column;gap:8px}.pkor{display:grid;grid-template-columns:70px 1fr 1.4fr;gap:8px;align-items:center}.pkos{font:700 13px var(--f-d)}
-.pknl[hidden],.pknb[hidden]{display:none!important}.bwf{display:flex;flex-direction:column;gap:6px;padding:10px 12px}.bwl{display:flex;align-items:center;gap:12px;font:700 17px var(--f-d);cursor:pointer}.bwl input{width:26px;height:26px}.pknw{margin-top:8px}.pknb{min-height:36px}
+.pknl[hidden],.pknb[hidden]{display:none!important}.bwf{display:flex;flex-direction:column;gap:6px;padding:10px 12px}.bwl{display:flex;align-items:center;gap:12px;font:700 17px var(--f-d);cursor:pointer}.bwl input{width:26px;height:26px}/* packaging tablet: production day next to the clock */
+.pkTopDay{display:flex;align-items:center;gap:12px;margin-left:18px}
+.bar .pkTopDay .daychip{align-items:center}.bar .pkTopDay .daychip small{color:#9fb0ad;font-size:10px;letter-spacing:.14em;text-transform:uppercase}.bar .pkTopDay .daychip b{color:#fff;font:700 20px/1.1 var(--f-d)}
+.pkTopDay .seg{display:flex;gap:4px}.pkTopDay .seg button{background:rgba(255,255,255,.08);color:#e8f0ee;border:1px solid rgba(255,255,255,.2);border-radius:8px;min-height:32px;padding:2px 12px;font:600 14px var(--f-b,inherit)}.pkTopDay .seg button.pri{background:#4fc3b4;color:#00231f;border-color:#4fc3b4}
+@media(max-width:760px){.bar.pkb{flex-wrap:wrap}.pkTopDay{order:9;flex-basis:100%;margin:4px 0 0;justify-content:space-between}}
+/* shifts side by side */
+.pkho .pkov{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px}.pkho.r .pkov{flex-direction:row;justify-content:flex-end}
+.pkho .pkoi{flex-wrap:nowrap;white-space:nowrap}
+/* order font sizes */
+.pkol{font-size:12px;font-weight:600}.pkoi i{font-size:14px;font-weight:700}.pkoi b{font-size:16px;font-weight:600}.pkob{font-size:14px;font-weight:600}.pkom{font-size:12px}
+.pknw{margin-top:8px}.pknb{min-height:36px}
 @media(max-width:760px){.pkhead{grid-template-columns:1fr 1fr}.pkhc{grid-column:1/-1;order:-1}}
 
 .pkgrid{gap:16px}.pkcol{display:flex;flex-direction:column;gap:16px}
@@ -426,7 +436,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v113';
+const APP_V='plant-v114';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -746,14 +756,14 @@ function renderTop(){
   const where=S.view==='area'?(area(S.areaId)||{}).name:(S.view==='admin'?'Control room':(S.view==='mplace'?'Maintenance':(S.view==='lab'?'Lab Moisture':S.view==='rm'?'Flour & semolina tests':S.view==='raw'?'Raw materials':S.view==='packm'?'Packaging':S.view==='summary'?'Summary':(S.view==='ops'?'Operators':''))));
   const t=new Date();
   const sub=[S.dev?placeName(S.dev.place):'',where].filter(Boolean).join(' · ');
-  $('#top').innerHTML='<header class="bar"><div class="tl"><span class="brand">'+esc(S.cfg.plantName||'Plant Logbook')+'</span>'+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</div><span class="sp"></span>'+
-   '<div class="stk2 ctr"><span class="clock" id="clock"><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span></span></div><span class="sp"></span>'+
+  $('#top').innerHTML='<header class="bar'+(S.view==='packm'&&pkTop()?' pkb':'')+'"><div class="tl"><span class="brand">'+esc(S.cfg.plantName||'Plant Logbook')+'</span>'+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</div><span class="sp"></span>'+
+   '<div class="stk2 ctr"><span class="clock" id="clock"><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span></span></div>'+(S.view==='packm'&&pkTop()?'<div class="pkTopDay" id="pkTopDay"></div>':'')+'<span class="sp"></span>'+
    '<div class="stk2"><span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'No database')+'</span></span>'+
    '<span class="batt" id="batt" hidden></span></div>'+
    (S.dev&&S.view!=='home'&&(S.view!=='mplace'||adminEff()||S.dev.place==='all'||S.dev.place==='maint')?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+'<button class="bbtn" id="menuBtn" data-nolang type="button" aria-label="Settings menu" aria-haspopup="true" aria-expanded="false" title="Settings">&#9776;</button></header>';
   const gh=$('#goHome');if(gh)gh.onclick=()=>go('home');
   const mb=$('#menuBtn');if(mb)mb.onclick=ev=>{ev.stopPropagation();toggleTopMenu();};
-  closeTopMenu();paintBatt();setBH();
+  closeTopMenu();paintBatt();setBH();if(S.view==='packm'&&pkTop())paintPkTop();
 }
 async function refreshApp(){
   try{if(navigator.serviceWorker){const r=await navigator.serviceWorker.getRegistration();if(r)await r.update();}}catch(e){}
@@ -992,7 +1002,7 @@ setInterval(()=>{
   if(S.dev&&S.acct&&NEED_APPROVAL(S.dev.place)&&!approvalOk()&&!S.dirty){S.dev=null;S.gate='approve';unsub('notices');S.view='home';renderTop();renderHome();return;}
   const t=new Date(),c=$('#clock');if(c)c.innerHTML='<span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span>';
   const d=pdate(t);
-  if(d!==S.today){const od=S.today;S.today=d;if(S.pk&&S.pk.date===od&&!adminEff()&&$('#pkWhen')&&$('#pkTog')){S.pk.date=d;pkReset();subPk();}if(S.ovDate===od)S.ovDate=d;if(S.view==='area'&&S.date===od&&!adminEff()){S.date=d;S.day=null;S.editKey=null;subDay();}}
+  if(d!==S.today){const od=S.today;S.today=d;if(S.pk&&S.pk.date===od&&!adminEff()&&$('#pkWhen')&&$('#pkTog')){S.pk.date=d;paintPkTop();pkReset();subPk();}if(S.ovDate===od)S.ovDate=d;if(S.view==='area'&&S.date===od&&!adminEff()){S.date=d;S.day=null;S.editKey=null;subDay();}}
   if(S.view==='area'){
     const a=area(S.areaId);
     if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;
@@ -1245,16 +1255,22 @@ const PKL=['pack_mac','pack_spa'];
 const packOK=()=>PKL.every(id=>canSee(area(id)));
 const pkCls=aid=>aid==='pack_mac'?'mac':'spa';
 const pkBrand=t=>String(t==null?'–':t).replace(/^(MACARONI|SPAGHETTI)\s*-\s*/,'');
+const pkTop=()=>!!(S.dev&&S.dev.place==='pack'&&!adminEff());
 function renderPk(){
   S.pk={date:S.today,docs:{pack_mac:null,pack_spa:null},edit:{pack_mac:null,pack_spa:null},dirty:{pack_mac:false,pack_spa:false}};
-  $('#main').innerHTML='<div class="card hcard pkhead"><div class="pkho" id="pko_pack_mac"></div><div class="pkhc"><div class="daychip" id="pkWhen"></div><div class="pkhsw">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="pkDt" value="'+S.pk.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="pkTog"><button type="button" class="btn sm pri" data-d="today">Today</button><button type="button" class="btn sm" data-d="yday">Yesterday</button></div>')+'</div></div><div class="pkho r" id="pko_pack_spa"></div></div>'+
+  $('#main').innerHTML='<div class="card hcard pkhead"><div class="pkho" id="pko_pack_mac"></div><div class="pkhc">'+(pkTop()?'':'<div class="daychip" id="pkWhen"></div>')+'<div class="pkhsw">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="pkDt" value="'+S.pk.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="pkTog"><button type="button" class="btn sm pri" data-d="today">Today</button><button type="button" class="btn sm" data-d="yday">Yesterday</button></div>')+'</div></div><div class="pkho r" id="pko_pack_spa"></div></div>'+
    '<button type="button" class="rawban none" id="rawBan"></button><div id="pinMsg"></div><div class="pkgrid">'+PKL.map(id=>'<section class="pkcol" id="pkc_'+id+'"><h3 class="rawh '+pkCls(id)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>'+RAW_T[id]+'</span><span class="pkcl" id="pkcl_'+id+'"></span></h3><div id="pkn_'+id+'"></div><div class="card" id="pkf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="pkr_'+id+'" class="tscroll"></div></div><div id="pkm_'+id+'"></div></section>').join('')+'</div>'+
    '<section class="card slim" id="issueBox"><button type="button" class="btn big" id="isOpen" style="width:100%">Report a problem to maintenance</button></section>';
+  paintPkTop();
   const dt=$('#pkDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.pk.date=v;pkReset();subPk();};
   $$('#pkTog button').forEach(b=>b.onclick=()=>{const v=b.dataset.d==='yday'?addDays(S.today,-1):S.today;if(S.pk.date===v)return;S.pk.date=v;$$('#pkTog button').forEach(x=>x.classList.toggle('pri',x===b));pkReset();subPk();});
   $('#isOpen').onclick=()=>openIssModal(null);
   $('#rawBan').onclick=()=>{if($('#rawBan').dataset.open==='1')go('raw');};
   PKL.forEach(id=>paintPkForm(id));subPk();paintPinMsg();paintPkNotices();paintRawBan();
+}
+function paintPkTop(){
+  const host=$('#pkTopDay');if(!host||!S.pk)return;
+  host.innerHTML='<div class="daychip" id="pkWhen"><small>Production day</small><b>'+esc(S.pk.date)+'</b></div>';
 }
 const pkRo=()=>!adminEff()&&S.pk.date!==S.today;
 function pkReset(){S.pk.docs={pack_mac:null,pack_spa:null};S.pk.edit={pack_mac:null,pack_spa:null};S.pk.dirty={pack_mac:false,pack_spa:false};PKL.forEach(id=>{paintPkForm(id);paintPkList(id);});}
@@ -1269,8 +1285,8 @@ function paintPkOrders(){
   PKL.forEach(id=>{
     const host=$('#pko_'+id);if(!host)return;
     const o=pkOrdOf(id),rows=names.map(n=>[n,pkEnt(o[n])]).filter(r=>r[1]);
-    host.innerHTML='<div class="pkol '+pkCls(id)+'"><span>Prepare</span>'+(pkCanOrd()?'<button type="button" class="btn sm" data-po>✎ Set order</button>':'')+'</div>'+
-      (rows.length?'<div class="pkov">'+rows.map(r=>'<div class="pkoi"><i>'+esc(r[0])+'</i><b>'+(r[1].n!=null&&r[1].n!==''?esc(String(r[1].n)):'–')+'</b><em>cartons</em>'+(r[1].b?'<span class="pkob">'+esc(r[1].b)+'</span>':'')+'</div>').join('')+'</div>':'<div class="pkon muted">No order yet</div>');
+    host.innerHTML='<div class="pkol '+pkCls(id)+'"><span>Prepare '+(id==='pack_mac'?'Macaroni':'Spaghetti')+' carton</span>'+(pkCanOrd()?'<button type="button" class="btn sm" data-po>✎ Set order</button>':'')+'</div>'+
+      (rows.length?'<div class="pkov">'+rows.map(r=>'<div class="pkoi"><i>'+esc(String(r[0]).replace(/^Shift\s+/i,''))+'</i><b>'+(r[1].n!=null&&r[1].n!==''?esc(String(r[1].n)):'–')+'</b>'+(r[1].b?'<span class="pkob">'+esc(r[1].b)+'</span>':'')+'</div>').join('')+'</div>':'<div class="pkon muted">No order yet</div>');
     const od=S.pk.ord,m=od&&((od.meta&&od.meta[id])||(!od.meta&&od.at?{by:od.by,at:od.at,edited:od.edited,firstBy:od.firstBy,firstAt:od.firstAt}:null)),
       mt=m&&m.at&&(adminEff()||(S.dev&&S.dev.place==='all'))?'<div class="pkom muted">'+(m.edited?'<span class="pked" title="Edited">✎</span> ':'')+(adminEff()&&m.by?(m.edited?'Edited by ':'Set by ')+esc(m.by)+' · ':(m.edited?'Edited ':'Saved '))+esc(pkAtTxt(m.at))+(m.edited&&adminEff()&&m.firstBy?' <span class="pkof">(first: '+esc(m.firstBy)+' '+esc(pkAtTxt(m.firstAt))+')</span>':'')+'</div>':'';
     if(mt&&(rows.length))host.insertAdjacentHTML('beforeend',mt);
