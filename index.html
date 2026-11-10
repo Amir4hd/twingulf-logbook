@@ -426,7 +426,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v110';
+const APP_V='plant-v111';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4082,24 +4082,30 @@ function loadJsQR(){return window.jsQR?Promise.resolve():Promise.reject(new Erro
 /* Opens the camera and resolves with the part found (or null if closed). o.pick=true just returns the part. */
 function scanDlg(o){
   return new Promise(resolve=>{
+    const dup=$('#scn');if(dup){resolve(null);return;}
     const old=$('#dlg');const prev=old;const w=document.createElement('div');w.id='scn';w.className='ovl';w.style.zIndex=10000;
     w.innerHTML='<div class="dlg" role="dialog" aria-modal="true"><h2>Scan the part QR</h2><p id="scMsg">Point the camera at the label QR code.</p><video id="scV" playsinline muted style="width:100%;max-height:50vh;background:#000;border-radius:10px"></video><canvas id="scC" hidden></canvas><div style="display:flex;gap:8px;margin-top:10px"><input type="text" id="scT" placeholder="or type the code, e.g. SPE-004" autocapitalize="characters" style="flex:1;min-height:44px"><button type="button" class="btn" id="scGo">Find</button></div><div class="row" style="margin-top:8px"><button type="button" class="btn big" id="scNo">Close</button></div></div>';
     document.body.appendChild(w);
     let stream=null,stop=false,det=null;
-    const msg=t=>{$('#scMsg').textContent=t;};
+    const msg=t=>{const m=$('#scMsg',w);if(m)m.textContent=t;};
+    msg('Starting the camera… please wait.');
     const fin=p=>{stop=true;try{stream&&stream.getTracks().forEach(t=>t.stop());}catch(e){}w.remove();resolve(p);};
     const tryCode=txt=>{const c=qrCodeOf(txt);const p=partByCode(c);if(p){fin(p);return true;}msg('Code "'+c+'" is not in the spare parts list.');return false;};
-    $('#scNo').onclick=()=>fin(null);
-    $('#scGo').onclick=()=>tryCode($('#scT').value);
-    $('#scT').onkeydown=e=>{if(e.key==='Enter')tryCode($('#scT').value);};
+    $('#scNo',w).onclick=()=>fin(null);
+    $('#scGo',w).onclick=()=>tryCode($('#scT',w).value);
+    $('#scT',w).onkeydown=e=>{if(e.key==='Enter')tryCode($('#scT',w).value);};
     (async()=>{
       try{
         if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('nocam');
-        stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
-        const v=$('#scV');v.srcObject=stream;await v.play();
+        const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+        if(stop){try{st.getTracks().forEach(t=>t.stop());}catch(e){}return;}
+        stream=st;
+        const v=$('#scV',w);v.srcObject=stream;try{await v.play();}catch(e){}
+        if(stop)return;
+        msg('Point the camera at the label QR code.');
         if('BarcodeDetector' in window){try{det=new BarcodeDetector({formats:['qr_code']});}catch(e){det=null;}}
         if(!det)await loadJsQR();
-        const cv=$('#scC'),cx=cv.getContext('2d',{willReadFrequently:true});let last='';
+        const cv=$('#scC',w),cx=cv.getContext('2d',{willReadFrequently:true});let last='';
         const loop=async()=>{if(stop)return;
           try{if(v.videoWidth){let txt='';
             if(det){const r=await det.detect(v);if(r.length)txt=r[0].rawValue;}
@@ -4111,7 +4117,9 @@ function scanDlg(o){
     })();
   });
 }
-async function scanPart(){
+let scanBusy=false;
+async function scanPart(){if(scanBusy||$('#scn'))return;scanBusy=true;try{await scanPart0();}finally{scanBusy=false;}}
+async function scanPart0(){
   if(S.view!=='mplace'||!S.parts.length){try{const sn=await S.db.collection('parts').limit(1500).get();S.parts=sn.docs.map(d=>Object.assign({id:d.id},d.data()));}catch(e){toast(dbErr(e),true);return;}}
   let p=await scanDlg();if(!p)return;
   let act;
