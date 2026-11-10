@@ -426,7 +426,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v111';
+const APP_V='plant-v112';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -461,9 +461,10 @@ function migrateCfg(c){
   if(c.gapWarnMin==null)c.gapWarnMin=30;
   (c.areas||[]).forEach(a=>{
   a.params.forEach(p=>{if(p.id==='line_hm'||p.id==='chiller_hm'||p.id==='ro_comp_hm'){p.opt=true;p.sm=true;}});
-  if((a.id==='macaroni'||a.id==='spaghetti')&&!a.params.some(p=>p.id==='line_hm'))a.params.push(N('line_hm','Line hour meter','h','Hour meters',{opt:true,sm:true}));
-  if(a.id==='boiler'&&!a.params.some(p=>p.id==='chiller_hm'))a.params.push(N('chiller_hm','Chiller hour meter','h','Hour meters',{opt:true,sm:true}));
-  if(a.id==='ro'){if(!a.params.some(p=>p.id==='ro_comp_hm'))a.params.push(N('ro_comp_hm','RO compressor hour meter','h','Hour meters',{opt:true,sm:true}));if(a.equipment.indexOf('RO compressor')<0)a.equipment.push('RO compressor');}
+  const dr=a.dropped||[];
+  if((a.id==='macaroni'||a.id==='spaghetti')&&dr.indexOf('line_hm')<0&&!a.params.some(p=>p.id==='line_hm'))a.params.push(N('line_hm','Line hour meter','h','Hour meters',{opt:true,sm:true}));
+  if(a.id==='boiler'&&dr.indexOf('chiller_hm')<0&&!a.params.some(p=>p.id==='chiller_hm'))a.params.push(N('chiller_hm','Chiller hour meter','h','Hour meters',{opt:true,sm:true}));
+  if(a.id==='ro'){if(dr.indexOf('ro_comp_hm')<0&&!a.params.some(p=>p.id==='ro_comp_hm'))a.params.push(N('ro_comp_hm','RO compressor hour meter','h','Hour meters',{opt:true,sm:true}));if(dr.indexOf('ro_comp_hm')<0&&a.equipment.indexOf('RO compressor')<0)a.equipment.push('RO compressor');}
   if(a.id==='macaroni'||a.id==='spaghetti')a.noStatus=true;
   if(a.id==='pack_mac'||a.id==='pack_spa'){const pre=a.id==='pack_mac'?'MACARONI':'SPAGHETTI';a.params.forEach(p=>{if(p.id==='ptype'&&(p.kind||'text')==='text'){p.kind='select';p.label='Production type';p.options=BRANDS.map(b=>pre+' - '+b);}});}
   if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='film_brand')){const i=a.params.findIndex(p=>p.id==='film_waste');if(i>=0)a.params.splice(i+1,0,N('film_brand','Film brand','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}),N('film_waste2','Film wastage 2','kg','Film and carton wastage',{total:true,opt:true}),N('film_brand2','Film brand 2','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}));}
@@ -3485,8 +3486,6 @@ function detailHTML(){
   if(isPack(a))return ovPackHour(a,S.sel.date,S.sel.hour);
   const head='<h2>'+esc(a.name)+' · '+hh(S.sel.hour)+' · '+S.sel.date+'</h2>';
   if(!es.length)return '<section class="card">'+head+'<div class="empty">No reading was logged in this hour.</div></section>';
-  if(a.timed)return '<section class="card">'+head+'<div class="tscroll"><table><thead><tr><th>Time</th><th>Operator</th>'+a.params.map(p=>'<th>'+esc(p.label)+'</th>').join('')+'<th>Notes</th></tr></thead><tbody>'+es.map(x=>{const e=x.e;
-    return '<tr><td class="mono">'+hm(x.min)+'</td><td>'+nmH(e.by)+(e.late?' <span class="chip warn">Late entry</span>':'')+(e.editedBy?'<div class="muted small">edited by '+nmH(e.editedBy)+'</div>':'')+'</td>'+a.params.map(p=>{const v=e.v&&e.v[p.id],st=pState(p,v,e.v&&e.v.zone),nm=(p.kind||'num')==='num';return '<td class="mono'+(st==='high'||st==='low'?' hi':'')+'">'+(nm?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&nm?' <span class="muted">'+esc(p.unit)+'</span>':'')+'</td>';}).join('')+'<td>'+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table></div></section>';
   return '<section class="card">'+head+es.map(x=>{const e=x.e;
    const cells=a.params.map(p=>{const v=e.v&&e.v[p.id],st=pState(p,v,e.v&&e.v.zone),isNum=(p.kind||'num')==='num',hi=st==='high'||st==='low';
      return '<div class="'+(hi?'hi':v==null?'empty0':'')+'"><small>'+esc(p.label)+'</small><b>'+(isNum?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&isNum?' <span class="muted" style="font-size:12px">'+esc(p.unit)+'</span>':'')+(hi?' <span class="chip warn">'+(st==='high'?'High':'Low')+'</span>':'')+'</b></div>';}).join('');
@@ -4655,6 +4654,7 @@ function saveArea(id){
     if(String(a.id).indexOf('pack_')===0){const orig=a.params,raws=orig.filter(p=>WIN_IDS.indexOf(p.id)>=0);if(raws.length){const fi=orig.findIndex(p=>WIN_IDS.indexOf(p.id)>=0),anc=fi>0?orig[fi-1].id:null;let at=0;if(anc){const k=params.findIndex(q=>q.id===anc);at=k>=0?k+1:params.length;}params.splice.apply(params,[at,0].concat(raws));}}
     const zb=$('.zlbox',sec),rpp=params.find(q=>q.id==='result');
     if(zb&&rpp){const zl={},names=[];$$('.zlrow',zb).forEach(r=>{const nm=$('.zl-name',r).value.trim();if(!nm||names.indexOf(nm)>=0)return;names.push(nm);const mn=num($('.zl-min',r).value),mx=num($('.zl-max',r).value);if(mn!=null||mx!=null)zl[nm]={min:mn,max:mx};});if(Object.keys(zl).length)rpp.zl=zl;const zpp=params.find(q=>q.id==='zone');if(zpp&&names.length)zpp.options=names;}
+    a.dropped=Array.from(new Set((a.dropped||[]).concat(a.params.filter(o=>!params.some(q=>q.id===o.id)).map(o=>o.id))));
     a.params=params;a.equipment=$('.s-eq',sec).value.split('\n').map(x=>x.trim()).filter(Boolean);
   },'this area');
 }
