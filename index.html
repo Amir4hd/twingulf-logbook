@@ -436,7 +436,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v114';
+const APP_V='plant-v115';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -1932,10 +1932,11 @@ async function rmSave(){
 const LINE_TOG=['macaroni','spaghetti','boiler'];
 const isLineTog=a=>!!a&&LINE_TOG.indexOf(a.id)>=0;
 function lineOffAt(id,date,h){const L=S.lines&&S.lines[id];if(!L||!L.length)return false;const t=entTime(date,h*60);return L.some(p=>{const f=Date.parse(p.from);return t>=f&&(!p.to||t<Date.parse(p.to));});}
+const lineLocked=a=>!!a&&isLineTog(a)&&S.date===S.today&&!!lineOpen(a.id);
 const lineOpen=id=>((S.lines&&S.lines[id])||[]).find(p=>!p.to)||null;
 function lineRefresh(){
   try{
-    if(S.view==='area'){paintLineBox();refreshStrip();}
+    if(S.view==='area'){paintLineBox();refreshStrip();try{applyWindow();}catch(e){}}
     else if(S.view==='home'&&S.dev)renderHome();
     else if(S.view==='summary')paintSummary();
     else if(S.view==='admin'&&S.tab==='overview')paintTab();
@@ -2532,6 +2533,7 @@ function curEntry(a){return S.day&&S.day.hours?(a.timed?(S.editKey?S.day.hours[S
 function perm(){
   const a=area(S.areaId),e=curEntry(a),L=adminEff()||leaderActive();
   if(!S.canWrite)return {can:false,cls:'bad',msg:'You can view this logbook but not save readings.'};
+  {const lo=lineLocked(a)?lineOpen(a.id):null;if(lo)return {can:false,cls:'bad',msg:'Line stopped since '+dlbl(lo.from)+'. Data entry is off. Press Running (above) when production restarts.'};}
   let normal;
   if(!a.timed){
     const b=winBase(a,S.date,S.hour);
@@ -2716,6 +2718,7 @@ function updateEntryState(){
 async function saveEntry(part){
   if(!S.db)return toast('No database connection.',true);
   const a=area(S.areaId),timed=!!a.timed,e0=curEntry(a),pk=isPack(a);
+  if(lineLocked(a))return toast('The line is stopped. Data entry is off until the line runs again.',true);
   part=pk?(part||'prod'):null;
   const btn=part==='raw'?$('#fSaveRaw'):$('#fSave'),inPart=p=>!pk||(part==='raw'?!!p.win:!p.win);
   if(part==='prod'&&e0&&e0.ovr){toast('This entry holds raw materials only. Use Save raw materials.',true);return;}
