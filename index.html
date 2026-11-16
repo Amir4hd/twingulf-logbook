@@ -356,6 +356,24 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .pkho .pkoi{flex-wrap:nowrap;white-space:nowrap}
 /* order font sizes */
 .pkol{font-size:12px;font-weight:600}.pkoi i{font-size:14px;font-weight:700}.pkoi b{font-size:16px;font-weight:600}.pkob{font-size:14px;font-weight:600}.pkom{font-size:12px}
+/* animated how-to */
+.tutd{max-width:760px;gap:10px}.tuth{display:flex;align-items:center;justify-content:space-between;gap:10px}.tuth b{font:700 18px var(--f-d)}
+.tutw{position:relative;overflow:hidden;border-radius:10px;border:1px solid var(--line);background:#101614}
+.tuts{position:absolute;left:0;top:0;width:640px;height:330px;transform-origin:0 0;color:#e8f0ee;font-family:var(--f-b,inherit);font-size:13px;padding:10px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box}
+.tuts .tbar{display:flex;align-items:center;gap:16px;background:#0b100e;border-radius:8px;padding:6px 12px}.tuts .tbar>b{font:700 14px var(--f-d);letter-spacing:.08em;margin-right:auto}.tclk{font:700 20px var(--f-d)}.tpd{display:flex;flex-direction:column;align-items:center;line-height:1.1}.tpd small{font-size:8px;letter-spacing:.14em;color:#9fb0ad}.tpd b{font:700 14px var(--f-d)}
+.tuts .tcard{background:#18211e;border:1px solid #2a3833;border-radius:8px;padding:6px 10px}.tprep{display:flex;justify-content:space-between;align-items:center}.tuts .amb{color:#e8a93d;font:700 11px var(--f-d);letter-spacing:.1em}.tsh{display:flex;gap:14px;font:600 13px var(--f-d)}.tsh b{font-weight:600;font-size:14px}.tsh i{font-style:normal;font-size:11px;border:1px solid #2a3833;border-radius:999px;padding:0 6px;color:#9fb0ad}
+.ttog{display:flex;gap:6px;justify-content:center}.ttog b{padding:3px 14px;border-radius:8px;border:1px solid #2a3833;background:#18211e;font:600 12px var(--f-b,inherit)}.ttog b.on{background:#4fc3b4;color:#00231f;border-color:#4fc3b4}
+.tform{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;position:relative}.tfh{grid-column:1/-1;font:700 12px var(--f-d);letter-spacing:.1em;text-transform:uppercase;color:#e8a93d}
+.tfl{font-size:10px;color:#9fb0ad;display:flex;flex-direction:column;gap:2px;position:relative}.tin{min-height:26px;border:1px solid #2a3833;border-radius:6px;background:#0b100e;color:#fff;font:600 14px var(--f-d);padding:3px 8px}.tph{color:#6c7f7b;font-weight:400}
+.tdd{display:none;position:absolute;left:0;right:0;top:100%;z-index:3;background:#0b100e;border:1px solid #4fc3b4;border-radius:6px;overflow:hidden}.tdd.on{display:block}.tdd div{padding:5px 8px;font:600 12px var(--f-d);color:#fff}.tdd div.sel{background:#4fc3b4;color:#00231f}
+.tbtns{grid-column:1/-1;display:flex;gap:8px}.tb{border:1px solid #2a3833;background:#1d2825;color:#e8f0ee;border-radius:7px;padding:5px 16px;font:700 12px var(--f-d)}.tb.ok{background:#4fc3b4;color:#00231f;border-color:#4fc3b4}.tb.sm{margin-left:auto;font-weight:600}
+.tnote{display:none;grid-column:1/-1;border:1px solid #2a3833;background:#0b100e;border-radius:6px;padding:4px 8px;min-height:20px;font-size:12px}.tnote.on{display:block}
+.tmsg{grid-column:1/-1;font-size:11px;min-height:14px;color:#9fb0ad}.tmsg.ok{color:#4fc3b4}.tmsg.bad{color:#ff8a80}
+.tlist{grid-column:1/-1}.tr{display:grid;grid-template-columns:60px 1fr 60px 80px;font-size:11px;padding:3px 6px;border-top:1px solid #2a3833;color:#c8d6d3}.tr.new{background:rgba(79,195,180,.14)}.tr.sel{background:rgba(232,169,61,.2);outline:1px solid #e8a93d}
+.tuts .hl{outline:2px solid #ffd54f;outline-offset:2px;border-radius:6px;animation:tpulse 1s infinite}@keyframes tpulse{50%{outline-color:rgba(255,213,79,.3)}}
+.tptr{position:absolute;left:0;top:0;width:26px;height:26px;margin:-6px 0 0 -6px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 0 0 3px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.6);transition:transform .8s cubic-bezier(.4,.1,.2,1);pointer-events:none;z-index:9}.tptr.tap{animation:ttap .26s}@keyframes ttap{50%{transform-origin:center;box-shadow:0 0 0 12px rgba(79,195,180,.55),0 2px 8px rgba(0,0,0,.6)}}
+.tcap{font-size:16px;line-height:1.35;min-height:66px}.tcap .tn{display:inline-block;background:#4fc3b4;color:#00231f;border-radius:999px;padding:0 9px;font:700 13px var(--f-d);margin-right:4px}
+.tctl{display:flex;align-items:center;justify-content:center;gap:14px}.tctl .btn{min-width:56px;min-height:48px;font-size:20px}.tdots{display:flex;gap:8px}.tdots i{width:14px;height:14px;border-radius:50%;background:#2a3833;cursor:pointer}.tdots i.done{background:#4a7f77}.tdots i.on{background:#4fc3b4;transform:scale(1.25)}
 .pknw{margin-top:8px}.pknb{min-height:36px}
 @media(max-width:760px){.pkhead{grid-template-columns:1fr 1fr}.pkhc{grid-column:1/-1;order:-1}}
 
@@ -436,7 +454,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v115';
+const APP_V='plant-v116';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -916,6 +934,77 @@ function helpAdmin(){
    ]);
 }
 
+/* ---- animated how-to (operators) ---- */
+const TUT_PLACES=['pack'];
+function tutDlg(place){
+  const fr=LANG==='fr',T=(en,f)=>fr?f:en;
+  if(TUT_PLACES.indexOf(place)<0){toast(T('The tutorial for this area is coming soon.','Le tutoriel de cette zone arrive bientôt.'));return;}
+  const steps=[
+    {c:T('Look at the top: the shift leader writes how many cartons to prepare for each shift (A, B, C) and which brand.','Regardez en haut : le chef d\'équipe indique combien de cartons préparer pour chaque équipe (A, B, C) et quelle marque.'),to:'#tPrep'},
+    {c:T('Check the production day. Today is normal. Press Yesterday only if you finish last night\'s work.','Vérifiez le jour de production. « Aujourd\'hui » est normal. Appuyez sur « Hier » seulement pour finir le travail de la nuit.'),to:'#tTog b:first-child',tap:1},
+    {c:T('Tap Cartons completed and type the number.','Touchez « Cartons terminés » et tapez le nombre.'),to:'#tCart',tap:1,type:'120'},
+    {c:T('Tap Production type and choose the brand from the list.','Touchez « Type de production » et choisissez la marque dans la liste.'),to:'#tType',tap:1,pick:1},
+    {c:T('Press Save. Both boxes must be filled. The time is saved automatically.','Appuyez sur Enregistrer. Les deux cases doivent être remplies. L\'heure est enregistrée automatiquement.'),to:'#tSave',tap:1,save:1},
+    {c:T('Something to tell the next shift? Tap ＋ Add note and write it.','Quelque chose à dire à l\'équipe suivante ? Touchez ＋ Ajouter une note et écrivez-la.'),to:'#tNoteB',tap:1,note:1},
+    {c:T('Line stopped? Press Stopped, then enter when it stopped and when it started again.','Ligne arrêtée ? Appuyez sur Arrêtée, puis indiquez l\'heure d\'arrêt et de redémarrage.'),to:'#tStop',tap:1,stop:1},
+    {c:T('Made a mistake? Tap your entry in the list, change it and press Save changes. You have 20 minutes.','Une erreur ? Touchez votre saisie dans la liste, corrigez et appuyez sur Enregistrer les modifications. Vous avez 20 minutes.'),to:'#tRow0',tap:1,edit:1}
+  ];
+  const w=rmOvl('tutOvl','<div class="dlg tutd"><div class="tuth"><b>'+T('How to use Packaging','Comment utiliser Conditionnement')+'</b><button type="button" class="tmx" id="tutX" aria-label="Close">✕</button></div>'+
+   '<div class="tutw" id="tutW"><div class="tuts" id="tutS">'+
+    '<div class="tbar"><b>TWIN GULF</b><span class="tclk">07:45</span><span class="tpd"><small>'+T('PRODUCTION DAY','JOUR DE PRODUCTION')+'</small><b>2026-11-16</b></span></div>'+
+    '<div class="tcard tprep" id="tPrep"><div><b class="amb">'+T('PREPARE MACARONI CARTON','PRÉPARER CARTONS MACARONI')+'</b></div><div class="tsh"><span>A <b>500</b> <i>AL-TAJ</i></span><span>B <b>400</b> <i>FAMI</i></span><span>C <b>300</b> <i>KHAYR</i></span></div></div>'+
+    '<div class="ttog" id="tTog"><b class="on">'+T('Today','Aujourd\'hui')+'</b><b>'+T('Yesterday','Hier')+'</b></div>'+
+    '<div class="tcard tform"><div class="tfh">'+T('Macaroni','Macaroni')+'</div>'+
+     '<div class="tfl">'+T('Cartons completed','Cartons terminés')+'<div class="tin" id="tCart"></div></div>'+
+     '<div class="tfl">'+T('Production type','Type de production')+'<div class="tin" id="tType"><span id="tTypeV" class="tph">'+T('Choose…','Choisir…')+'</span></div><div class="tdd" id="tDd"><div>AL-TAJ</div><div>FAMI</div><div>KHAYR</div></div></div>'+
+     '<div class="tbtns"><button type="button" class="tb ok" id="tSave" tabindex="-1">'+T('Save','Enregistrer')+'</button><button type="button" class="tb" id="tStop" tabindex="-1">'+T('Stopped','Arrêtée')+'</button><button type="button" class="tb sm" id="tNoteB" tabindex="-1">＋ '+T('Add note','Ajouter une note')+'</button></div>'+
+     '<div class="tnote" id="tNote"></div><div class="tmsg" id="tMsg"></div>'+
+     '<div class="tlist"><div class="tr" id="tRow0"><span>06:40</span><span>Test</span><span>95</span><span>FAMI</span></div></div></div>'+
+    '<div class="tptr" id="tPtr"></div></div></div>'+
+   '<div class="tcap" id="tCap"></div><div class="tctl"><button type="button" class="btn" id="tPrev">‹</button><span class="tdots" id="tDots"></span><button type="button" class="btn" id="tPlay">❚❚</button><button type="button" class="btn" id="tNext">›</button></div></div>');
+  const $$$=s=>w.querySelector(s),st=$$$('#tutS'),ptr=$$$('#tPtr');
+  let idx=0,tok=0,playing=true,scale=1;
+  const fit=()=>{const box=$$$('#tutW'),aw=box.clientWidth,ah=Math.max(240,window.innerHeight-250);scale=Math.min(1.7,aw/640,ah/330);st.style.transform='scale('+scale+')';box.style.height=Math.round(330*scale)+'px';};
+  fit();const onR=()=>fit();window.addEventListener('resize',onR);
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const pos=el=>{const r=el.getBoundingClientRect(),s=st.getBoundingClientRect();return {x:(r.left-s.left+r.width*.55)/scale,y:(r.top-s.top+r.height*.6)/scale};};
+  const reset=()=>{
+    $$$('#tCart').textContent='';$$$('#tTypeV').textContent=T('Choose…','Choisir…');$$$('#tTypeV').className='tph';$$$('#tDd').classList.remove('on');
+    $$$('#tNote').textContent='';$$$('#tNote').classList.remove('on');$$$('#tMsg').textContent='';$$$('#tMsg').className='tmsg';
+    w.querySelectorAll('.tlist .tr.new').forEach(x=>x.remove());w.querySelectorAll('.hl,.sel').forEach(x=>x.classList.remove('hl','sel'));
+    $$$('#tSave').textContent=T('Save','Enregistrer');
+    const p=pos($$$('#tPrep'));ptr.style.transform='translate('+(p.x+120)+'px,'+(p.y+60)+'px)';
+  };
+  const dots=$$$('#tDots');dots.innerHTML=steps.map((s,i)=>'<i data-i="'+i+'"></i>').join('');
+  const paintDots=()=>dots.querySelectorAll('i').forEach((d,i)=>d.className=i===idx?'on':i<idx?'done':'');
+  async function run(i){
+    const my=++tok,alive=()=>my===tok;idx=i;paintDots();
+    const s=steps[i];$$$('#tCap').innerHTML='<span class="tn">'+(i+1)+'/'+steps.length+'</span> '+esc(s.c);
+    // rebuild state up to this step quickly
+    reset();
+    for(let k=0;k<i;k++){const q=steps[k];if(q.type)$$$('#tCart').textContent=q.type;if(q.pick){$$$('#tTypeV').textContent='AL-TAJ';$$$('#tTypeV').className='';}if(q.save){addRow();$$$('#tCart').textContent='';$$$('#tTypeV').textContent=T('Choose…','Choisir…');$$$('#tTypeV').className='tph';}}
+    const el=st.querySelector(s.to);if(!el)return;
+    el.classList.add('hl');await sleep(500);if(!alive())return;
+    const p=pos(el);ptr.style.transform='translate('+p.x+'px,'+p.y+'px)';await sleep(900);if(!alive())return;
+    if(s.tap){ptr.classList.add('tap');await sleep(260);ptr.classList.remove('tap');}
+    if(s.type){for(const ch of s.type){$$$('#tCart').textContent+=ch;await sleep(220);if(!alive())return;}}
+    if(s.pick){$$$('#tDd').classList.add('on');await sleep(700);if(!alive())return;const o=$$$('#tDd div');const q=pos(o);ptr.style.transform='translate('+q.x+'px,'+q.y+'px)';await sleep(800);if(!alive())return;ptr.classList.add('tap');await sleep(260);ptr.classList.remove('tap');o.classList.add('sel');await sleep(250);$$$('#tTypeV').textContent='AL-TAJ';$$$('#tTypeV').className='';$$$('#tDd').classList.remove('on');}
+    if(s.save){const m=$$$('#tMsg');m.className='tmsg ok';m.textContent=T('Saved ✓ · time recorded automatically','Enregistré ✓ · heure enregistrée automatiquement');addRow();}
+    if(s.note){const n=$$$('#tNote');n.classList.add('on');const t=T('Short stop to clean the line.','Court arrêt pour nettoyer la ligne.');for(const ch of t){n.textContent+=ch;await sleep(45);if(!alive())return;}}
+    if(s.stop){const m=$$$('#tMsg');m.className='tmsg bad';m.textContent=T('Stopped · 07:10 to 07:25 · 15 min','Arrêtée · 07:10 à 07:25 · 15 min');}
+    if(s.edit){$$$('#tRow0').classList.add('sel');const m=$$$('#tMsg');m.className='tmsg ok';m.textContent=T('Editing 06:40 · change it and press Save changes','Modification de 06:40 · corrigez puis appuyez sur Enregistrer les modifications');$$$('#tSave').textContent=T('Save changes','Enregistrer les modifications');}
+    await sleep(1800);if(!alive())return;
+    if(playing){if(i<steps.length-1)run(i+1);else{playing=false;$$$('#tPlay').textContent='▶';}}
+  }
+  function addRow(){const r=document.createElement('div');r.className='tr new';r.innerHTML='<span>07:46</span><span>Test</span><span>120</span><span>AL-TAJ</span>';$$$('.tlist').appendChild(r);}
+  const close=()=>{tok++;window.removeEventListener('resize',onR);w.remove();};
+  $$$('#tutX').onclick=close;w.onclick=ev=>{if(ev.target===w)close();};
+  $$$('#tPlay').onclick=()=>{playing=!playing;$$$('#tPlay').textContent=playing?'❚❚':'▶';if(playing)run(idx>=steps.length-1&&false?0:idx);else tok++;};
+  $$$('#tPrev').onclick=()=>{playing=false;$$$('#tPlay').textContent='▶';run(Math.max(0,idx-1));};
+  $$$('#tNext').onclick=()=>{playing=false;$$$('#tPlay').textContent='▶';run(Math.min(steps.length-1,idx+1));};
+  dots.onclick=ev=>{const i=ev.target.dataset&&ev.target.dataset.i;if(i==null)return;playing=false;$$$('#tPlay').textContent='▶';run(+i);};
+  setTimeout(()=>run(0),150);
+}
 function helpDlg(){
   if(!$('#hlpCss')){const st=document.createElement('style');st.id='hlpCss';st.textContent=HELP_CSS;document.head.appendChild(st);}
   const pl=S.dev?S.dev.place:'',fr=(typeof LANG!=='undefined'&&LANG==='fr');
@@ -939,6 +1028,7 @@ function toggleTopMenu(){
    (S.dev&&S.dev.place==='admin'?'<button type="button" class="tmr" id="tmSnd" role="menuitem"><span class="ti">🔔</span>Sound'+sw(soundOn())+'</button>':'')+'</div>'+
    '<div class="tms">Tablet</div><div class="tmc">'+(canPrint()?'<button type="button" class="tmr" id="prBtn" role="menuitem"><span class="ti">🖨</span>Print<span class="tv">›</span></button>':'')+
    '<button type="button" class="tmr" id="tmHelp" role="menuitem"><span class="ti">❓</span>Help<span class="tv">›</span></button>'+
+   ((S.dev&&TUT_PLACES.indexOf(S.dev.place)>=0)||adminEff()?'<button type="button" class="tmr" id="tmTut" role="menuitem"><span class="ti">🎬</span>How it works (video)<span class="tv">›</span></button>':'')+
    '<button type="button" class="tmr" id="tmRef" role="menuitem"><span class="ti">🔄</span>Refresh app<span class="tv">›</span></button>'+
    '<button type="button" class="tmr" id="tmAbout" role="menuitem"><span class="ti">ℹ️</span>About<span class="tv">›</span></button></div>'+
    (S.acct?'<button type="button" class="tmout" id="signOut" role="menuitem">Sign out</button>':'');
@@ -953,6 +1043,7 @@ function toggleTopMenu(){
   $('#tmRef',m).onclick=async()=>{closeTopMenu();if(S.dirty&&!await ask({title:'Refresh the app?',msg:'You have readings typed but not saved. They will be lost.',ok:'Yes, refresh'}))return;refreshApp();};
   $('#tmAbout',m).onclick=()=>{closeTopMenu();aboutDlg();};
   $('#tmHelp',m).onclick=()=>{closeTopMenu();helpDlg();};
+  const ttb=$('#tmTut',m);if(ttb)ttb.onclick=()=>{closeTopMenu();tutDlg(S.dev&&TUT_PLACES.indexOf(S.dev.place)>=0?S.dev.place:'pack');};
   const arm=()=>{clearTimeout(tmTimer);tmTimer=setTimeout(closeTopMenu,8000);};arm();
   m.onclick=ev=>{ev.stopPropagation();arm();};
 }
