@@ -465,7 +465,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v120';
+const APP_V='plant-v121';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -1521,7 +1521,7 @@ function paintPkList(id){
     const canE=!ro&&(adminEff()||leaderActive()||unlockOn()||editLeft(e)>0);const cls=(canE?'clk':'')+(e.run===false?' stp':'')+(S.pk.edit[id]===x.k?' sel':'');
     if(e.run===false)return '<tr class="'+cls+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <span class="mono stt">'+esc(stopTimes(e))+'</span>'+nt+'</td><td>'+by+(ro?'':((editLeft(e)>0||adminEff()||leaderActive()||unlockOn())?'<button type="button" class="delstop" data-k="'+esc(x.k)+'" aria-label="Delete stoppage record">🗑</button>':''))+'</td><td class="n"></td></tr>';
     const c=num(v.pallets);if(c!=null)tot+=c;
-    return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(c==null?'–':fmtN(c))+'</td><td>'+esc(pkBrand(v.ptype))+nt+'</td><td>'+by+(!ro&&gapShort(gaps[x.k])?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" aria-label="Delete reading" title="'+esc(gp)+'">🗑</button>':'')+'</td><td class="n pkdf">'+gp+'</td></tr>';}).join('');
+    return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(c==null?'–':fmtN(c))+'</td><td>'+esc(pkBrand(v.ptype))+nt+'</td><td>'+by+(!ro&&(gapShort(gaps[x.k])||adminEff())?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" aria-label="Delete reading" title="'+esc(gp)+'">🗑</button>':'')+'</td><td class="n pkdf">'+gp+'</td></tr>';}).join('');
   el.innerHTML='<table class="elt pkt" style="white-space:nowrap"><thead><tr><th>Time</th><th>Cartons</th><th>Type</th><th>By</th><th class="n">Diff</th></tr></thead><tbody>'+rows+'<tr class="tt"><td>Total</td><td class="mono"><b>'+fmtN(tot)+'</b></td><td colspan="3"></td></tr></tbody></table>'+(ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to change it.</p>');
   el.querySelectorAll('.delstop').forEach(b=>b.onclick=ev=>{ev.stopPropagation();(b.classList.contains('delgap')?pkDelGap:pkDelStop)(id,b.dataset.k);});
   el.querySelectorAll('.pkmsg').forEach(b=>b.onclick=ev=>{ev.stopPropagation();const e=d.hours[b.dataset.note];if(!e)return;
@@ -1539,7 +1539,7 @@ async function pkDelStop(id,key){
 }
 async function pkDelGap(id,key){
   const e=S.pk.docs[id]&&S.pk.docs[id].hours?S.pk.docs[id].hours[key]:null;if(!e)return;
-  const who=await ask({title:'Delete this reading?',msg:'This reading was saved very soon after the previous one (possible duplicate). It will be removed from the log. This cannot be undone.',pw:true,ok:'Yes, delete'});if(!who)return;
+  const who=await ask({title:'Delete this reading?',msg:'This reading will be removed from the log. This cannot be undone.',pw:true,ok:'Yes, delete'});if(!who)return;
   if(!(who.leader||sameP(who,e))){toast('Only a shift leader or the operator who saved it can delete this reading.',true);return;}
   try{await writeEntry(id,S.pk.date,key,null,null);toast('Reading deleted by '+(who.name||'Admin'));}catch(e2){toast(dbErr(e2),true);}
 }
@@ -2968,7 +2968,7 @@ async function delStop(key){
 }
 async function delGap(key){
   const e=S.day&&S.day.hours?S.day.hours[key]:null;if(!e)return;
-  const who=await ask({title:'Delete this reading?',msg:'This reading was saved very soon after the previous one (possible duplicate). It will be removed from the log. This cannot be undone.',pw:true,ok:'Yes, delete'});
+  const who=await ask({title:'Delete this reading?',msg:'This reading will be removed from the log. This cannot be undone.',pw:true,ok:'Yes, delete'});
   if(!who)return;
   if(!(who.leader||sameP(who,e))){toast('Only a shift leader or the operator who saved it can delete this reading.',true);return;}
   try{await writeEntry(S.areaId,S.date,key,null,null);toast('Reading deleted by '+(who.name||'Admin'));}catch(e2){toast(dbErr(e2),true);}
@@ -2988,7 +2988,7 @@ function refreshPack(a){
     const nt=e.note?' <span class="edi" title="'+esc(e.note)+'">✉</span>':'';
     const cls=(R.ro?'':'clk')+(e.run===false?' stp':'');
     if(e.run===false)return '<tr class="'+cls+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <span class="mono stt">'+esc(stopTimes(e))+'</span>'+nt+'</td><td>'+by+'</td><td class="n">'+(R.ro?'':((editLeft(e)>0||adminEff()||leaderActive()||unlockOn())?'<button type="button" class="delstop" data-k="'+esc(x.k)+'" title="Delete this stoppage record" aria-label="Delete stoppage record">🗑</button>':''))+'</td></tr>';
-    return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(v.pallets==null?'–':fmtN(v.pallets))+' <span class="muted small">ctn</span></td><td>'+esc(abbr(v.ptype))+nt+'</td><td>'+by+'</td><td class="n muted small">'+gp+(!R.ro&&gapShort(gaps[x.k])?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" title="Delete this reading (shift leader or the operator who saved it)" aria-label="Delete reading">🗑</button>':'')+'</td></tr>';}).join('');
+    return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(v.pallets==null?'–':fmtN(v.pallets))+' <span class="muted small">ctn</span></td><td>'+esc(abbr(v.ptype))+nt+'</td><td>'+by+'</td><td class="n muted small">'+gp+(!R.ro&&(gapShort(gaps[x.k])||adminEff())?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" title="Delete this reading (shift leader or the operator who saved it)" aria-label="Delete reading">🗑</button>':'')+'</td></tr>';}).join('');
   el.innerHTML=rdBar()+(es.length?'<table class="elt"><thead><tr><th>Time</th><th>Quantity</th><th>Type</th><th>By</th><th class="n">Diff</th></tr></thead><tbody>'+rows+'</tbody></table>'+(R.ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to open it. Operators can change their own entry for '+editMin()+' minutes after saving; a shift leader can change any entry.</p>'):'<div class="empty">No entries for '+esc(R.date)+'.</div>');
   bindRd();bindDelStop(el);
   if(!R.ro)$$('tr.clk',el).forEach(r=>r.onclick=()=>{S.editKey=r.dataset.k;S.dirty=false;refreshStrip();renderForm();window.scrollTo({top:0,behavior:'smooth'});});
@@ -3025,7 +3025,7 @@ function refreshRecent(){
       return '<tr class="clk'+(e.run===false?' stp':'')+(x.k===vk?' sel':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td><b>'+nmH(e.by)+'</b>'+(e.editedBy?' <span class="edi" title="Edited by '+esc(e.editedBy)+'">✎</span>':'')+chip(e)+'</td><td>'+(e.run===false?'<span class="chip bad">Stopped · '+(e.down||0)+' min</span> ':'')+(e.alarms?'<span class="chip warn">'+e.alarms+' out of range</span> ':'')+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table><p class="muted small">Tap a row to see its readings above. Use Edit this entry to change it (operators within '+editMin()+' minutes of saving; a shift leader any time).</p>';
   }else if(a.timed){
     el.innerHTML='<table><thead><tr><th>Time</th><th>Operator</th>'+a.params.map(p=>'<th>'+esc(p.label)+'</th>').join('')+'<th>Notes</th></tr></thead><tbody>'+es.map(x=>{const e=x.e;
-      return '<tr class="clk'+(e.run===false?' stp':'')+'"'+(e.run===false?' style="background:var(--badbg)"':'')+' data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+(gaps[x.k]!=null?'<span class="gap">'+gapTxt(gaps[x.k])+'</span>':'')+'</td><td>'+nmH(e.by)+chip(e)+(e.editedBy?'<div class="muted small">edited by '+nmH(e.editedBy)+'</div>':'')+'</td>'+a.params.map(p=>{const v=e.v&&e.v[p.id];return '<td class="mono">'+((p.kind||'num')==='num'?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&(p.kind||'num')==='num'?' <span class="muted">'+esc(p.unit)+'</span>':'')+'</td>';}).join('')+'<td>'+(e.run===false?'<span class="chip bad">Stopped · '+(e.down||0)+' min</span> '+esc(stopTimes(e))+' '+(R.ro?'':'<button type="button" class="delstop" data-k="'+esc(x.k)+'" title="Delete this stoppage record (shift leader password)" aria-label="Delete stoppage record">🗑</button> '):'')+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table><p class="muted small">Tap a row to open it. Operators can change their own entry for '+editMin()+' minutes after saving; a shift leader can change any entry.</p>';
+      return '<tr class="clk'+(e.run===false?' stp':'')+'"'+(e.run===false?' style="background:var(--badbg)"':'')+' data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+(gaps[x.k]!=null?'<span class="gap">'+gapTxt(gaps[x.k])+'</span>':'')+'</td><td>'+nmH(e.by)+chip(e)+(e.editedBy?'<div class="muted small">edited by '+nmH(e.editedBy)+'</div>':'')+'</td>'+a.params.map(p=>{const v=e.v&&e.v[p.id];return '<td class="mono">'+((p.kind||'num')==='num'?fmtN(v):esc(v==null?'–':v))+(v!=null&&p.unit&&(p.kind||'num')==='num'?' <span class="muted">'+esc(p.unit)+'</span>':'')+'</td>';}).join('')+'<td>'+(e.run===false?'<span class="chip bad">Stopped · '+(e.down||0)+' min</span> '+esc(stopTimes(e))+' '+(R.ro?'':'<button type="button" class="delstop" data-k="'+esc(x.k)+'" title="Delete this stoppage record (shift leader password)" aria-label="Delete stoppage record">🗑</button> '):(R.ro||!adminEff()?'':'<button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" title="Delete this reading (admin)" aria-label="Delete reading">🗑</button> '))+esc(e.note)+'</td></tr>';}).join('')+'</tbody></table><p class="muted small">Tap a row to open it. Operators can change their own entry for '+editMin()+' minutes after saving; a shift leader can change any entry.</p>';
   }else{
     el.innerHTML='<table><thead><tr><th>Hour</th><th>Operator</th><th>Line</th><th class="n">Out of range</th><th>Notes</th></tr></thead><tbody>'+HRS().slice().reverse().map(hr=>{const hx=es.filter(x=>x.h===hr);
       if(!hx.length){return cellState(R.doc,R.date,hr,a)==='miss'?'<tr class="clk mrow" data-h="'+hr+'" style="background:var(--badbg)"><td class="mono">'+hh(hr)+'</td><td class="muted">–</td><td><span class="chip bad">Missed</span></td><td class="n mono">–</td><td class="muted">No reading was saved</td></tr>':'';}
@@ -3156,7 +3156,7 @@ function noticesFor(id){return S.notices.filter(n=>n.to===id&&ntOpen(n)&&ntRel(n
 const ntDeleted=n=>n.status==='deleted';
 /* an arrived message stays in its place, in another colour, for exactly 24 hours after it arrived */
 const ntGotAt=n=>{const v=n.arrivedAt||n.ackAt;return v&&!isNaN(new Date(v))?new Date(v).getTime():null;};
-const ntKeep=n=>{if(ntOpen(n))return new Date(n.ts).getTime()>=Date.now()-24*3600e3;const g=ntGotAt(n);return Date.now()-(g==null?new Date(n.ts).getTime():g)<24*3600e3;};
+const ntKeep=n=>{const t=new Date(n.ts).getTime();return isNaN(t)?true:t>=Date.now()-24*3600e3;};
 const ntGotRow=n=>'<div class="ntline got"><span class="tx">ARRIVED '+esc(ntWhen(ntGotAt(n)==null?n.ts:new Date(ntGotAt(n))))+' · '+ntLine(n)+' · sent by '+nmH(n.by)+' '+esc(fmt12(n.ts))+ntSeenArr(n)+'</span></div>';
 const ntRecv=id=>S.notices.filter(n=>n.to===id&&!ntDeleted(n)&&ntKeep(n)).slice().sort((a,b)=>((a.arriveAt||a.ts)<(b.arriveAt||b.ts)?-1:1));
 /* a message reaches packaging only after the sender's edit time has finished */
