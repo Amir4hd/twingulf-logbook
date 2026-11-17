@@ -381,6 +381,10 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .tptr{position:absolute;left:0;top:0;width:34px;height:34px;margin:-8px 0 0 -8px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 0 0 3px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.6);transition:transform .8s cubic-bezier(.4,.1,.2,1);pointer-events:none;z-index:9}.tptr.tap{animation:ttap .26s}@keyframes ttap{50%{box-shadow:0 0 0 14px rgba(79,195,180,.55),0 2px 8px rgba(0,0,0,.6)}}
 .tcap{font-size:18px;line-height:1.3;min-height:48px}.tcap .tn{display:inline-block;background:#4fc3b4;color:#00231f;border-radius:999px;padding:0 9px;font:700 13px var(--f-d);margin-right:4px}
 .tctl{display:flex;align-items:center;justify-content:center;gap:14px}.tctl .btn{min-width:56px;min-height:44px;font-size:20px}.tdots{display:flex;gap:8px}.tdots i{width:14px;height:14px;border-radius:50%;background:#2a3833;cursor:pointer}.tdots i.done{background:#4a7f77}.tdots i.on{background:#4fc3b4;transform:scale(1.25)}
+/* compact packaging form + icons */
+.pkrow1{display:flex;align-items:flex-end;gap:12px}.pkrow1 .pkpair{flex:1;min-width:0}.pkrow1 .pksv{flex:0 0 auto;min-width:110px;margin-bottom:22px}
+.pkhr{display:flex;align-items:center;gap:26px}.pkstopi{width:42px;height:38px;border-radius:10px;border:1.5px solid #c0503f;background:#2c1a17;color:#ff7a66;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.pkstopi:disabled{opacity:.35}
+.pkpen{width:30px;height:28px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;opacity:.9}
 .pknw{margin-top:8px}.pknb{min-height:36px}
 @media(max-width:760px){.pkhead{grid-template-columns:1fr 1fr}.pkhc{grid-column:1/-1;order:-1}}
 
@@ -461,7 +465,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v119';
+const APP_V='plant-v120';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -1365,7 +1369,7 @@ const pkTop=()=>!!(S.dev&&S.dev.place==='pack'&&!adminEff());
 function renderPk(){
   S.pk={date:S.today,docs:{pack_mac:null,pack_spa:null},edit:{pack_mac:null,pack_spa:null},dirty:{pack_mac:false,pack_spa:false}};
   $('#main').innerHTML='<div class="card hcard pkhead"><div class="pkho" id="pko_pack_mac"></div><div class="pkhc">'+(pkTop()?'':'<div class="daychip" id="pkWhen"></div>')+'<div class="pkhsw">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="pkDt" value="'+S.pk.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="pkTog"><button type="button" class="btn sm pri" data-d="today">Today</button><button type="button" class="btn sm" data-d="yday">Yesterday</button></div>')+'</div></div><div class="pkho r" id="pko_pack_spa"></div></div>'+
-   '<button type="button" class="rawban none" id="rawBan"></button><div id="pinMsg"></div><div class="pkgrid">'+PKL.map(id=>'<section class="pkcol" id="pkc_'+id+'"><h3 class="rawh '+pkCls(id)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>'+RAW_T[id]+'</span><span class="pkcl" id="pkcl_'+id+'"></span></h3><div id="pkn_'+id+'"></div><div class="card" id="pkf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="pkr_'+id+'" class="tscroll"></div></div><div id="pkm_'+id+'"></div></section>').join('')+'</div>'+
+   '<button type="button" class="rawban none" id="rawBan"></button><div id="pinMsg"></div><div class="pkgrid">'+PKL.map(id=>'<section class="pkcol" id="pkc_'+id+'"><h3 class="rawh '+pkCls(id)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>'+RAW_T[id]+'</span><span class="pkhr"><button type="button" class="pkstopi" data-pst aria-label="Stopped" title="Line stopped"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="currentColor"/></svg></button><span class="pkcl" id="pkcl_'+id+'"></span></span></h3><div id="pkn_'+id+'"></div><div class="card" id="pkf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="pkr_'+id+'" class="tscroll"></div></div><div id="pkm_'+id+'"></div></section>').join('')+'</div>'+
    '<section class="card slim" id="issueBox"><button type="button" class="btn big" id="isOpen" style="width:100%">Report a problem to maintenance</button></section>';
   paintPkTop();
   const dt=$('#pkDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.pk.date=v;pkReset();subPk();};
@@ -1391,15 +1395,20 @@ function paintPkOrders(){
   PKL.forEach(id=>{
     const host=$('#pko_'+id);if(!host)return;
     const o=pkOrdOf(id),rows=names.map(n=>[n,pkEnt(o[n])]).filter(r=>r[1]);
-    host.innerHTML='<div class="pkol '+pkCls(id)+'"><span>Prepare '+(id==='pack_mac'?'Macaroni':'Spaghetti')+' carton</span>'+(pkCanOrd()?'<button type="button" class="btn sm" data-po>✎ Set order</button>':'')+'</div>'+
+    host.innerHTML='<div class="pkol '+pkCls(id)+'"><span>Prepare '+(id==='pack_mac'?'Macaroni':'Spaghetti')+' carton</span>'+'<button type="button" class="pkpen" data-po aria-label="Set order" title="Set order">✎</button>'+'</div>'+
       (rows.length?'<div class="pkov">'+rows.map(r=>'<div class="pkoi"><i>'+esc(String(r[0]).replace(/^Shift\s+/i,''))+'</i><b>'+(r[1].n!=null&&r[1].n!==''?esc(String(r[1].n)):'–')+'</b>'+(r[1].b?'<span class="pkob">'+esc(r[1].b)+'</span>':'')+'</div>').join('')+'</div>':'<div class="pkon muted">No order yet</div>');
     const od=S.pk.ord,m=od&&((od.meta&&od.meta[id])||(!od.meta&&od.at?{by:od.by,at:od.at,edited:od.edited,firstBy:od.firstBy,firstAt:od.firstAt}:null)),
       mt=m&&m.at&&(adminEff()||(S.dev&&S.dev.place==='all'))?'<div class="pkom muted">'+(m.edited?'<span class="pked" title="Edited">✎</span> ':'')+(adminEff()&&m.by?(m.edited?'Edited by ':'Set by ')+esc(m.by)+' · ':(m.edited?'Edited ':'Saved '))+esc(pkAtTxt(m.at))+(m.edited&&adminEff()&&m.firstBy?' <span class="pkof">(first: '+esc(m.firstBy)+' '+esc(pkAtTxt(m.firstAt))+')</span>':'')+'</div>':'';
     if(mt&&(rows.length))host.insertAdjacentHTML('beforeend',mt);
-    const b=$('[data-po]',host);if(b)b.onclick=()=>pkOrderDlg(id);
+    const b=$('[data-po]',host);if(b)b.onclick=()=>pkOrderAsk(id);
   });
 }
-function pkOrderDlg(pid){
+async function pkOrderAsk(id){
+  const who=await ask({title:'Shift leader password needed',msg:'Set the '+(id==='pack_mac'?'Macaroni':'Spaghetti')+' carton order?',pw:true,leaderOnly:true,ok:'Open'});
+  if(!who)return;if(!who.leader){toast('Only a shift leader can set the order.',true);return;}
+  pkOrderDlg(id,who);
+}
+function pkOrderDlg(pid,who0){
   const PKL=[pid],names=pkShiftNames(),old=$('#pkoDlg');if(old)old.remove();
   const row=id=>'<div class="pkod '+pkCls(id)+'"><b>'+(id==='pack_mac'?'Macaroni':'Spaghetti')+'</b><div class="pkog2">'+names.map(n=>{const e=pkEnt(pkOrdOf(id)[n])||{};return '<div class="pkor"><span class="pkos">Shift '+esc(n)+'</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="Cartons" aria-label="Cartons, shift '+esc(n)+'" data-o="'+id+'|'+esc(n)+'" value="'+(e.n==null?'':esc(String(e.n)))+'"><select data-ob="'+id+'|'+esc(n)+'" aria-label="Brand, shift '+esc(n)+'"><option value="">Brand…</option>'+BRANDS.map(b=>'<option'+(e.b===b?' selected':'')+'>'+esc(b)+'</option>').join('')+'</select></div>';}).join('')+'</div></div>';
   const w=document.createElement('div');w.id='pkoDlg';w.className='ovl';
@@ -1421,9 +1430,9 @@ function pkOrderDlg(pid){
     if(nb.length){const s=$('[data-ob="'+nb[0][0]+'|'+nb[0][1]+'"]',w);$$('select[data-ob]',w).forEach(x=>{const k=x.dataset.ob.split('|');if(nb.some(z=>z[0]===k[0]&&z[1]===k[1]))x.classList.add('need');});toast('Choose the brand for shift '+nb[0][1]+'. The brand is required when there is a quantity.',true);if(s)s.focus();return;}
     const chg=PKL.filter(id=>JSON.stringify(orders[id])!==JSON.stringify((po&&po.orders&&po.orders[id])||{}));
     if(!chg.length){toast('No changes to save.');return;}
-    w.style.display='none';
-    const who=await ask({title:'Shift leader password needed',msg:'Save the '+(pid==='pack_mac'?'Macaroni':'Spaghetti')+' order for '+S.pk.date+'?',pw:true,leaderOnly:true,ok:'Yes, save'});
-    w.style.display='';if(!who)return;
+    let who=who0;
+    if(!who){w.style.display='none';who=await ask({title:'Shift leader password needed',msg:'Save the '+(pid==='pack_mac'?'Macaroni':'Spaghetti')+' order for '+S.pk.date+'?',pw:true,leaderOnly:true,ok:'Yes, save'});w.style.display='';}
+    if(!who)return;
     if(!who.leader){toast('Only a shift leader can set the order.',true);return;}
     const iso=new Date().toISOString(),meta=Object.assign({},po&&po.meta||{});
     chg.forEach(id=>{const pr=meta[id]||(po&&po.at&&!po.meta&&po.orders&&po.orders[id]&&Object.keys(po.orders[id]).length?{by:po.by,at:po.at,firstBy:po.firstBy,firstAt:po.firstAt}:null);meta[id]=Object.assign({by:who.name,at:iso},pr&&pr.at?{edited:true,firstBy:pr.firstBy||pr.by||'',firstAt:pr.firstAt||pr.at}:{});});
@@ -1459,12 +1468,12 @@ function pkLastType(id){
 function paintPkForm(id){
   const box=$('#pkf_'+id);if(!box||!S.pk)return;
   const a=area(id),e=pkEntry(id),v=(e&&e.v)||{},pp=a.params.find(p=>p.id==='pallets'),pt=a.params.find(p=>p.id==='ptype');
-  if(pkRo()){box.innerHTML='<div class="status">Yesterday: read only.</div>';const h0=$('#pkc_'+id+' [data-pn]');if(h0)h0.remove();return;}
+  if(pkRo()){box.innerHTML='<div class="status">Yesterday: read only.</div>';const hs0=$('#pkc_'+id+' [data-pst]');if(hs0)hs0.disabled=true;const h0=$('#pkc_'+id+' [data-pn]');if(h0)h0.remove();return;}
   const ptv=e&&e.run!==false?v.ptype:(e?v.ptype:pkLastType(id));
   const l=e?editLeft(e):0;
-  box.innerHTML='<div class="pkpair"><div class="rawcell '+pkCls(id)+'">'+rawField(id,pp,v.pallets,false)+'</div><div class="rawcell '+pkCls(id)+'">'+rawField(id,pt,(ptv&&(pt.options||[]).indexOf(ptv)>=0)?ptv:'',false)+'</div></div>'+
-   (()=>{const nt=e&&e.run!==false?(e.note||''):'';return '<div class="pknw">'+(nt?'':'<button type="button" class="btn sm pknb" data-pnote>＋ Add note</button>')+'<label class="l pknl"'+(nt?'':' hidden')+'>Note<textarea class="pknote" placeholder="Anything unusual" style="min-height:52px">'+esc(nt)+'</textarea></label></div>';})()+'<div class="status" data-pm></div>'+
-   '<div class="row" style="flex-wrap:wrap"><button type="button" class="btn pri big" data-ps style="flex:1">'+(e&&e.run!==false?'Save changes':'Save production')+'</button><button type="button" class="btn big stopbtn" data-pst>Stopped</button></div>';
+  box.innerHTML='<div class="pkrow1"><div class="pkpair"><div class="rawcell '+pkCls(id)+'">'+rawField(id,pp,v.pallets,false)+'</div><div class="rawcell '+pkCls(id)+'">'+rawField(id,pt,(ptv&&(pt.options||[]).indexOf(ptv)>=0)?ptv:'',false)+'</div></div><button type="button" class="btn pri big pksv" data-ps>Save</button></div>'+
+   (()=>{const nt=e&&e.run!==false?(e.note||''):'';return '<div class="pknw">'+(nt?'':'<button type="button" class="btn sm pknb" data-pnote>＋ Add note</button>')+'<label class="l pknl"'+(nt?'':' hidden')+'>Note<textarea class="pknote" placeholder="Anything unusual" style="min-height:52px">'+esc(nt)+'</textarea></label></div>';})()+'<div class="status" data-pm></div>';
+  $$('.ir i',box).forEach(x=>{if(x.textContent==='cartons')x.textContent='ctn';});
   $$('option',box).forEach(o=>{const f=o.value;if(f){o.value=f;o.textContent=pkBrand(f);}});
   const hd=$('#pkc_'+id+' h3.rawh');if(hd){let nb=$('[data-pn]',hd);if(nb)nb.remove();if(e){hd.insertAdjacentHTML('beforeend',' <button type="button" class="btn sm pknew" data-pn>+ New entry</button>');$('[data-pn]',hd).onclick=()=>{S.pk.edit[id]=null;S.pk.dirty[id]=false;paintPkForm(id);paintPkList(id);};}}
   const m=$('[data-pm]',box);
@@ -1474,7 +1483,7 @@ function paintPkForm(id){
   const nb=$('[data-pnote]',box),ntx=$('.pknote',box),nl=$('.pknl',box);
   if(nb&&ntx&&nl){nb.onclick=()=>{nl.hidden=false;nb.hidden=true;ntx.focus();};ntx.addEventListener('blur',()=>{if(!ntx.value.trim()){nl.hidden=true;nb.hidden=false;}});}
   $('[data-ps]',box).onclick=()=>pkSave(id,null);
-  $('[data-pst]',box).onclick=async()=>{const sv=await pkStopDlg(id,e&&e.run===false?e:null);if(sv)pkSave(id,sv);};
+  const hs=$('#pkc_'+id+' [data-pst]');if(hs){hs.disabled=false;hs.onclick=async()=>{const sv=await pkStopDlg(id,e&&e.run===false?e:null);if(sv)pkSave(id,sv);};}
 }
 function pkStopDlg(id,e){
   return new Promise(res=>{
