@@ -384,6 +384,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 /* compact packaging form + icons */
 .pkrow1{display:flex;align-items:flex-end;gap:12px}.pkrow1 .pkpair{flex:1;min-width:0}.pkrow1 .pksv{flex:0 0 auto;min-width:110px;margin-bottom:22px}
 .pkhr{display:flex;align-items:center;gap:26px}.pkstopi{width:42px;height:38px;border-radius:10px;border:1.5px solid #c0503f;background:#2c1a17;color:#ff7a66;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.pkstopi:disabled{opacity:.35}
+.pkprev td{opacity:.62;font-style:italic;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(128,128,128,.12) 6px 12px)}.pkprev .chip{font-style:normal}
 .pkpen{width:30px;height:28px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;opacity:.9}
 .pknw{margin-top:8px}.pknb{min-height:36px}
 @media(max-width:760px){.pkhead{grid-template-columns:1fr 1fr}.pkhc{grid-column:1/-1;order:-1}}
@@ -465,7 +466,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v121';
+const APP_V='plant-v122';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -498,6 +499,7 @@ function migrateCfg(c){
   if(c.shifts&&c.shifts.length===3&&c.shifts[0].name==='Morning'&&c.shifts[1].name==='Afternoon'&&c.shifts[2].name==='Night')c.shifts=c.shifts.map((x,i)=>({name:'Shift '+'ABC'[i],start:x.start}));
   if(c.noticeEditMin==null)c.noticeEditMin=5;
   if(c.gapWarnMin==null)c.gapWarnMin=30;
+  if(c.pkGraceMin==null)c.pkGraceMin=0;
   (c.areas||[]).forEach(a=>{
   a.params.forEach(p=>{if(p.id==='line_hm'||p.id==='chiller_hm'||p.id==='ro_comp_hm'){p.opt=true;p.sm=true;}});
   const dr=a.dropped||[];
@@ -576,7 +578,8 @@ function toast(msg,bad){const t=$('#toast');t.className='toast'+(bad?' bad':'');
 const dbErr=e=>(e&&e.message)?e.message:'Could not save. Check the connection and try again.';
 
 /* hour cell state for a day doc */
-function entries(doc){const out=[];if(!doc||!doc.hours)return out;Object.keys(doc.hours).forEach(k=>{const e=doc.hours[k];if(!e)return;const c0=k.charAt(0),min=c0==='s'?Math.floor(Number(k.slice(1))/60):c0==='t'?Number(k.slice(1)):Number(k)*60;out.push({k:k,min:min,h:Math.floor(min/60),e:e});});return out.sort((a,b)=>om(a.min)-om(b.min));}
+function entries(doc){const out=[];if(!doc||!doc.hours)return out;Object.keys(doc.hours).forEach(k=>{const e=doc.hours[k];if(!e)return;const c0=k.charAt(0),min=c0==='s'?Math.floor(Number(k.slice(1))/60):c0==='t'?Number(k.slice(1)):Number(k)*60;out.push({k:k,min:min,h:Math.floor(min/60),e:e});});return out.sort((a,b)=>ordMin(a)-ordMin(b));}
+const ordMin=x=>om(x.min)+(x.e&&x.e.gr?1440:0);
 const hm=min=>pad(Math.floor(min/60))+':'+pad(min%60);
 const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes();};
 function entTime(date,min){const q=parseYmd(realDate(date,min));return new Date(q.getFullYear(),q.getMonth(),q.getDate(),Math.floor(min/60),min%60).getTime();}
@@ -1112,7 +1115,9 @@ setInterval(()=>{
   if(S.dev&&S.acct&&NEED_APPROVAL(S.dev.place)&&!approvalOk()&&!S.dirty){S.dev=null;S.gate='approve';unsub('notices');S.view='home';renderTop();renderHome();return;}
   const t=new Date(),c=$('#clock');if(c)c.innerHTML='<span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span>';
   const d=pdate(t);
-  if(d!==S.today){const od=S.today;S.today=d;if(S.pk&&S.pk.date===od&&!adminEff()&&$('#pkWhen')&&$('#pkTog')){S.pk.date=d;paintPkTop();pkReset();subPk();}if(S.ovDate===od)S.ovDate=d;if(S.view==='area'&&S.date===od&&!adminEff()){S.date=d;S.day=null;S.editKey=null;subDay();}}
+  if(d!==S.today){const od=S.today;S.today=d;if(S.ovDate===od)S.ovDate=d;if(S.view==='area'&&S.date===od&&!adminEff()){S.date=d;S.day=null;S.editKey=null;subDay();}}
+  try{if(S.view==='packm'&&S.pk&&$('#pkWhen')){const ro=pkRo();if(S.pkRoV!==undefined&&S.pkRoV!==ro&&!S.pk.dirty.pack_mac&&!S.pk.dirty.pack_spa&&!$('#dlg')){PKL.forEach(id=>{paintPkForm(id);paintPkList(id);});}S.pkRoV=ro;}}catch(e){}
+  try{const pd=pkToday();if(S.pkTd!==pd){const od=S.pkTd;S.pkTd=pd;if(od&&S.pk&&S.pk.date===od&&!adminEff()&&$('#pkWhen')&&$('#pkTog')){S.pk.date=pd;paintPkTop();pkReset();subPk();}}}catch(e){}
   if(S.view==='area'){
     const a=area(S.areaId);
     if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;
@@ -1152,7 +1157,7 @@ function go(view,areaId,tab){
   if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done'&&S.tab!=='parts'&&S.tab!=='jobs')S.tab='issues';
   if(view==='mplace'&&S.tab==='parts'&&!S.partsOnly)S.tab='issues';
   if(view==='mplace'&&S.partsOnly)S.tab='parts';
-  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');unsub('rawM');unsub('rawS');unsub('rawG');unsub('pkO');unsub('pkM');unsub('pkS');if(view!=='sanc'){unsub('hrE');unsub('hrC');unsub('hrS');}if(view!=='home')unsub('hrB');if(view!=='rm')S.rm=null;if(view!=='raw')S.raw=null;if(view!=='packm')S.pk=null;S.opsDraft=null;S.acctDraft=null;
+  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');unsub('rawM');unsub('rawS');unsub('rawG');unsub('pkO');unsub('pkM');unsub('pkYM');unsub('pkYS');unsub('pkS');if(view!=='sanc'){unsub('hrE');unsub('hrC');unsub('hrS');}if(view!=='home')unsub('hrB');if(view!=='rm')S.rm=null;if(view!=='raw')S.raw=null;if(view!=='packm')S.pk=null;S.opsDraft=null;S.acctDraft=null;
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
   if(tab)S.tab=tab;
   if(view==='area'){S.date=S.today;S.hour=effH();S.lastHour=effH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;S.entryOpen=false;lsSet('plant.view','area:'+areaId);}
@@ -1367,13 +1372,13 @@ const pkCls=aid=>aid==='pack_mac'?'mac':'spa';
 const pkBrand=t=>String(t==null?'–':t).replace(/^(MACARONI|SPAGHETTI)\s*-\s*/,'');
 const pkTop=()=>!!(S.dev&&S.dev.place==='pack'&&!adminEff());
 function renderPk(){
-  S.pk={date:S.today,docs:{pack_mac:null,pack_spa:null},edit:{pack_mac:null,pack_spa:null},dirty:{pack_mac:false,pack_spa:false}};
-  $('#main').innerHTML='<div class="card hcard pkhead"><div class="pkho" id="pko_pack_mac"></div><div class="pkhc">'+(pkTop()?'':'<div class="daychip" id="pkWhen"></div>')+'<div class="pkhsw">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="pkDt" value="'+S.pk.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="pkTog"><button type="button" class="btn sm pri" data-d="today">Today</button><button type="button" class="btn sm" data-d="yday">Yesterday</button></div>')+'</div></div><div class="pkho r" id="pko_pack_spa"></div></div>'+
+  S.pkTd=pkToday();S.pk={date:pkToday(),prev:{},docs:{pack_mac:null,pack_spa:null},edit:{pack_mac:null,pack_spa:null},dirty:{pack_mac:false,pack_spa:false}};
+  $('#main').innerHTML='<div class="card hcard pkhead"><div class="pkho" id="pko_pack_mac"></div><div class="pkhc">'+(pkTop()?'':'<div class="daychip" id="pkWhen"></div>')+'<div class="pkhsw">'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="pkDt" value="'+S.pk.date+'" max="'+pkToday()+'" min="'+addDays(pkToday(),-3)+'"></label>':'<div class="seg" id="pkTog"><button type="button" class="btn sm pri" data-d="today">Today</button><button type="button" class="btn sm" data-d="yday">Yesterday</button></div>')+'</div></div><div class="pkho r" id="pko_pack_spa"></div></div>'+
    '<button type="button" class="rawban none" id="rawBan"></button><div id="pinMsg"></div><div class="pkgrid">'+PKL.map(id=>'<section class="pkcol" id="pkc_'+id+'"><h3 class="rawh '+pkCls(id)+'" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>'+RAW_T[id]+'</span><span class="pkhr"><button type="button" class="pkstopi" data-pst aria-label="Stopped" title="Line stopped"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="currentColor"/></svg></button><span class="pkcl" id="pkcl_'+id+'"></span></span></h3><div id="pkn_'+id+'"></div><div class="card" id="pkf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="pkr_'+id+'" class="tscroll"></div></div><div id="pkm_'+id+'"></div></section>').join('')+'</div>'+
    '<section class="card slim" id="issueBox"><button type="button" class="btn big" id="isOpen" style="width:100%">Report a problem to maintenance</button></section>';
   paintPkTop();
   const dt=$('#pkDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.pk.date=v;pkReset();subPk();};
-  $$('#pkTog button').forEach(b=>b.onclick=()=>{const v=b.dataset.d==='yday'?addDays(S.today,-1):S.today;if(S.pk.date===v)return;S.pk.date=v;$$('#pkTog button').forEach(x=>x.classList.toggle('pri',x===b));pkReset();subPk();});
+  $$('#pkTog button').forEach(b=>b.onclick=()=>{const v=b.dataset.d==='yday'?addDays(pkToday(),-1):pkToday();if(S.pk.date===v)return;S.pk.date=v;$$('#pkTog button').forEach(x=>x.classList.toggle('pri',x===b));pkReset();subPk();});
   $('#isOpen').onclick=()=>openIssModal(null);
   $('#rawBan').onclick=()=>{if($('#rawBan').dataset.open==='1')go('raw');};
   PKL.forEach(id=>paintPkForm(id));subPk();paintPinMsg();paintPkNotices();paintRawBan();
@@ -1382,8 +1387,15 @@ function paintPkTop(){
   const host=$('#pkTopDay');if(!host||!S.pk)return;
   host.innerHTML='<div class="daychip" id="pkWhen"><small>Production day</small><b>'+esc(S.pk.date)+'</b></div>';
 }
-const pkRo=()=>!adminEff()&&S.pk.date!==S.today;
-function pkReset(){S.pk.docs={pack_mac:null,pack_spa:null};S.pk.edit={pack_mac:null,pack_spa:null};S.pk.dirty={pack_mac:false,pack_spa:false};PKL.forEach(id=>{paintPkForm(id);paintPkList(id);});}
+const pkGrace=()=>{const n=Math.round(Number(S.cfg&&S.cfg.pkGraceMin));return n>0?Math.min(n,180):0;};
+const pkInWin=()=>{const g=pkGrace();if(!g)return false;const n=new Date(),m=n.getHours()*60+n.getMinutes(),st=dayStart()*60;return m>=st&&m<st+g;};
+const pkWinLeft=()=>{const n=new Date();return dayStart()*60+pkGrace()-(n.getHours()*60+n.getMinutes());};
+const pkToday=()=>pdate(new Date());
+const pkYdayOpen=()=>!!(S.pk&&pkInWin()&&S.pk.date===addDays(pkToday(),-1));
+const pkInGrace=()=>pkYdayOpen();
+const pkShiftNow=()=>pkYdayOpen()?shiftOf((dayStart()+23)%24):shiftOf(new Date().getHours());
+const pkRo=()=>!adminEff()&&S.pk.date!==pkToday()&&!pkYdayOpen();
+function pkReset(){S.pk.prev={};S.pk.docs={pack_mac:null,pack_spa:null};S.pk.edit={pack_mac:null,pack_spa:null};S.pk.dirty={pack_mac:false,pack_spa:false};PKL.forEach(id=>{paintPkForm(id);paintPkList(id);});}
 const pkCanOrd=()=>!!(adminEff()||(S.dev&&S.dev.place==='all'));
 const pkShiftNames=()=>S.cfg.shifts.slice().sort((a,b)=>ordH(a.start)-ordH(b.start)).map(s=>s.name);
 const pkAtTxt=iso=>{const d=new Date(iso);if(isNaN(d))return '';const t=pad(d.getHours())+':'+pad(d.getMinutes());return d.toDateString()===new Date().toDateString()?t:d.getDate()+'/'+(d.getMonth()+1)+' '+t;};
@@ -1449,6 +1461,7 @@ function subPk(){
   resub('pkO',()=>S.db.doc('logs/packorder_'+S.pk.date).onSnapshot(sn=>{S.pk.ord=sn.exists?sn.data():null;paintPkOrders();},e=>{}));
   if(!S.db){PKL.forEach(id=>{S.pk.docs[id]={hours:{}};paintPkList(id);});return;}
   PKL.forEach((id,i)=>resub(i?'pkS':'pkM',()=>S.db.doc('logs/'+id+'_'+S.pk.date).onSnapshot(snap=>{S.pk.docs[id]=snap.exists?snap.data():{hours:{}};paintPkList(id);if(!S.pk.dirty[id])paintPkForm(id);},e=>toast(dbErr(e),true))));
+  PKL.forEach((id,i)=>resub(i?'pkYS':'pkYM',()=>S.db.doc('logs/'+id+'_'+addDays(S.pk.date,-1)).onSnapshot(snap=>{S.pk.prev[id]=snap.exists?snap.data():null;paintPkList(id);},e=>{})));
 }
 function paintRawBan(){
   const el=$('#rawBan');if(!el)return;
@@ -1478,7 +1491,7 @@ function paintPkForm(id){
   const hd=$('#pkc_'+id+' h3.rawh');if(hd){let nb=$('[data-pn]',hd);if(nb)nb.remove();if(e){hd.insertAdjacentHTML('beforeend',' <button type="button" class="btn sm pknew" data-pn>+ New entry</button>');$('[data-pn]',hd).onclick=()=>{S.pk.edit[id]=null;S.pk.dirty[id]=false;paintPkForm(id);paintPkList(id);};}}
   const m=$('[data-pm]',box);
   if(e){m.className='status '+(l>0?'ok':'bad');m.textContent=l>0?'Saved by '+e.by+'. You can change it for '+left5(l)+' more.':'Saved by '+e.by+'. Locked: only a shift leader can change it now.';}
-  else m.textContent='Fill the readings and press Save.';
+  else m.textContent=(pkYdayOpen()&&!adminEff()?'Yesterday is open for '+pkWinLeft()+' more min (counted as '+pkShiftNow()+'). ':'')+'Fill the readings and press Save.';
   box.oninput=box.onchange=ev=>{S.pk.dirty[id]=true;const fl=ev.target.closest&&ev.target.closest('.fld');if(fl)fl.classList.remove('need');};
   const nb=$('[data-pnote]',box),ntx=$('.pknote',box),nl=$('.pknl',box);
   if(nb&&ntx&&nl){nb.onclick=()=>{nl.hidden=false;nb.hidden=true;ntx.focus();};ntx.addEventListener('blur',()=>{if(!ntx.value.trim()){nl.hidden=true;nb.hidden=false;}});}
@@ -1502,7 +1515,7 @@ const pkKeyMin=k=>k.charAt(0)==='s'?Math.floor(Number(k.slice(1))/60):Number(k.s
 const pkK=id=>({aid:id,date:S.pk.date,d:()=>S.pk.docs[id]});
 function paintPkClean(id){
   const el=$('#pkcl_'+id);if(!el||!S.pk)return;
-  const K=pkK(id),shs=(S.cfg.shifts||[]).slice().sort((a,b)=>a.start-b.start).map(x=>x.name).filter(n=>S.pk.date!==S.today||adminEff()||leaderActive()||(S.dev&&S.dev.place==='all')||n===shiftOf(nowH()));
+  const K=pkK(id),shs=(S.cfg.shifts||[]).slice().sort((a,b)=>a.start-b.start).map(x=>x.name).filter(n=>S.pk.date!==pkToday()||adminEff()||leaderActive()||(S.dev&&S.dev.place==='all')||n===pkShiftNow());
   el.innerHTML=shs.map(n=>'<span class="pkclo">'+cleanBtnHTML(n,K,String(n).slice(-1).toUpperCase())+'</span>').join('');
   $$('.clbtn',el).forEach(b=>b.onclick=()=>cleanDlg(b.dataset.clsh,K));
 }
@@ -1512,7 +1525,10 @@ function paintPkList(id){
   const d=S.pk.docs[id];
   if(d==null){el.innerHTML='<div class="empty">'+(S.db?'Loading…':'No database connection.')+'</div>';return;}
   const all=entries(d),es=all.filter(x=>!(x.e&&x.e.ovr)).reverse(),gaps=gapOf(all),ro=pkRo();
-  if(!es.length){el.innerHTML='<div class="empty">No entries for '+esc(S.pk.date)+'.</div>';return;}
+  const pv=(()=>{try{const L=entries(S.pk.prev&&S.pk.prev[id]).filter(x=>x.e&&!x.e.ovr&&x.e.run!==false);return L.length?L[L.length-1]:null;}catch(e){return null;}})();
+  const firstRun=all.find(x=>x.e&&!x.e.ovr&&x.e.run!==false);
+  if(pv&&firstRun&&gaps[firstRun.k]==null){const g0=1440-ordMin(pv)+ordMin(firstRun);if(g0>=0&&g0<1440)gaps[firstRun.k]=g0;}
+  if(!es.length&&!pv){el.innerHTML='<div class="empty">No entries for '+esc(S.pk.date)+'.</div>';return;}
   const chip=e=>(!ro&&editLeft(e)>0)?' <span class="chip ok">edit '+left5(editLeft(e))+'</span>':'';
   let tot=0;
   const rows=es.map(x=>{const e=x.e,v=e.v||{},gp=gaps[x.k]!=null?gapTxt(gaps[x.k]):'';
@@ -1522,7 +1538,8 @@ function paintPkList(id){
     if(e.run===false)return '<tr class="'+cls+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <span class="mono stt">'+esc(stopTimes(e))+'</span>'+nt+'</td><td>'+by+(ro?'':((editLeft(e)>0||adminEff()||leaderActive()||unlockOn())?'<button type="button" class="delstop" data-k="'+esc(x.k)+'" aria-label="Delete stoppage record">🗑</button>':''))+'</td><td class="n"></td></tr>';
     const c=num(v.pallets);if(c!=null)tot+=c;
     return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(c==null?'–':fmtN(c))+'</td><td>'+esc(pkBrand(v.ptype))+nt+'</td><td>'+by+(!ro&&(gapShort(gaps[x.k])||adminEff())?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" aria-label="Delete reading" title="'+esc(gp)+'">🗑</button>':'')+'</td><td class="n pkdf">'+gp+'</td></tr>';}).join('');
-  el.innerHTML='<table class="elt pkt" style="white-space:nowrap"><thead><tr><th>Time</th><th>Cartons</th><th>Type</th><th>By</th><th class="n">Diff</th></tr></thead><tbody>'+rows+'<tr class="tt"><td>Total</td><td class="mono"><b>'+fmtN(tot)+'</b></td><td colspan="3"></td></tr></tbody></table>'+(ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to change it.</p>');
+  const pvRow=pv?'<tr class="pkprev" title="Last reading of the day before. Not counted."><td class="mono">'+hm(pv.min)+'</td><td class="mono">'+fmtN(num((pv.e.v||{}).pallets))+'</td><td>'+esc(pkBrand((pv.e.v||{}).ptype))+'</td><td><span class="chip">yesterday</span></td><td class="n"></td></tr>':'';
+  el.innerHTML='<table class="elt pkt" style="white-space:nowrap"><thead><tr><th>Time</th><th>Cartons</th><th>Type</th><th>By</th><th class="n">Diff</th></tr></thead><tbody>'+(es.length?rows:'<tr><td colspan="5" class="muted">No entries yet for '+esc(S.pk.date)+'.</td></tr>')+pvRow+'<tr class="tt"><td>Total</td><td class="mono"><b>'+fmtN(tot)+'</b></td><td colspan="3"></td></tr></tbody></table>'+(ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to change it.</p>');
   el.querySelectorAll('.delstop').forEach(b=>b.onclick=ev=>{ev.stopPropagation();(b.classList.contains('delgap')?pkDelGap:pkDelStop)(id,b.dataset.k);});
   el.querySelectorAll('.pkmsg').forEach(b=>b.onclick=ev=>{ev.stopPropagation();const e=d.hours[b.dataset.note];if(!e)return;
     const old=$('#pkNote');if(old)old.remove();const w=document.createElement('div');w.id='pkNote';w.className='ovl';
@@ -1568,9 +1585,9 @@ async function pkSave(id,stop){
   const v=Object.assign({},e1&&e1.v||{});a.params.forEach(p=>{if(!(p.id in v))v[p.id]=null;});
   v.pallets=n;v.ptype=ty;
   const alarms=0;
-  const obj=Object.assign({},e1||{},{v:v,run:run,down:run?0:stop.down,why:run?'':stop.why,note:run?($('.pknote',box).value||'').trim():stop.note,shift:shiftOf(nowH()),stopAt:run?'':stop.stopAt,startAt:run?'':stop.startAt,alarms:alarms,empty:0});
+  const obj=Object.assign({},e1||{},{v:v,run:run,down:run?0:stop.down,why:run?'':stop.why,note:run?($('.pknote',box).value||'').trim():stop.note,shift:pkShiftNow(),stopAt:run?'':stop.stopAt,startAt:run?'':stop.startAt,alarms:alarms,empty:0});
   if(e1){obj.editedAt=nowIso;obj.editedBy=who.name;}
-  else{obj.by=who.name;obj.byId=who.id||null;obj.at=nowIso;obj.late=false;}
+  else{obj.by=who.name;obj.byId=who.id||null;obj.at=nowIso;obj.late=false;if(pkYdayOpen())obj.gr=1;else delete obj.gr;}
   const sb=$('[data-ps]',box);if(sb)sb.disabled=true;
   try{
     await writeEntry(id,S.pk.date,key,obj,null);
@@ -1860,8 +1877,9 @@ const LABS=['lab_mac','lab_spa'],LAB_T={lab_mac:'Macaroni',lab_spa:'Spaghetti'};
 const labOK=()=>LABS.every(id=>canSee(area(id)));
 function renderLab(){
   S.lab={docs:{},edit:{},dirty:{}};
-  $('#main').innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Lab Moisture · timed entries</h2><div class="muted small">The time is recorded automatically when you save · <span id="labWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:190px">Date<input type="date" id="labDt" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+'</div></div>'+
+  $('#main').innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Lab Moisture · timed entries</h2><div class="muted small">The time is recorded automatically when you save · <span id="labWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:190px">Date<input type="date" id="labDt" value="'+S.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="labTog">'+[['Today',0],['Yesterday',1],['2 days ago',2]].map(q=>'<button type="button" class="btn sm'+(S.date===addDays(S.today,-q[1])?' pri':'')+'" data-n="'+q[1]+'">'+q[0]+'</button>').join('')+'</div>')+'</div></div>'+
    '<div id="pinMsg"></div><div class="labgrid">'+LABS.map(id=>'<section class="labcol" id="lc_'+id+'"><h3 class="labh">'+LAB_T[id]+'</h3><div class="card" id="lf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="lr_'+id+'" class="tscroll"></div></div></section>').join('')+'</div>';
+  $$('#labTog button').forEach(b=>b.onclick=()=>{const v=addDays(S.today,-Number(b.dataset.n));if(S.date===v)return;S.date=v;S.lab.edit={};S.lab.dirty={};$$('#labTog button').forEach(x=>x.classList.toggle('pri',x===b));LABS.forEach(id=>paintLabForm(id));subLab();});
   const dt=$('#labDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.date=v;S.lab.edit={};S.lab.dirty={};subLab();};
   LABS.forEach(id=>paintLabForm(id));subLab();paintPinMsg();
 }
@@ -1871,9 +1889,11 @@ function subLab(){
   LABS.forEach((id,i)=>{S.lab.docs[id]=null;resub(i?'labB':'labA',()=>S.db.doc('logs/'+id+'_'+S.date).onSnapshot(snap=>{S.lab.docs[id]=snap.exists?snap.data():{hours:{}};paintLabList(id);if(!S.lab.dirty[id])paintLabForm(id);},e=>toast(dbErr(e),true)));});
 }
 const labEntry=id=>{const k=S.lab.edit[id],d=S.lab.docs[id];return k&&d&&d.hours&&d.hours[k]?d.hours[k]:null;};
+const labRo=()=>!adminEff()&&S.date!==S.today;
 function paintLabForm(id){
   const box=$('#lf_'+id);if(!box||!S.lab)return;
   const a=area(id),e=labEntry(id),v=(e&&e.v)||{};
+  if(labRo()){box.innerHTML='<div class="status">'+esc(S.date)+': read only. Go to Today to enter a reading.</div>';return;}
   box.innerHTML='<div class="labfs">'+a.params.map(p=>fieldHTML(p,v[p.id])).join('')+'</div><label class="l">Notes<input type="text" class="lnote" placeholder="Optional" value="'+esc(e?e.note||'':'')+'"></label><div class="status" data-lm></div><div class="row"><button type="button" class="btn pri big" data-ls>'+(e?'Save changes':'Save')+'</button>'+(e?'<button type="button" class="btn big" data-ln>New entry</button>':'')+'</div>';
   const m=$('[data-lm]',box);
   if(e){const l=editLeft(e);m.className='status '+(l>0?'ok':'bad');m.textContent=l>0?'Saved by '+e.by+'. You can change it for '+left5(l)+' more.':'Saved by '+e.by+'. Locked: only the lab head or a shift leader can change it now.';}
@@ -1893,8 +1913,15 @@ function paintLabList(id){
   if(!es.length){el.innerHTML='<div class="empty">No readings saved for '+S.date+' yet.</div>';return;}
   const chip=e=>editLeft(e)>0?' <span class="chip ok">editable '+left5(editLeft(e))+'</span>':'';
   el.innerHTML='<table class="elt"><thead><tr><th>Time</th><th>Zone</th><th class="n">Result</th><th>By</th></tr></thead><tbody>'+es.map(x=>{const e=x.e,v=e.v||{};
-    return '<tr class="clk'+(S.lab.edit[id]===x.k?' sel':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td>'+esc(v.zone==null?'–':v.zone)+'</td><td class="n mono">'+fmtN(v.result)+(e.alarms?' <span class="chip warn">!</span>':'')+'</td><td><b>'+nmH(e.by)+'</b>'+(e.editedBy?' <span class="edi" title="Edited by '+esc(e.editedBy)+'">✎</span>':'')+chip(e)+(e.note?'<div class="muted small">'+esc(e.note)+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table>';
-  $$('tr.clk',el).forEach(r=>r.onclick=()=>{S.lab.edit[id]=r.dataset.k;S.lab.dirty[id]=false;paintLabForm(id);paintLabList(id);});
+    return '<tr class="'+(labRo()?'':'clk')+(S.lab.edit[id]===x.k?' sel':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td>'+esc(v.zone==null?'–':v.zone)+'</td><td class="n mono">'+fmtN(v.result)+(e.alarms?' <span class="chip warn">!</span>':'')+'</td><td><b>'+nmH(e.by)+'</b>'+(e.editedBy?' <span class="edi" title="Edited by '+esc(e.editedBy)+'">✎</span>':'')+chip(e)+(adminEff()?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" title="Delete this reading (admin)" aria-label="Delete reading">🗑</button>':'')+(e.note?'<div class="muted small">'+esc(e.note)+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table>';
+  $$('.delstop',el).forEach(b=>b.onclick=ev=>{ev.stopPropagation();labDel(id,b.dataset.k);});
+  if(!labRo())$$('tr.clk',el).forEach(r=>r.onclick=()=>{S.lab.edit[id]=r.dataset.k;S.lab.dirty[id]=false;paintLabForm(id);paintLabList(id);});
+}
+async function labDel(id,key){
+  const e=S.lab.docs[id]&&S.lab.docs[id].hours?S.lab.docs[id].hours[key]:null;if(!e)return;
+  const who=await ask({title:'Delete this reading?',msg:'This reading will be removed from the log. This cannot be undone.',pw:true,ok:'Yes, delete'});if(!who)return;
+  if(!(who.leader||adminEff())){toast('Only an admin or shift leader can delete this reading.',true);return;}
+  try{await writeEntry(id,S.date,key,null,null);if(S.lab.edit[id]===key)S.lab.edit[id]=null;toast('Reading deleted by '+(who.name||'Admin'));}catch(e2){toast(dbErr(e2),true);}
 }
 async function labSave(id){
   if(!S.db)return toast('No database connection.',true);
@@ -2954,7 +2981,7 @@ function shiftBoxes(el){
   t.replaceWith(wrap);
 }
 function bindRd(){$$('#rdTog button').forEach(b=>b.onclick=()=>{if((S.rd||'today')!==b.dataset.d)setRd(b.dataset.d);else refreshRecent();$$('#rdTog button').forEach(x=>x.classList.toggle('pri',x===b));});}
-const gapOf=list=>{const m={};list.filter(x=>!(x.e&&(x.e.ovr||x.e.run===false))).forEach((x,i,arr)=>{if(i>0){const d=x.min-arr[i-1].min;if(d>=0)m[x.k]=d;}});return m;};
+const gapOf=list=>{const m={};list.filter(x=>!(x.e&&(x.e.ovr||x.e.run===false))).forEach((x,i,arr)=>{if(i>0){const d=ordMin(x)-ordMin(arr[i-1]);if(d>=0)m[x.k]=d;}});return m;};
 const gapTxt=d=>d==null?'':d+' min';
 const gapShort=d=>{const m=Number(S.cfg.gapWarnMin);return d!=null&&m>0&&d<m;};
 const stopTimes=e=>e.stopAt&&e.startAt?e.stopAt+' → '+e.startAt:e.stopAt?'from '+e.stopAt:e.startAt?'until '+e.startAt:'';
@@ -4709,7 +4736,7 @@ function setupShell(){
     '<label class="l" style="margin-top:12px">Equipment in this area (one per line, used for problem reports and maintenance)<textarea class="s-eq">'+esc(a.equipment.join('\n'))+'</textarea></label></section>'+
     '<div class="row"><button class="btn pri big" id="sSave">Save '+esc(a.name)+'</button></div>';
   return menu+'<section class="card"><h2>Plant</h2><div class="ctlrow"><label class="l" style="flex:2 1 260px">Plant name<input type="text" id="sName" value="'+esc(c.plantName)+'"></label>'+
-   c.shifts.map((s,i)=>'<label class="l">'+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'<label class="l">Hourly entry window (minutes, 1 to 59)<input type="number" min="1" max="59" id="sEntry" value="'+(Number(c.entryMin)>=1&&Number(c.entryMin)<=59?Math.round(Number(c.entryMin)):20)+'"></label><label class="l">Packaging: highlight a reading when the gap since the last one is less than (minutes, 0 = off)<input type="number" min="0" max="240" id="sGap" value="'+(Number(c.gapWarnMin)>=0?Math.round(Number(c.gapWarnMin)):30)+'"></label><label class="l">Data entry edit duration (minutes)<input type="number" min="1" max="60" id="sNtEdit" value="'+(Number(c.noticeEditMin)>=1?Math.round(Number(c.noticeEditMin)):5)+'"></label><label class="l" style="flex:1 1 100%;flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="sNeedAp"'+(c.needApproval===true?' checked':'')+' style="width:auto"> Ask for a shift leader password when a shift starts on the Press, Laboratory and Packaging tablets</label></div><p class="muted small" style="margin:8px 0 0">Operators can enter an hourly reading only during the first minutes of the hour. After that only a shift leader can enter it (unlock button). Lab, packaging and RO entries are not affected.</p></section>'+
+   c.shifts.map((s,i)=>'<label class="l">'+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'<label class="l">Hourly entry window (minutes, 1 to 59)<input type="number" min="1" max="59" id="sEntry" value="'+(Number(c.entryMin)>=1&&Number(c.entryMin)<=59?Math.round(Number(c.entryMin)):20)+'"></label><label class="l">Packaging: highlight a reading when the gap since the last one is less than (minutes, 0 = off)<input type="number" min="0" max="240" id="sGap" value="'+(Number(c.gapWarnMin)>=0?Math.round(Number(c.gapWarnMin)):30)+'"></label><label class="l">Packaging: after the new day starts, still allow entries for Yesterday (last shift) for (minutes, 0 = off)<input type="number" min="0" max="180" id="sPkGrace" value="'+(Number(c.pkGraceMin)>=0?Math.round(Number(c.pkGraceMin)):0)+'"></label><label class="l">Data entry edit duration (minutes)<input type="number" min="1" max="60" id="sNtEdit" value="'+(Number(c.noticeEditMin)>=1?Math.round(Number(c.noticeEditMin)):5)+'"></label><label class="l" style="flex:1 1 100%;flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="sNeedAp"'+(c.needApproval===true?' checked':'')+' style="width:auto"> Ask for a shift leader password when a shift starts on the Press, Laboratory and Packaging tablets</label></div><p class="muted small" style="margin:8px 0 0">Operators can enter an hourly reading only during the first minutes of the hour. After that only a shift leader can enter it (unlock button). Lab, packaging and RO entries are not affected.</p></section>'+
    '<div class="row"><button class="btn pri big" id="sSave">Save plant</button><button class="btn" id="sReset">Restore starter setup</button></div>'+clearCardHTML();
 }
 function zoneLimCard(a){
@@ -4778,6 +4805,7 @@ function savePlant(){
     cfg.plantName=$('#sName').value.trim()||'Plant Logbook';
     cfg.gapWarnMin=Math.max(0,Math.min(240,Math.round(Number($('#sGap').value))||0));
     cfg.noticeEditMin=Math.max(1,Math.min(60,Math.round(Number($('#sNtEdit').value))||5));
+    cfg.pkGraceMin=Math.max(0,Math.min(180,Math.round(Number($('#sPkGrace').value))||0));
     cfg.entryMin=Math.max(1,Math.min(59,Math.round(Number($('#sEntry').value))||20));
     cfg.needApproval=!!($('#sNeedAp')&&$('#sNeedAp').checked);
     cfg.shifts=S.cfg.shifts.map((s,i)=>({name:s.name,start:Math.max(0,Math.min(23,Number($('.sShift[data-i="'+i+'"]').value)||0))}));
