@@ -345,7 +345,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .pkoi{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}.pkho.r .pkoi{justify-content:flex-end}.pkoi i{font-style:normal;font:700 12px var(--f-d);color:var(--mut);min-width:14px}.pkoi b{font:700 15px var(--f-d);color:var(--ink)}.pkoi em{font-style:normal;font-size:12px;color:var(--mut)}.pkob{font:600 12px var(--f-d);letter-spacing:.04em;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
 .pkov{flex-direction:column;align-items:flex-start;gap:2px}.pkho.r .pkov{align-items:flex-end}
 .pkon{font-size:13px}.pkor input.need,.pkor select.need{border:2px solid #d32f2f;background:var(--badbg);box-shadow:0 0 0 3px rgba(211,47,47,.3)}.pkom{font-size:12px}.pked{font-style:normal;color:inherit}.pkof{opacity:.8}
-.pkog2{display:flex;flex-direction:column;gap:8px}.pkor{display:grid;grid-template-columns:70px 1fr 1.4fr;gap:8px;align-items:center}.pkos{font:700 13px var(--f-d)}
+.pkog2{display:flex;flex-direction:column;gap:8px}.pkoshift{display:flex;flex-direction:column;gap:6px}.pkor{display:grid;grid-template-columns:70px 1fr 1.4fr 40px;gap:8px;align-items:center}.btn.pkoadd,.btn.pkodel{min-width:40px;height:40px;padding:0;font-size:24px;font-weight:700;line-height:1}.pkoplus{font:700 15px var(--f-d);color:var(--mut);margin:0 2px}.pkos{font:700 13px var(--f-d)}
 .pknl[hidden],.pknb[hidden]{display:none!important}.bwf{display:flex;flex-direction:column;gap:6px;padding:10px 12px}.bwl{display:flex;align-items:center;gap:12px;font:700 17px var(--f-d);cursor:pointer}.bwl input{width:26px;height:26px}/* packaging tablet: production day next to the clock */
 .pkTopDay{display:flex;align-items:center;gap:12px;margin-left:18px}
 .bar .pkTopDay .daychip{align-items:center}.bar .pkTopDay .daychip small{color:#9fb0ad;font-size:10px;letter-spacing:.14em;text-transform:uppercase}.bar .pkTopDay .daychip b{color:#fff;font:700 20px/1.1 var(--f-d)}
@@ -354,6 +354,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 /* shifts side by side */
 .pkho .pkov{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px}.pkho.r .pkov{flex-direction:row;justify-content:flex-end}
 .pkho .pkoi{flex-wrap:nowrap;white-space:nowrap}
+.pkov .pkoi.pks0{border-color:#3fbf9a}.pkov .pkoi.pks1{border-color:#e8a93d}.pkov .pkoi.pks2{border-color:#7a9cf0}.pkov .pkoi{border:1.5px solid var(--mut);border-radius:14px;padding:3px 10px 3px 8px;gap:7px}.pkho .pkov{gap:8px 10px}
 /* order font sizes */
 .pkol{font-size:12px;font-weight:600}.pkoi i{font-size:14px;font-weight:700}.pkoi b{font-size:16px;font-weight:600}.pkob{font-size:14px;font-weight:600}.pkom{font-size:12px}
 /* animated how-to */
@@ -385,9 +386,10 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .pkrow1{display:flex;align-items:flex-end;gap:12px}.pkrow1 .pkpair{flex:1;min-width:0}.pkrow1 .pksv{flex:0 0 auto;min-width:110px;margin-bottom:22px}
 .pkhr{display:flex;align-items:center;gap:26px}.pkstopi{width:42px;height:38px;border-radius:10px;border:1.5px solid #c0503f;background:#2c1a17;color:#ff7a66;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.pkstopi:disabled{opacity:.35}
 .labnav{display:flex;align-items:center;gap:6px}.labnav .btn{min-width:46px;font-size:22px;line-height:1;padding:0 10px}.labnav .btn:disabled{opacity:.35}.labdl{min-width:104px;text-align:center;font-size:16px}
-.pkTot{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;margin-top:6px;border-top:1px solid var(--line);font-size:16px}.pkprevt{margin-top:2px}.pkprev td{opacity:.62;font-style:italic;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(128,128,128,.12) 6px 12px)}.pkprev .chip{font-style:normal}
+.pkTot{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;margin-top:6px;border-top:1px solid var(--line);font-size:16px}.pkprevt{margin-top:2px}.pktime{margin-left:6px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--mut);cursor:pointer;vertical-align:middle;line-height:0}.pktmr{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;font-size:16px}.pkwh{flex:0 0 auto;display:flex;flex-direction:column;gap:2px;margin-bottom:22px;font-size:12px;font-weight:600;color:var(--mut)}.pkwh input{width:142px;min-height:52px;font-size:16px;padding:4px 8px}.tedi{font-size:12px;opacity:.85;cursor:help}.pktm{margin-top:4px;color:var(--warn,#e8a93d)}
+.pkprev td{opacity:.62;font-style:italic;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(128,128,128,.12) 6px 12px)}.pkprev .chip{font-style:normal}
 .pkpen{width:30px;height:28px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;opacity:.9}
-.pknw{margin-top:8px}.pknb{min-height:36px}
+.pknw{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.pknb{min-height:36px}.pknw .pknl,.pknw .pktl{flex:1 1 100%;margin:0}.pktl[hidden]{display:none!important}.pktl input{max-width:180px}
 @media(max-width:760px){.pkhead{grid-template-columns:1fr 1fr}.pkhc{grid-column:1/-1;order:-1}}
 
 .pkgrid{gap:16px}.pkcol{display:flex;flex-direction:column;gap:16px}
@@ -467,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v124';
+const APP_V='plant-v125';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -515,7 +517,7 @@ function migrateCfg(c){
   if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='scotch2')){const i=a.params.findIndex(p=>p.id==='scotch_brand');if(i>=0)a.params.splice(i+1,0,N('scotch2','Scotch used 2','cartons','Film and carton wastage',{total:true,opt:true}),N('scotch_brand2','Scotch brand 2','','Film and carton wastage',{kind:'select',options:['Transparent'].concat(BRANDS),opt:true}));}
   if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='dmg_carton2')){const j=a.params.findIndex(p=>p.id==='dmg_brand');if(j>=0)a.params.splice(j+1,0,N('dmg_carton2','Damaged carton 2','pcs','Film and carton wastage',{total:true,opt:true}),N('dmg_brand2','Carton brand 2','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}));}
   if(a.id==='pack_spa'||a.id==='pack_mac')a.params.forEach(p=>{if(p.id==='scotch'||p.id==='dmg_carton')p.opt=true;});
-  if(String(a.id).indexOf('pack_')===0){a.params.forEach(p=>{if(['flour','semolina','regr_used','regr_prod'].indexOf(p.id)>=0&&p.unit==='cartons')p.unit='kg';});a.params=a.params.filter(p=>p.id!=='pallet_times');a.params.forEach(p=>{if(p.id==='pallets'){p.label='Cartons completed';p.unit='cartons';}});a.params.forEach(p=>{if(WIN_IDS.indexOf(p.id)>=0)p.win=PACK_WIN;});}});return c;}
+  if(String(a.id).indexOf('pack_')===0){a.params.forEach(p=>{if(['flour','semolina','regr_used','regr_prod'].indexOf(p.id)>=0&&p.unit==='cartons')p.unit='kg';});a.params=a.params.filter(p=>p.id!=='pallet_times');a.params.forEach(p=>{if(p.id==='pallets'){p.label='Cartons completed';p.unit='cartons';}});a.params.forEach(p=>{if(WIN_IDS.indexOf(p.id)>=0&&!(Array.isArray(p.win)&&p.win.length))p.win=PACK_WIN;});}});return c;}
 const C_='°C',H_='%RH';
 function sensors(list){return list.map(c=>{const t=c.slice(-1);if(t==='T'||t==='H')return N('s'+c.toLowerCase(),c+(t==='T'?' temp':' humidity'),t==='T'?C_:H_,'Dryer temperature & humidity');return N('s'+c,'Motor '+c+' speed','Hz','Dryer motor speeds');});}
 function pack(id,name){return {id:id,name:name,every:'any',timed:true,equipment:['Packing machine','Carton sealer','Pallet wrapper','Conveyor'],params:[
@@ -1129,6 +1131,7 @@ setInterval(()=>{
   }
   if(S.view==='rm'&&S.rm&&S.rm.rows&&!$('#rmDlg'))paintRmList();
   if(S.view==='raw'&&S.raw){if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;paintRawStatus();if(rawReady()&&!$('#dlg'))paintRawLock();}
+  try{const rt=rawToday();if(S.rawTd!==rt){const od=S.rawTd;S.rawTd=rt;if(od&&S.view==='raw'&&S.raw&&S.raw.date===od&&!adminEff()&&!RAWL.some(a=>S.raw.dirty[a])){S.raw.date=rt;S.raw.docs={pack_mac:null,pack_spa:null};S.raw.regr=null;S.raw.x={};const inf=rawInfo(rt);if(inf){const k=rawSlots().findIndex(q=>q.s===inf.sl.s);if(k>=0)S.raw.sel=k;}subRaw();rawRefresh();}}}catch(e){}
   if(S.view==='home')paintRawCard();
   if(S.view==='packm')paintRawBan();
   if(S.view==='area')paintDieBox();
@@ -1189,7 +1192,7 @@ function go(view,areaId,tab){
 function rawCardHTML(){return '<button class="acard" data-a="__raw"><b>Raw materials</b><span class="muted">Film, carton and raw material for Macaroni and Spaghetti, with shared Regrinding</span><span class="rawnext" id="rawCardInfo"></span></button>';}
 function paintRawCard(){
   const el=$('#rawCardInfo');if(!el)return;
-  const inf=rawInfo(S.today);
+  const inf=rawInfo(rawToday());
   if(!inf){el.textContent='';el.className='rawnext';return;}
   el.className='rawnext '+inf.cls;el.textContent=inf.open?(inf.all?'Open · no time limit':'Open now · '+inf.left+' min left'):'Next opening in '+durTxt(inf.wait)+' · '+t12(inf.sl.s);
 }
@@ -1401,15 +1404,17 @@ const pkCanOrd=()=>!!(adminEff()||(S.dev&&S.dev.place==='all'));
 const pkShiftNames=()=>S.cfg.shifts.slice().sort((a,b)=>ordH(a.start)-ordH(b.start)).map(s=>s.name);
 const pkAtTxt=iso=>{const d=new Date(iso);if(isNaN(d))return '';const t=pad(d.getHours())+':'+pad(d.getMinutes());return d.toDateString()===new Date().toDateString()?t:d.getDate()+'/'+(d.getMonth()+1)+' '+t;};
 const pkEnt=v=>v==null||v===''?null:(typeof v==='object'?(v.n==null&&!v.b?null:v):{n:v,b:''});
+const pkEnts=v=>Array.isArray(v)?v.map(pkEnt).filter(Boolean):(pkEnt(v)?[pkEnt(v)]:[]);
+const pkShTxt=n=>/^shift/i.test(String(n))?String(n):'Shift '+n;
 function pkOrdOf(id){return (S.pk&&S.pk.ord&&S.pk.ord.orders&&S.pk.ord.orders[id])||{};}
 function paintPkOrders(){
   if(!S.pk)return;
   const names=pkShiftNames();
   PKL.forEach(id=>{
     const host=$('#pko_'+id);if(!host)return;
-    const o=pkOrdOf(id),rows=names.map(n=>[n,pkEnt(o[n])]).filter(r=>r[1]);
+    const o=pkOrdOf(id),rows=names.map((n,ni)=>[n,pkEnts(o[n]),ni]).filter(r=>r[1].length);
     host.innerHTML='<div class="pkol '+pkCls(id)+'"><span>Prepare '+(id==='pack_mac'?'Macaroni':'Spaghetti')+' carton</span>'+'<button type="button" class="pkpen" data-po aria-label="Set order" title="Set order">✎</button>'+'</div>'+
-      (rows.length?'<div class="pkov">'+rows.map(r=>'<div class="pkoi"><i>'+esc(String(r[0]).replace(/^Shift\s+/i,''))+'</i><b>'+(r[1].n!=null&&r[1].n!==''?esc(String(r[1].n)):'–')+'</b>'+(r[1].b?'<span class="pkob">'+esc(r[1].b)+'</span>':'')+'</div>').join('')+'</div>':'<div class="pkon muted">No order yet</div>');
+      (rows.length?'<div class="pkov">'+rows.map(r=>'<div class="pkoi pks'+(r[2]%3)+'"><i>'+esc(String(r[0]).replace(/^Shift\s+/i,''))+'</i>'+r[1].map((x,j)=>(j?'<span class="pkoplus">+</span>':'')+'<b>'+(x.n!=null&&x.n!==''?esc(String(x.n)):'–')+'</b>'+(x.b?'<span class="pkob">'+esc(x.b)+'</span>':'')).join('')+'</div>').join('')+'</div>':'<div class="pkon muted">No order yet</div>');
     const od=S.pk.ord,m=od&&((od.meta&&od.meta[id])||(!od.meta&&od.at?{by:od.by,at:od.at,edited:od.edited,firstBy:od.firstBy,firstAt:od.firstAt}:null)),
       mt=m&&m.at&&(adminEff()||(S.dev&&S.dev.place==='all'))?'<div class="pkom muted">'+(m.edited?'<span class="pked" title="Edited">✎</span> ':'')+(adminEff()&&m.by?(m.edited?'Edited by ':'Set by ')+esc(m.by)+' · ':(m.edited?'Edited ':'Saved '))+esc(pkAtTxt(m.at))+(m.edited&&adminEff()&&m.firstBy?' <span class="pkof">(first: '+esc(m.firstBy)+' '+esc(pkAtTxt(m.firstAt))+')</span>':'')+'</div>':'';
     if(mt&&(rows.length))host.insertAdjacentHTML('beforeend',mt);
@@ -1423,24 +1428,27 @@ async function pkOrderAsk(id){
 }
 function pkOrderDlg(pid,who0){
   const PKL=[pid],names=pkShiftNames(),old=$('#pkoDlg');if(old)old.remove();
-  const row=id=>'<div class="pkod '+pkCls(id)+'"><b>'+(id==='pack_mac'?'Macaroni':'Spaghetti')+'</b><div class="pkog2">'+names.map(n=>{const e=pkEnt(pkOrdOf(id)[n])||{};return '<div class="pkor"><span class="pkos">Shift '+esc(n)+'</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="Cartons" aria-label="Cartons, shift '+esc(n)+'" data-o="'+id+'|'+esc(n)+'" value="'+(e.n==null?'':esc(String(e.n)))+'"><select data-ob="'+id+'|'+esc(n)+'" aria-label="Brand, shift '+esc(n)+'"><option value="">Brand…</option>'+BRANDS.map(b=>'<option'+(e.b===b?' selected':'')+'>'+esc(b)+'</option>').join('')+'</select></div>';}).join('')+'</div></div>';
+  const brOpts=sel=>'<option value="">Brand…</option>'+BRANDS.map(b=>'<option'+(sel===b?' selected':'')+'>'+esc(b)+'</option>').join('');
+  const orow=(id,n,e,first)=>'<div class="pkor"><span class="pkos">'+(first?esc(pkShTxt(n)):'')+'</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="Cartons" aria-label="Cartons, '+esc(pkShTxt(n))+'" data-o="'+id+'|'+esc(n)+'" value="'+(e.n==null?'':esc(String(e.n)))+'"><select data-ob="'+id+'|'+esc(n)+'" aria-label="Brand, '+esc(pkShTxt(n))+'">'+brOpts(e.b)+'</select>'+(first?'<button type="button" class="btn sm pkoadd" title="Add another brand" aria-label="Add another brand">+</button>':'<button type="button" class="btn sm bad pkodel" title="Remove this brand" aria-label="Remove this brand">\u2212</button>')+'</div>';
+  const row=id=>'<div class="pkod '+pkCls(id)+'"><b>'+(id==='pack_mac'?'Macaroni':'Spaghetti')+'</b><div class="pkog2">'+names.map(n=>{const es=pkEnts(pkOrdOf(id)[n]);if(!es.length)es.push({});return '<div class="pkoshift" data-sh="'+esc(n)+'">'+es.map((e,k)=>orow(id,n,e,k===0)).join('')+'</div>';}).join('')+'</div></div>';
   const w=document.createElement('div');w.id='pkoDlg';w.className='ovl';
-  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:520px"><h2>'+(pid==='pack_mac'?'Macaroni':'Spaghetti')+' · prepare · '+esc(S.pk.date)+'</h2><p class="muted small" style="margin:0 0 8px">How many cartons the packaging team should prepare in each shift. Pick the brand too. Leave blank for no order.</p>'+PKL.map(row).join('')+'<div class="row" style="margin-top:10px"><button type="button" class="btn big" id="poNo">Cancel</button><button type="button" class="btn pri big" id="poYes">Save order</button></div></div>';
+  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:520px"><h2>'+(pid==='pack_mac'?'Macaroni':'Spaghetti')+' · prepare · '+esc(S.pk.date)+'</h2><p class="muted small" style="margin:0 0 8px">How many cartons the packaging team should prepare in each shift. Pick the brand too. Press + to add a second brand in the same shift. Leave blank for no order.</p>'+PKL.map(row).join('')+'<div class="row" style="margin-top:10px"><button type="button" class="btn big" id="poNo">Cancel</button><button type="button" class="btn pri big" id="poYes">Save order</button></div></div>';
   document.body.appendChild(w);
   const done=()=>{w.remove();document.removeEventListener('keydown',kd);},kd=e=>{if(e.key==='Escape')done();};
   document.addEventListener('keydown',kd);
   $('#poNo').onclick=done;
   $('#poYes').onclick=async()=>{
     const orders={};
-    PKL.forEach(id=>{const o={};names.forEach(n=>{const el=$('[data-o="'+id+'|'+n+'"]',w),bs=$('[data-ob="'+id+'|'+n+'"]',w),v=el&&el.value.trim()!==''?Math.max(0,Math.round(Number(el.value))):null,b=bs?bs.value:'';if((v!=null&&!isNaN(v))||b)o[n]={n:(v!=null&&!isNaN(v))?v:null,b:b};});orders[id]=o;});
+    const nq=[],nb=[];
+    PKL.forEach(id=>{const o={};names.forEach(n=>{const blk=$$('.pkoshift',w).find(x=>x.dataset.sh===n),ents=[];
+      if(blk)$$('.pkor',blk).forEach(r=>{const el=$('input[data-o]',r),bs=$('select[data-ob]',r),v=el&&el.value.trim()!==''?Math.max(0,Math.round(Number(el.value))):null,b=bs?bs.value:'',hv=v!=null&&!isNaN(v);
+        if(hv||b){ents.push({n:hv?v:null,b:b});if(b&&!hv)nq.push([el,n]);if(hv&&!b)nb.push([bs,n]);}});
+      if(ents.length)o[n]=ents.length===1?ents[0]:ents;});orders[id]=o;});
     const po=S.pk.ord;
     if(!Object.keys(orders[pid]).length&&!(po&&po.orders&&po.orders[pid]&&Object.keys(po.orders[pid]).length)){toast('Type at least one quantity first.',true);return;}
-    const nb=[];PKL.forEach(id=>names.forEach(n=>{const e=orders[id][n];if(e&&e.n!=null&&!e.b)nb.push([id,n]);}));
-    const nq=[];PKL.forEach(id=>names.forEach(n=>{const e=orders[id][n];if(e&&e.n==null&&e.b)nq.push([id,n]);}));
-    $$('input[data-o]',w).forEach(s=>s.classList.remove('need'));
-    if(nq.length){const s=$('[data-o="'+nq[0][0]+'|'+nq[0][1]+'"]',w);$$('input[data-o]',w).forEach(x=>{const k=x.dataset.o.split('|');if(nq.some(z=>z[0]===k[0]&&z[1]===k[1]))x.classList.add('need');});toast('Type the cartons for shift '+nq[0][1]+'. The quantity is required when there is a brand.',true);if(s)s.focus();return;}
-    $$('select[data-ob]',w).forEach(s=>s.classList.remove('need'));
-    if(nb.length){const s=$('[data-ob="'+nb[0][0]+'|'+nb[0][1]+'"]',w);$$('select[data-ob]',w).forEach(x=>{const k=x.dataset.ob.split('|');if(nb.some(z=>z[0]===k[0]&&z[1]===k[1]))x.classList.add('need');});toast('Choose the brand for shift '+nb[0][1]+'. The brand is required when there is a quantity.',true);if(s)s.focus();return;}
+    $$('input[data-o],select[data-ob]',w).forEach(x=>x.classList.remove('need'));
+    if(nq.length){nq.forEach(z=>z[0].classList.add('need'));toast('Type the cartons for '+pkShTxt(nq[0][1]).toLowerCase()+'. The quantity is required when there is a brand.',true);nq[0][0].focus();return;}
+    if(nb.length){nb.forEach(z=>z[0].classList.add('need'));toast('Choose the brand for '+pkShTxt(nb[0][1]).toLowerCase()+'. The brand is required when there is a quantity.',true);nb[0][0].focus();return;}
     const chg=PKL.filter(id=>JSON.stringify(orders[id])!==JSON.stringify((po&&po.orders&&po.orders[id])||{}));
     if(!chg.length){toast('No changes to save.');return;}
     let who=who0;
@@ -1452,8 +1460,13 @@ function pkOrderDlg(pid,who0){
     try{await S.db.doc('logs/packorder_'+S.pk.date).set({area:'packorder',date:S.pk.date,orders:Object.assign({},po&&po.orders||{},orders),meta:meta});done();toast('Order saved.');}
     catch(e){toast(dbErr(e),true);}
   };
-  $$('select[data-ob]',w).forEach(s=>{s.onchange=()=>s.classList.remove('need');});
-  $$('input[data-o]',w).forEach(s=>{s.oninput=()=>s.classList.remove('need');});
+  w.addEventListener('input',ev=>{if(ev.target.classList)ev.target.classList.remove('need');});
+  w.addEventListener('change',ev=>{if(ev.target.classList)ev.target.classList.remove('need');});
+  w.addEventListener('click',ev=>{
+    const a=ev.target.closest('.pkoadd');
+    if(a){const blk=a.closest('.pkoshift');if(blk.querySelectorAll('.pkor').length>=4){toast('Maximum 4 brands in one shift.',true);return;}blk.insertAdjacentHTML('beforeend',orow(pid,blk.dataset.sh,{},false));const ni=blk.querySelector('.pkor:last-child input');if(ni)ni.focus();return;}
+    const d=ev.target.closest('.pkodel');if(d)d.closest('.pkor').remove();
+  });
   const f=$('input',w);if(f)f.focus();
 }
 function subPk(){
@@ -1466,7 +1479,7 @@ function subPk(){
 }
 function paintRawBan(){
   const el=$('#rawBan');if(!el)return;
-  const inf=rawInfo(S.today);
+  const inf=rawInfo(rawToday());
   if(!inf){el.className='rawban none';el.dataset.open='0';return;}
   el.dataset.open=inf.open?'1':'0';
   if(inf.open)el.textContent=inf.all?'Raw materials open · no time limit':'Raw materials open · closes in '+inf.left+' min ('+t12(inf.sl.e)+')';
@@ -1492,6 +1505,8 @@ function paintPkForm(id){
   const hd=$('#pkc_'+id+' h3.rawh');if(hd){let nb=$('[data-pn]',hd);if(nb)nb.remove();if(e){hd.insertAdjacentHTML('beforeend',' <button type="button" class="btn sm pknew" data-pn>+ New entry</button>');$('[data-pn]',hd).onclick=()=>{S.pk.edit[id]=null;S.pk.dirty[id]=false;paintPkForm(id);paintPkList(id);};}}
   const m=$('[data-pm]',box);
   if(e){m.className='status '+(l>0?'ok':'bad');m.textContent=l>0?'Saved by '+e.by+'. You can change it for '+left5(l)+' more.':'Saved by '+e.by+'. Locked: only a shift leader can change it now.';}
+  if(e&&e.tEdit)m.insertAdjacentHTML('afterend','<div class="status pktm">⏱ Time edited by '+esc(e.tEdit.by)+' · '+esc(pkAtTxt(e.tEdit.at))+' (was '+esc(e.tEdit.from)+')</div>');
+  if(e){}
   else m.textContent=(pkYdayOpen()&&!adminEff()?'Yesterday is open for '+pkWinLeft()+' more min (counted as '+pkShiftNow()+'). ':'')+'Fill the readings and press Save.';
   box.oninput=box.onchange=ev=>{S.pk.dirty[id]=true;const fl=ev.target.closest&&ev.target.closest('.fld');if(fl)fl.classList.remove('need');};
   const nb=$('[data-pnote]',box),ntx=$('.pknote',box),nl=$('.pknl',box);
@@ -1538,10 +1553,11 @@ function paintPkList(id){
     const canE=!ro&&(adminEff()||leaderActive()||unlockOn()||editLeft(e)>0);const cls=(canE?'clk':'')+(e.run===false?' stp':'')+(S.pk.edit[id]===x.k?' sel':'');
     if(e.run===false)return '<tr class="'+cls+'" data-k="'+esc(x.k)+'"'+(e.gr&&e.shift?' data-sh="'+esc(e.shift)+'"':'')+'><td class="mono">'+hm(x.min)+'</td><td colspan="2"><span class="chip bad" title="'+esc(e.why||'')+'">Stopped · '+(e.down||0)+' min</span> <span class="mono stt">'+esc(stopTimes(e))+'</span>'+nt+'</td><td>'+by+(ro?'':((editLeft(e)>0||adminEff()||leaderActive()||unlockOn())?'<button type="button" class="delstop" data-k="'+esc(x.k)+'" aria-label="Delete stoppage record">🗑</button>':''))+'</td><td class="n"></td></tr>';
     const c=num(v.pallets);if(c!=null)tot+=c;
-    return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"'+(e.gr&&e.shift?' data-sh="'+esc(e.shift)+'"':'')+'><td class="mono">'+hm(x.min)+'</td><td class="mono">'+(c==null?'–':fmtN(c))+'</td><td>'+esc(pkBrand(v.ptype))+nt+'</td><td>'+by+(!ro&&(gapShort(gaps[x.k])||adminEff())?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" aria-label="Delete reading" title="'+esc(gp)+'">🗑</button>':'')+'</td><td class="n pkdf">'+gp+'</td></tr>';}).join('');
+    return '<tr class="'+cls+(gapShort(gaps[x.k])?' shortgap':'')+'" data-k="'+esc(x.k)+'"'+(e.gr&&e.shift?' data-sh="'+esc(e.shift)+'"':'')+'><td class="mono">'+hm(x.min)+(e.tEdit?' <span class="tedi" title="Time edited by '+esc(e.tEdit.by)+' at '+esc(pkAtTxt(e.tEdit.at))+' (was '+esc(e.tEdit.from)+')">⏱</span>':'')+'</td><td class="mono">'+(c==null?'–':fmtN(c))+'</td><td>'+esc(pkBrand(v.ptype))+nt+'</td><td>'+by+(!ro&&(gapShort(gaps[x.k])||adminEff())?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" aria-label="Delete reading" title="'+esc(gp)+'">🗑</button>':'')+'</td><td class="n pkdf">'+gp+(!ro?' <button type="button" class="pktime" data-k="'+esc(x.k)+'" aria-label="Change time" title="Change time (shift leader)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>':'')+'</td></tr>';}).join('');
   const pvRow=pv?'<tr class="pkprev" title="Last reading of the day before. Not counted."><td class="mono">'+hm(pv.min)+'</td><td class="mono">'+fmtN(num((pv.e.v||{}).pallets))+'</td><td>'+esc(pkBrand((pv.e.v||{}).ptype))+'</td><td><span class="chip">yesterday</span></td><td class="n"></td></tr>':'';
   el.innerHTML='<table class="elt pkt" style="white-space:nowrap"><thead><tr><th>Time</th><th>Cartons</th><th>Type</th><th>By</th><th class="n">Diff</th></tr></thead><tbody>'+(es.length?rows:'<tr><td colspan="5" class="muted">No entries yet for '+esc(S.pk.date)+'.</td></tr>')+'</tbody></table>'+(ro?'<p class="muted small">Yesterday, read only.</p>':'<p class="muted small">Tap a line to change it.</p>');
   el.querySelectorAll('.delstop').forEach(b=>b.onclick=ev=>{ev.stopPropagation();(b.classList.contains('delgap')?pkDelGap:pkDelStop)(id,b.dataset.k);});
+  el.querySelectorAll('.pktime').forEach(b=>b.onclick=ev=>{ev.stopPropagation();pkTimeAsk(id,b.dataset.k);});
   el.querySelectorAll('.pkmsg').forEach(b=>b.onclick=ev=>{ev.stopPropagation();const e=d.hours[b.dataset.note];if(!e)return;
     const old=$('#pkNote');if(old)old.remove();const w=document.createElement('div');w.id='pkNote';w.className='ovl';
     w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:420px"><h2>Comment · '+esc(RAW_T[id])+'</h2><div class="muted small">'+esc(hm(pkKeyMin(b.dataset.note)))+' · '+nmH(e.by)+'</div><p style="white-space:pre-wrap;font-size:18px;margin:10px 0 0">'+esc(e.note)+'</p></div>';
@@ -1550,6 +1566,37 @@ function paintPkList(id){
   shiftBoxes(el);
   {const sb=el.querySelector('.shbox'),after=sb?sb.parentNode:el.querySelector('table');
    if(after)after.insertAdjacentHTML('afterend',(pv?'<table class="elt pkt pkprevt" style="white-space:nowrap"><tbody>'+pvRow+'</tbody></table>':'')+'<div class="pkTot"><span>Total</span><b class="mono">'+fmtN(tot)+'</b></div>');}
+}
+async function pkTimeAsk(id,key){
+  const e=S.pk.docs[id]&&S.pk.docs[id].hours?S.pk.docs[id].hours[key]:null;if(!e||pkRo())return;
+  let who;
+  if(unlockOn())who={name:S.unlock.name,id:S.unlock.id,leader:true};
+  else if(adminEff()||leaderActive())who={name:(S.unlock&&S.unlock.name)||'Admin',leader:true};
+  else{who=await ask({title:'Shift leader password needed',msg:'Change the time of this entry?',pw:true,leaderOnly:true,ok:'Open'});if(!who)return;}
+  if(!(who.leader||adminEff())){toast('Only a shift leader can change the time.',true);return;}
+  pkTimeDlg(id,key,who);
+}
+function pkTimeDlg(id,key,who){
+  const e=S.pk.docs[id]&&S.pk.docs[id].hours?S.pk.docs[id].hours[key]:null;if(!e)return;
+  const old=$('#pkTmDlg');if(old)old.remove();
+  const m0=pkKeyMin(key),w=document.createElement('div');w.id='pkTmDlg';w.className='ovl';
+  w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:340px"><h2>Change time</h2><div class="muted small" style="margin:0 0 8px">'+esc(RAW_T[id])+' · '+(e.v&&e.v.pallets!=null?esc(String(e.v.pallets))+' ctn':'')+'</div><div class="pktmr"><span>Old time</span><b class="mono">'+esc(hm(m0))+'</b></div><label class="l">New time<input type="time" id="pkTmNew" value="'+esc(hm(m0))+'"></label><div class="row" style="margin-top:10px"><button type="button" class="btn big" id="pkTmNo">Cancel</button><button type="button" class="btn pri big" id="pkTmYes">Save</button></div></div>';
+  document.body.appendChild(w);
+  const done=()=>{w.remove();document.removeEventListener('keydown',kd);},kd=ev=>{if(ev.key==='Escape')done();};
+  document.addEventListener('keydown',kd);$('#pkTmNo').onclick=done;
+  const ti=$('#pkTmNew');if(ti){ti.focus();}
+  $('#pkTmYes').onclick=async()=>{
+    const tv=ti.value;if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(tv)){toast('Type a valid time.',true);return;}
+    const t=Number(tv.slice(0,2))*60+Number(tv.slice(3,5));if(t===m0){toast('The time is the same. Change it or press Cancel.',true);return;}
+    if(S.pk.date===pkToday()&&!e.gr){const nw=new Date();if(om(t)>om(nw.getHours()*60+nw.getMinutes())+1){toast('That time has not happened yet.',true);return;}}
+    const hrs=(S.pk.docs[id]&&S.pk.docs[id].hours)||{};let sec=t*60+(Number(key.slice(1))%60||0);while(hrs['s'+sec]&&'s'+sec!==key)sec++;
+    const nk='s'+sec,nm=Math.floor(sec/60),iso=new Date().toISOString();
+    const obj=Object.assign({},e,{tEdit:{by:who.name||'Admin',at:iso,from:(e.tEdit&&e.tEdit.from)||hm(m0),to:hm(nm)}});
+    if(!e.gr)obj.shift=shiftOf(Math.floor(nm/60));
+    $('#pkTmYes').disabled=true;
+    try{await writeEntry(id,S.pk.date,nk,obj,null);await writeEntry(id,S.pk.date,key,null,null);if(S.pk.edit[id]===key)S.pk.edit[id]=null;S.unlock=null;done();toast(RAW_T[id]+' time changed '+hm(m0)+' → '+hm(nm)+' by '+(who.name||'Admin'));paintPkForm(id);paintPkList(id);}
+    catch(er){toast(dbErr(er),true);$('#pkTmYes').disabled=false;}
+  };
 }
 async function pkDelStop(id,key){
   const e=S.pk.docs[id]&&S.pk.docs[id].hours?S.pk.docs[id].hours[key]:null,ov=adminEff()||leaderActive()||unlockOn();
@@ -1589,7 +1636,7 @@ async function pkSave(id,stop){
   const v=Object.assign({},e1&&e1.v||{});a.params.forEach(p=>{if(!(p.id in v))v[p.id]=null;});
   v.pallets=n;v.ptype=ty;
   const alarms=0;
-  const obj=Object.assign({},e1||{},{v:v,run:run,down:run?0:stop.down,why:run?'':stop.why,note:run?($('.pknote',box).value||'').trim():stop.note,shift:pkShiftNow(),stopAt:run?'':stop.stopAt,startAt:run?'':stop.startAt,alarms:alarms,empty:0});
+  const obj=Object.assign({},e1||{},{v:v,run:run,down:run?0:stop.down,why:run?'':stop.why,note:run?($('.pknote',box).value||'').trim():stop.note,shift:(e1&&e1.shift)?e1.shift:pkShiftNow(),stopAt:run?'':stop.stopAt,startAt:run?'':stop.startAt,alarms:alarms,empty:0});
   if(e1){obj.editedAt=nowIso;obj.editedBy=who.name;}
   else{obj.by=who.name;obj.byId=who.id||null;obj.at=nowIso;obj.late=false;if(pkYdayOpen())obj.gr=1;else delete obj.gr;}
   const sb=$('[data-ps]',box);if(sb)sb.disabled=true;
@@ -1635,22 +1682,31 @@ const rawOK=()=>RAWL.every(id=>canSee(area(id)));
 const rawSlots=()=>packSlots(area('pack_mac'));
 const durTxt=m=>m<60?m+' min':Math.floor(m/60)+' h '+pad(m%60)+' min';
 const rawOpenAll=()=>!!(S.cfg&&S.cfg.rawOpenAll);
+const rawExt=()=>{const ds=dayStart()*60;let x=0;rawSlots().forEach(sl=>{if(sl.s<ds&&sl.e>ds)x=Math.max(x,sl.e-ds);});return x;};
+const rawToday=()=>{const x=rawExt();if(!x)return S.today;const n=new Date(),m=n.getHours()*60+n.getMinutes(),ds=dayStart()*60;return m>=ds&&m<ds+x?addDays(S.today,-1):S.today;};
+const rawPos=()=>{const ds=dayStart()*60,n=new Date(),m=n.getHours()*60+n.getMinutes(),x=rawExt();return om(m)+((x&&m>=ds&&m<ds+x)?1440:0);};
+const rawSlName=sl=>sl.l?sl.l:winText([[sl.s,sl.e]]);
+const rawShiftFor=sl=>shiftOf((Math.floor((sl.s+sl.e)/120)+23)%24);
+const RAW_GRP={D:'Day leader',N:'Night leader'};
 function rawSlotState(sl,date){
-  if(date<S.today)return {st:'past'};
-  if(date>S.today)return {st:'later'};
-  const m=nowMin();
-  if(rawOpenAll()&&!(m>=sl.s&&m<sl.e))return {st:'open',left:null,all:true};
-  if(m>=sl.s&&m<sl.e)return {st:'open',left:sl.e-m};
-  return {st:'soon',wait:((sl.s-m)+1440)%1440};
+  const rt=rawToday();
+  if(date<rt)return {st:'past'};
+  if(date>rt)return {st:'later'};
+  const pos=rawPos(),so=om(sl.s),eo=so+(sl.e-sl.s),inside=pos>=so&&pos<eo;
+  if(rawOpenAll()&&!inside)return {st:'open',left:null,all:true};
+  if(inside)return {st:'open',left:eo-pos};
+  if(pos<so)return {st:'soon',wait:so-pos};
+  return {st:'past'};
 }
 function rawInfo(date){
   const sls=rawSlots();if(!sls.length)return null;
-  const o=sls.map(sl=>({sl:sl,s:rawSlotState(sl,date)}));
-  if(rawOpenAll()&&date===S.today){const m=nowMin(),cur=sls.find(sl=>m>=sl.s&&m<sl.e)||sls.filter(sl=>sl.s<=m).pop()||sls[sls.length-1];return {open:true,all:true,left:null,sl:cur,txt:'Open · no time limit',cls:'ok'};}
+  if(date!==rawToday())return null;
+  const pos=rawPos(),cyc=sl=>((om(sl.s)-pos)+1440)%1440,o=sls.map(sl=>({sl:sl,s:rawSlotState(sl,date)}));
+  if(rawOpenAll()){const cur=sls.find(sl=>pos>=om(sl.s)&&pos<om(sl.s)+(sl.e-sl.s))||sls.filter(sl=>om(sl.s)<=pos).pop()||sls[0];return {open:true,all:true,left:null,sl:cur,txt:'Open · no time limit',cls:'ok'};}
   const op=o.find(x=>x.s.st==='open');
   if(op)return {open:true,left:op.s.left,sl:op.sl,txt:'Open now · '+op.s.left+' min left',cls:op.s.left<=15?'bad':'ok'};
-  const nx=o.filter(x=>x.s.st==='soon').sort((a,b)=>a.s.wait-b.s.wait)[0];
-  return nx?{open:false,wait:nx.s.wait,sl:nx.sl,txt:'Next opening in '+durTxt(nx.s.wait)+' · '+winText([[nx.sl.s,nx.sl.e]]),cls:nx.s.wait<=40?'warn':''}:null;
+  const nx=sls.map(sl=>({sl:sl,wait:cyc(sl)})).sort((a,b)=>a.wait-b.wait)[0];
+  return nx?{open:false,wait:nx.wait,sl:nx.sl,txt:'Next opening in '+durTxt(nx.wait)+' · '+winText([[nx.sl.s,nx.sl.e]]),cls:nx.wait<=40?'warn':''}:null;
 }
 function rawEntry(doc,sl){
   const es=entries(doc).filter(x=>x.min>=sl.s&&x.min<sl.e&&x.e&&x.e.v&&RAW_IDS.concat(REGR).some(id=>x.e.v[id]!=null));
@@ -1672,10 +1728,11 @@ function rawSlotDone(sl){
 }
 function renderRaw(){
   const sls=rawSlots();
-  S.raw={date:S.today,sel:0,docs:{pack_mac:null,pack_spa:null},regr:null,dirty:{},x:{}};
+  S.rawTd=rawToday();S.raw={date:rawToday(),sel:0,docs:{pack_mac:null,pack_spa:null},regr:null,dirty:{},x:{}};
   const inf=rawInfo(S.raw.date);if(inf){const i=sls.findIndex(s=>s.s===inf.sl.s);if(i>=0)S.raw.sel=i;}
-  $('#main').innerHTML='<div class="card hcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="eyebrow">Three times a day</div><h2>Raw materials</h2><div class="muted small">Film wastage, carton and raw material for Macaroni and Spaghetti, with Regrinding shared by both · <span id="rawWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="rawDt" value="'+S.raw.date+'" max="'+S.today+'" min="'+addDays(S.today,-3)+'"></label>':'')+'</div><div id="rawStat" class="status" style="margin-top:10px"></div></div>'+
+  $('#main').innerHTML='<div class="card hcard"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="eyebrow">'+(({3:'Three',4:'Four',5:'Five',2:'Two',1:'One'})[rawSlots().length]||rawSlots().length)+' record'+(rawSlots().length===1?'':'s')+' a day</div><h2>Raw materials</h2><div class="muted small">Film wastage, carton and raw material for Macaroni and Spaghetti, with Regrinding shared by both · <span id="rawWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:170px">Date<input type="date" id="rawDt" value="'+S.raw.date+'" max="'+rawToday()+'" min="'+addDays(S.today,-3)+'"></label>':'<div class="seg" id="rawTog"><button type="button" class="btn sm" data-d="y">Yesterday</button><button type="button" class="btn sm" data-d="t">Today</button></div>')+'</div><div id="rawStat" class="status" style="margin-top:10px"></div></div>'+
    '<div id="rawChips" class="rawchips"></div><form class="card" id="rawForm" autocomplete="off" novalidate></form><div id="rawHist"></div>';
+  $$('#rawTog button').forEach(b=>b.onclick=()=>{const v=b.dataset.d==='y'?addDays(rawToday(),-1):rawToday();if(S.raw.date===v)return;if(RAWL.some(a=>S.raw.dirty[a])&&!confirm('Discard what you typed?'))return;S.raw.date=v;S.raw.docs={pack_mac:null,pack_spa:null};S.raw.regr=null;S.raw.dirty={};S.raw.x={};const inf=rawInfo(v);if(inf){const k=rawSlots().findIndex(q=>q.s===inf.sl.s);if(k>=0)S.raw.sel=k;}subRaw();rawRefresh();});
   const dt=$('#rawDt');if(dt)dt.onchange=e=>{const v=e.target.value;if(!v)return;S.raw.date=v;S.raw.docs={pack_mac:null,pack_spa:null};S.raw.regr=null;S.raw.dirty={};S.raw.x={};subRaw();rawRefresh();};
   subRaw();rawRefresh();
 }
@@ -1695,8 +1752,9 @@ function rawRefresh(){
 }
 function paintRawStatus(){
   const el=$('#rawStat');if(!el||!S.raw)return;
+  $$('#rawTog button').forEach(b=>b.classList.toggle('pri',(b.dataset.d==='t')===(S.raw.date===rawToday())));
   const inf=rawInfo(S.raw.date);
-  if(S.raw.date!==S.today){el.className='status';el.innerHTML='Viewing '+esc(S.raw.date)+' · an earlier production day.';}
+  if(S.raw.date!==rawToday()){el.className='status';el.innerHTML='Viewing '+esc(S.raw.date)+' · an earlier production day. A record that was missed can be filled here by a shift leader (unlock).';}
   else if(inf){el.className='status '+inf.cls+(inf.cls==='warn'||inf.open?' cdbar':'');el.innerHTML='<b>'+esc(inf.txt)+'</b>'+(inf.open?' · window '+winText([[inf.sl.s,inf.sl.e]]):'');}
   else{el.className='status';el.textContent='';}
   if(rawReady())paintRawChips();
@@ -1710,7 +1768,7 @@ function paintRawChips(){
     else if(ts.st==='soon'){txt='opens in '+durTxt(ts.wait);cls=ts.wait<=40?'warn':'';if(dn==='part'){txt='partly saved';cls='warn';}}
     else if(ts.st==='past'||(ts.st==='later')){txt=ts.st==='later'?'later':(dn==='part'?'partly saved':'missed');cls=ts.st==='past'&&dn!=='part'?'bad':(dn==='part'?'warn':'');}
     if(dn==='part'&&ts.st==='open'){txt='partly saved'+(ts.all?'':' · '+ts.left+' min left');cls='warn';}
-    return '<button type="button" class="rawchip'+(i===S.raw.sel?' sel':'')+'" data-i="'+i+'"><b>'+winText([[sl.s,sl.e]])+'</b><span class="chip '+cls+'">'+esc(txt)+'</span></button>';}).join('');
+    return '<button type="button" class="rawchip'+(i===S.raw.sel?' sel':'')+'" data-i="'+i+'"><b>'+esc(rawSlName(sl))+'</b>'+(sl.l?'<span class="muted small">'+winText([[sl.s,sl.e]])+(sl.g&&RAW_GRP[sl.g]?' · '+RAW_GRP[sl.g]:'')+'</span>':'')+'<span class="chip '+cls+'">'+esc(txt)+'</span></button>';}).join('');
   $$('.rawchip',el).forEach(b=>b.onclick=()=>{const i=Number(b.dataset.i);if(i===S.raw.sel)return;if(RAWL.some(a=>S.raw.dirty[a])&&!confirm('Discard what you typed?'))return;S.raw.sel=i;S.raw.dirty={};S.raw.x={};paintRawChips();paintRawForm();});
 }
 const rawCtl=(aid,id)=>$('#rawForm [data-a="'+aid+'"] input[data-p="'+id+'"],#rawForm [data-a="'+aid+'"] select[data-p="'+id+'"]');
@@ -1783,7 +1841,7 @@ function paintRawForm(){
 function rawPerm(){
   const sl=rawSlots()[S.raw.sel],L=leaderActive();
   if(!S.canWrite)return {can:false,cls:'bad',msg:'You can view this logbook but not save readings.'};
-  if(S.raw.date>S.today)return {can:false,cls:'bad',msg:'This day has not started yet.'};
+  if(S.raw.date>rawToday())return {can:false,cls:'bad',msg:'This day has not started yet.'};
   const ts=rawSlotState(sl,S.raw.date);
   let normal;
   if(ts.st==='open')normal={can:true,cls:'ok',msg:ts.all?'Open with no time limit. Save each part when you have it, one by one.':'Window open · '+ts.left+' min left. Save each part when you have it, one by one.'};
@@ -1823,9 +1881,20 @@ function paintRawHist(){
       sums[id].pack_mac=add(sums[id].pack_mac,num(a));sums[id].pack_spa=add(sums[id].pack_spa,num(b));
       const t=(num(a)||0)+(num(b)||0);
       return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+'</span></td><td class="n mono">'+cell(a,brandOf('pack_mac',sl,id),saverOf('pack_mac',sl,id))+'</td><td class="n mono">'+cell(b,brandOf('pack_spa',sl,id),saverOf('pack_spa',sl,id))+'</td><td class="n mono tcol">'+fmtN(t)+'</td></tr>';}).join('')+REGR.map(id=>{const v=rawVal('pack_mac',sl,id),p=mp.find(q=>q.id===id);if(v==null)return '';rsum[id]=add(rsum[id],num(v));return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+' · both lines</span></td><td class="n mono" colspan="2">'+fmtN(v)+'</td><td class="n mono tcol">'+fmtN(v)+'</td></tr>';}).join('');
-    return '<div class="rawhh"><h4 style="margin:12px 0 4px">'+winText([[sl.s,sl.e]])+(by?' <span class="muted small" style="font-weight:400">· saved by '+esc(by)+'</span>':'')+'</h4>'+'</div>'+(rows?'<table class="mx"><thead><tr><th></th><th class="n mac">Macaroni</th><th class="n spa">Spaghetti</th><th class="n">Total</th></tr></thead><tbody>'+rows+'</tbody></table>':'<div class="empty">Nothing saved in this window.</div>');}).join('');
-  const dayRows=numIds.map(id=>{const p=mp.find(q=>q.id===id),a=sums[id].pack_mac,b=sums[id].pack_spa;if(a==null&&b==null)return '';return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+'</span></td><td class="n mono">'+cell(a)+'</td><td class="n mono">'+cell(b)+'</td><td class="n mono tcol">'+fmtN((a||0)+(b||0))+'</td></tr>';}).join('')+REGR.map(id=>{const p=mp.find(q=>q.id===id);return rsum[id]==null?'':'<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+' · both lines</span></td><td class="n mono" colspan="2">'+fmtN(rsum[id])+'</td><td class="n mono tcol">'+fmtN(rsum[id])+'</td></tr>';}).join('');
-  el.innerHTML='<div class="card"><h3>Entries on this date</h3>'+blocks+(dayRows?'<h4 style="margin:16px 0 4px">Whole day</h4><table class="mx"><thead><tr><th></th><th class="n mac">Macaroni</th><th class="n spa">Spaghetti</th><th class="n">Total</th></tr></thead><tbody>'+dayRows+'</tbody></table>':'')+'</div>';
+    return '<div class="rawhh"><h4 style="margin:12px 0 4px">'+(sl.l?esc(sl.l)+' <span class="muted small" style="font-weight:400">'+winText([[sl.s,sl.e]])+(sl.g&&RAW_GRP[sl.g]?' · '+RAW_GRP[sl.g]:'')+'</span>':winText([[sl.s,sl.e]]))+(by?' <span class="muted small" style="font-weight:400">· saved by '+esc(by)+'</span>':'')+'</h4>'+'</div>'+(rows?'<table class="mx"><thead><tr><th></th><th class="n mac">Macaroni</th><th class="n spa">Spaghetti</th><th class="n">Total</th></tr></thead><tbody>'+rows+'</tbody></table>':'<div class="empty">Nothing saved in this window.</div>');}).join('');
+  const rowsFor=(sm,rs)=>numIds.map(id=>{const p=mp.find(q=>q.id===id),a=sm[id].pack_mac,b=sm[id].pack_spa;if(a==null&&b==null)return '';return '<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+'</span></td><td class="n mono">'+cell(a)+'</td><td class="n mono">'+cell(b)+'</td><td class="n mono tcol">'+fmtN((a||0)+(b||0))+'</td></tr>';}).join('')+REGR.map(id=>{const p=mp.find(q=>q.id===id);return rs[id]==null?'':'<tr><td>'+esc(p.label)+' <span class="muted small">'+esc(p.unit)+' · both lines</span></td><td class="n mono" colspan="2">'+fmtN(rs[id])+'</td><td class="n mono tcol">'+fmtN(rs[id])+'</td></tr>';}).join('');
+  const tbl=r=>'<table class="mx"><thead><tr><th></th><th class="n mac">Macaroni</th><th class="n spa">Spaghetti</th><th class="n">Total</th></tr></thead><tbody>'+r+'</tbody></table>';
+  const dayRows=rowsFor(sums,rsum);
+  const gblock=(title,gs)=>{
+    const gm={},gr={};numIds.forEach(id=>{gm[id]={pack_mac:null,pack_spa:null};});REGR.forEach(id=>{gr[id]=null;});
+    gs.forEach(sl=>{numIds.forEach(id=>{gm[id].pack_mac=add(gm[id].pack_mac,num(rawVal('pack_mac',sl,id)));gm[id].pack_spa=add(gm[id].pack_spa,num(rawVal('pack_spa',sl,id)));});REGR.forEach(id=>{gr[id]=add(gr[id],num(rawVal('pack_mac',sl,id)));});});
+    const lr=rowsFor(gm,gr);
+    return '<div class="rawld"><h4 style="margin:16px 0 2px">'+esc(title)+'</h4><div class="muted small" style="margin:0 0 4px">'+gs.map(sl=>esc(rawSlName(sl))).join(' + ')+'</div>'+(lr?tbl(lr):'<div class="empty">Nothing saved yet.</div>')+'</div>';};
+  const shNames=[];rawSlots().forEach(sl=>{const n=rawShiftFor(sl);if(shNames.indexOf(n)<0)shNames.push(n);});
+  const byShift=shNames.length?'<h3 style="margin:22px 0 0">By operator shift</h3>'+shNames.map(n=>{const gs=rawSlots().filter(sl=>rawShiftFor(sl)===n);return gblock(n+(gs.length>1?' · total':''),gs);}).join(''):'';
+  const lgs=['D','N'].filter(g=>rawSlots().some(sl=>sl.g===g));
+  const leaders=lgs.length?'<h3 style="margin:22px 0 0">By shift leader</h3>'+lgs.map(g=>gblock(RAW_GRP[g],rawSlots().filter(sl=>sl.g===g))).join(''):'';
+  el.innerHTML='<div class="card"><h3>Entries on this date</h3>'+blocks+(dayRows?'<h4 style="margin:16px 0 4px">Whole day</h4>'+tbl(dayRows):'')+byShift+leaders+'</div>';
 }
 async function saveRaw(aid){
   if(!S.db)return toast('No database connection.',true);
@@ -1863,7 +1932,8 @@ async function saveRaw(aid){
       let al=0;area(aid).params.forEach(q=>{if(RAW_IDS.indexOf(q.id)>=0&&(q.kind||'num')==='num'){const n=num(v[q.id]);if(n!=null&&pState(q,n)!=='ok')al++;}});
       const obj=Object.assign({},e1||{},{v:v,ip:ip,alarms:al});
       if(e1){if(ent.some(it=>rawItemSaved(aid,sl,it))){obj.editedAt=nowIso;obj.editedBy=who.name;}}
-      else Object.assign(obj,{run:true,down:0,why:'',note:'',stopAt:'',startAt:'',empty:0,ovr:true,shift:shiftOf(Math.floor(min/60)),by:who.name,byId:who.id||null,at:nowIso,late:false});
+      else Object.assign(obj,{run:true,down:0,why:'',note:'',stopAt:'',startAt:'',empty:0,ovr:true,shift:rawShiftFor(sl),by:who.name,byId:who.id||null,at:nowIso,late:false});
+      if(sl.s<dayStart()*60&&sl.e>dayStart()*60&&min>=dayStart()*60)obj.gr=1;
       await writeEntry(aid,date,key,obj,null);
     }
     if(chg.some(it=>it.shared)){
@@ -2959,7 +3029,7 @@ function packSlotInfo(a,date,es,sl){
   if(nm<eo){const l=eo-nm;return {st:l<=15?'closing':'open',cls:l<=15?'bad':'ok',txt:(l<=15?'closing in ':'open · ')+l+' min'+(l<=15?'':' left'),left:l};}
   return {st:'missed',cls:'bad',txt:'missed'};
 }
-function packSlots(a){const wp=a.params.find(p=>p.win);return wp?wp.win.map(w=>({s:w[0],e:w[1]})).sort((x,y)=>om(x.s)-om(y.s)):[];}
+function packSlots(a){const wp=a.params.find(p=>p.win);return wp?wp.win.map(w=>({s:w[0],e:w[1],l:w[2]||'',g:w[3]||''})).sort((x,y)=>om(x.s)-om(y.s)):[];}
 const abbr=t=>String(t==null?'–':t).replace(/^MACARONI/,'MAC').replace(/^SPAGHETTI/,'SPA');
 function rdDoc(){return S.rd==='yday'?{doc:S.ydoc,regr:S.yregr,date:addDays(S.today,-1),ro:true}:{doc:S.day,regr:S.regr,date:S.date,ro:false};}
 function setRd(d){
@@ -4676,7 +4746,7 @@ function paramRow(p){
 const RAWSET_ITEMS=[['film_waste','Film wastage'],['scotch','Scotch used'],['dmg_carton','Damaged carton'],['flour','Flour used'],['semolina','Semolina used']];
 const minToTime=m=>pad(Math.floor(m/60)%24)+':'+pad(m%60);
 const timeToMin=v=>{const m=/^(\d{1,2}):(\d{2})$/.exec(String(v||''));return m?Number(m[1])*60+Number(m[2]):null;};
-function rwWinRow(w){return '<div class="rwwin" style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;margin:6px 0"><label class="l" style="margin:0">Opens<input type="time" class="rw-s" value="'+(w?minToTime(w[0]):'')+'"></label><label class="l" style="margin:0">Closes<input type="time" class="rw-e" value="'+(w?minToTime(w[1]):'')+'"></label><button type="button" class="btn sm bad ico rw-delwin" title="Remove window" aria-label="Remove window" style="margin-top:18px">'+TRASH+'</button></div>';}
+function rwWinRow(w){return '<div class="rwwin" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:10px;align-items:center;margin:6px 0"><label class="l" style="margin:0">Name<input type="text" class="rw-n" maxlength="40" placeholder="e.g. Shift A · record at 15:00" value="'+esc(w&&w[2]||'')+'"></label><label class="l" style="margin:0">For<select class="rw-g"><option value="">–</option><option value="D"'+(w&&w[3]==='D'?' selected':'')+'>Day leader</option><option value="N"'+(w&&w[3]==='N'?' selected':'')+'>Night leader</option></select></label><label class="l" style="margin:0">Opens<input type="time" class="rw-s" value="'+(w?minToTime(w[0]):'')+'"></label><label class="l" style="margin:0">Closes<input type="time" class="rw-e" value="'+(w?minToTime(w[1]):'')+'"></label><button type="button" class="btn sm bad ico rw-delwin" title="Remove window" aria-label="Remove window" style="margin-top:18px">'+TRASH+'</button></div>';}
 function rawSetupHTML(){
   const ar=id=>S.cfg.areas.find(x=>x.id===id),mac=ar('pack_mac');
   if(!mac)return '<section class="card"><p class="muted">The packaging lines are not set up.</p></section>';
@@ -4688,7 +4758,7 @@ function rawSetupHTML(){
   const rows=RAWSET_ITEMS.map(it=>{const p=P('pack_mac',it[0])||{};return '<div style="'+grid+'"><b>'+esc(it[1])+' <span class="muted small">'+esc(p.unit||'')+'</span></b>'+lim('pack_mac',it[0])+lim('pack_spa',it[0])+'</div>';}).join('');
   const rg=[['regr_used','Regrinding used'],['regr_prod','Regrinding produced']].map(it=>{const p=P('pack_mac',it[0])||{};return '<div style="display:grid;grid-template-columns:minmax(110px,1fr) 90px 90px;gap:8px;align-items:center;margin:6px 0"><b>'+esc(it[1])+' <span class="muted small">'+esc(p.unit||'')+'</span></b>'+lim('both',it[0])+'</div>';}).join('');
   return '<section class="card" data-raw="1"><h2>Raw materials</h2><p class="muted small">This sets the Raw materials page in Packaging. It applies to both the Macaroni and Spaghetti lines.</p>'+
-   '<h3 style="margin:14px 0 4px">Entry windows</h3><p class="muted small" style="margin:0 0 6px">The operators can fill the raw materials only inside these times. Changing a time affects new entries; entries saved earlier keep their old window.</p><div class="rwwins">'+wins.map(rwWinRow).join('')+'</div><div class="row" style="margin-top:8px;align-items:flex-end;gap:10px;flex-wrap:wrap"><label class="l" style="margin:0;width:150px">Opens (min before shift start)<input type="number" min="0" max="240" id="rwBef" value="30"></label><label class="l" style="margin:0;width:150px">Closes (min after shift start)<input type="number" min="1" max="240" id="rwAft" value="30"></label><button type="button" class="btn sm rw-fromsh">Fill the windows from the shift starts</button></div><label class="l" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px"><input type="checkbox" id="rwOpenAll"'+(S.cfg.rawOpenAll?' checked':'')+' style="width:auto"> Leave open: operators can fill raw materials at any time (no time limit)</label><div class="row" style="margin-top:6px"><button type="button" class="btn sm rw-addwin">Add window</button></div>'+
+   '<h3 style="margin:14px 0 4px">Entry windows</h3><p class="muted small" style="margin:0 0 6px">The operators can fill the raw materials only inside these times. Changing a time affects new entries; entries saved earlier keep their old window.</p><div class="rwwins">'+wins.map(rwWinRow).join('')+'</div><div class="row" style="margin-top:8px;align-items:flex-end;gap:10px;flex-wrap:wrap"><label class="l" style="margin:0;width:150px">Opens (min before shift start)<input type="number" min="0" max="240" id="rwBef" value="30"></label><label class="l" style="margin:0;width:150px">Closes (min after shift start)<input type="number" min="1" max="240" id="rwAft" value="30"></label><button type="button" class="btn sm rw-fromsh">Fill the windows from the shift starts</button><button type="button" class="btn sm rw-four">Use the 4 records (07:00 · 15:00 · 19:00 · 23:00)</button></div><label class="l" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px"><input type="checkbox" id="rwOpenAll"'+(S.cfg.rawOpenAll?' checked':'')+' style="width:auto"> Leave open: operators can fill raw materials at any time (no time limit)</label><div class="row" style="margin-top:6px"><button type="button" class="btn sm rw-addwin">Add window</button></div>'+
    '<h3 style="margin:18px 0 4px">Brands</h3><p class="muted small" style="margin:0 0 6px">One brand per line. Old entries keep the brand they were saved with.</p>'+
    '<label class="l">Film brands<textarea class="rw-b-film" rows="5">'+esc(opts('film_brand'))+'</textarea></label><label class="l">Scotch brands<textarea class="rw-b-scotch" rows="5">'+esc(opts('scotch_brand'))+'</textarea></label><label class="l">Carton brands<textarea class="rw-b-carton" rows="5">'+esc(opts('dmg_brand'))+'</textarea></label>'+
    '<h3 style="margin:18px 0 4px">Limits</h3><p class="muted small" style="margin:0 0 6px">The normal Min and Max of each reading. A value outside is flagged. Blank = not checked.</p>'+
@@ -4699,7 +4769,7 @@ function saveRawSetup(){
   const sec=$('section[data-raw]');if(!sec)return;
   let msg=null;
   writeCfg(cfg=>{
-    const wins=[];$$('.rwwin',sec).forEach(r=>{const s=timeToMin($('.rw-s',r).value),e=timeToMin($('.rw-e',r).value);if(s==null||e==null)return;if(e<=s)msg='Each window must close after it opens.';wins.push([s,e]);});
+    const wins=[];$$('.rwwin',sec).forEach(r=>{const s=timeToMin($('.rw-s',r).value),e=timeToMin($('.rw-e',r).value);if(s==null||e==null)return;if(e<=s)msg='Each window must close after it opens.';wins.push([s,e,($('.rw-n',r).value||'').trim(),$('.rw-g',r).value||'']);});
     wins.sort((a,b)=>a[0]-b[0]);
     for(let i=1;i<wins.length;i++)if(wins[i][0]<wins[i-1][1])msg=msg||'Windows must not overlap.';
     if(!wins.length)msg='Add at least one window.';
@@ -4711,7 +4781,7 @@ function saveRawSetup(){
     const two={film_waste:'film_waste2',scotch:'scotch2',dmg_carton:'dmg_carton2'};
     ['pack_mac','pack_spa'].forEach(aid=>{const a=cfg.areas.find(x=>x.id===aid);if(!a)return;
       a.params.forEach(p=>{
-        if(WIN_IDS.indexOf(p.id)>=0)p.win=wins.map(w=>[w[0],w[1]]);
+        if(WIN_IDS.indexOf(p.id)>=0)p.win=wins.map(w=>[w[0],w[1],w[2]||'',w[3]||'']);
         if(/^film_brand2?$/.test(p.id))p.options=lists.film.slice();
         if(/^scotch_brand2?$/.test(p.id))p.options=lists.scotch.slice();
         if(/^dmg_brand2?$/.test(p.id))p.options=lists.dmg.slice();
@@ -4797,6 +4867,7 @@ function bindSetup(rootSel,lim){
     if(up||dn){const r=(up||dn).closest('.prow'),sib=up?r.previousElementSibling:r.nextElementSibling;if(sib&&sib.classList.contains('prow')&&!sib.classList.contains('h')){if(up)r.parentNode.insertBefore(r,sib);else r.parentNode.insertBefore(sib,r);S.setupEditing=true;r.scrollIntoView({block:'nearest'});}return;}
     const wdl=e.target.closest('.rw-delwin');if(wdl){if(wdl.closest('.rwwins').querySelectorAll('.rwwin').length<=1){toast('Keep at least one window.',true);return;}wdl.closest('.rwwin').remove();S.setupEditing=true;return;}
     const fsh=e.target.closest('.rw-fromsh');if(fsh){const bf=Math.max(0,Math.min(240,Math.round(Number($('#rwBef').value))||0)),af=Math.max(1,Math.min(240,Math.round(Number($('#rwAft').value))||30));const sts=(S.cfg.shifts||[]).map(x=>Number(x.start)*60).filter(x=>!isNaN(x)).sort((a,b)=>a-b);const box=fsh.closest('section').querySelector('.rwwins');box.innerHTML=sts.map(st=>rwWinRow([Math.max(0,st-bf),Math.min(1439,st+af)])).join('');S.setupEditing=true;return;}
+    const fo4=e.target.closest('.rw-four');if(fo4){const bf=Math.max(0,Math.min(240,Math.round(Number($('#rwBef').value))||0)),af=Math.max(1,Math.min(240,Math.round(Number($('#rwAft').value))||30));const P4=[[420,'Shift C · record at 07:00','N'],[900,'Shift A · record at 15:00','D'],[1140,'Shift B part 1 · record at 19:00','D'],[1380,'Shift B part 2 · record at 23:00','N']];fo4.closest('section').querySelector('.rwwins').innerHTML=P4.map(q=>rwWinRow([Math.max(0,q[0]-bf),Math.min(1439,q[0]+af),q[1],q[2]])).join('');S.setupEditing=true;return;}
     const wad=e.target.closest('.rw-addwin');if(wad){wad.closest('.row').insertAdjacentHTML('beforebegin',rwWinRow(null));S.setupEditing=true;return;}
     const zdl=e.target.closest('.zl-del');if(zdl){const box=zdl.closest('.zlbox');if(box.querySelectorAll('.zlrow').length<=1){toast('Keep at least one zone.',true);return;}zdl.closest('.zlrow').remove();S.setupEditing=true;return;}
     const zad=e.target.closest('.zl-add');if(zad){const row=zad.closest('.row');row.insertAdjacentHTML('beforebegin',zlRowHTML('',{}));const nr=row.previousElementSibling;nr.querySelector('.zl-name').focus();S.setupEditing=true;return;}
