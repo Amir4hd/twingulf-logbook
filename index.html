@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v126';
+const APP_V='plant-v127';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2038,8 +2038,11 @@ async function labSave(id){
 const RM={flour:{id:'lab_flour',name:'Flour'},semo:{id:'lab_semo',name:'Semolina'}};
 const RM_GR=[['g450','>450 µm'],['g300','>300 µm'],['g212','>212 µm'],['g150','>150 µm'],['gl150','<150 µm']];
 const RM_K={batch:'Batch received',sample:'Supplier sample'};
-const rmRes=m=>[['wet','Wet gluten','%'],['dry','Dry gluten','%'],['ash','Ash','%'],['moist','Moisture','%'],['color','Color','']].concat(m==='semo'?[['black','Black spots','/100 cm²'],['brown','Brown spots','/100 cm²']]:[]);
-const rmFld=(id,label,unit,val)=>'<label class="fld" data-p="'+id+'"><span class="fl">'+esc(label)+'</span><span class="ir"><input '+(id==='color'?'type="text" autocomplete="off"':'type="number" inputmode="decimal" step="any"')+' data-r="'+id+'" value="'+(val==null?'':esc(val))+'"><i>'+esc(unit)+'</i></span></label>';
+const RMD={flour:{res:[['wet','Wet gluten','%','num'],['dry','Dry gluten','%','num'],['ash','Ash','%','num'],['moist','Moisture','%','num'],['color','Color','','text']],gr:[]},semo:{res:[['wet','Wet gluten','%','num'],['dry','Dry gluten','%','num'],['ash','Ash','%','num'],['moist','Moisture','%','num'],['color','Color','','text'],['black','Black spots','/100 cm\u00b2','num'],['brown','Brown spots','/100 cm\u00b2','num']],gr:RM_GR.map(x=>[x[0],x[1]])}};
+const rmF=m=>{const c=S.cfg&&S.cfg.rmF&&S.cfg.rmF[m];return c&&Array.isArray(c.res)&&Array.isArray(c.gr)?c:RMD[m];};
+const rmRes=m=>rmF(m).res.map(r=>[r[0],r[1],r[2]||'',r[3]==='text'?'text':'num']);
+const rmGr=m=>rmF(m).gr.map(r=>[r[0],r[1]]);
+const rmFld=(id,label,unit,val,txt)=>'<label class="fld" data-p="'+id+'"><span class="fl">'+esc(label)+'</span><span class="ir"><input '+(txt?'type="text" autocomplete="off"':'type="number" inputmode="decimal" step="any"')+' data-r="'+id+'" value="'+(val==null?'':esc(val))+'"><i>'+esc(unit)+'</i></span></label>';
 const rmMatOf=area=>area===RM.semo.id?'semo':'flour';
 function renderRm(){
   S.rm={kind:S.rm&&S.rm.kind||'batch',edit:null,rows:null};
@@ -2085,11 +2088,11 @@ function openRmForm(m,er){
    '<label class="fld"><span class="fl">Batch / lot no. (optional)</span><span class="ir"><input type="text" data-r="lot" autocomplete="off" value="'+esc(ev.lot||'')+'"></span></label>'+
    '<label class="fld"><span class="fl">Decision</span><span class="ir"><select data-r="decision" style="border:0;min-height:50px;font-size:20px;background:transparent">'+['','Accepted','Rejected','Pending'].map(o=>'<option value="'+o+'"'+((ev.decision||'')===o?' selected':'')+'>'+(o||'Not set')+'</option>').join('')+'</select></span></label></div>'+
    '<datalist id="rmSup">'+sup.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist>'+
-   '<h4 class="rmh">Results</h4><div class="rmres">'+rmRes(m).map(r=>rmFld(r[0],r[1],r[2],ev[r[0]])).join('')+'</div>'+
-   (m==='semo'?'<h4 class="rmh">Granulation <span class="muted small" style="font-weight:400">% retained on each sieve · <b id="rmGs"></b></span></h4><div class="rmres g5">'+RM_GR.map(r=>rmFld(r[0],r[1],'%',ev[r[0]])).join('')+'</div>':'')+
+   '<h4 class="rmh">Results</h4><div class="rmres">'+rmRes(m).map(r=>rmFld(r[0],r[1],r[2],ev[r[0]],r[3]==='text')).join('')+'</div>'+
+   (rmGr(m).length?'<h4 class="rmh">Granulation <span class="muted small" style="font-weight:400">% retained on each sieve · <b id="rmGs"></b></span></h4><div class="rmres g5">'+rmGr(m).map(r=>rmFld(r[0],r[1],'%',ev[r[0]])).join('')+'</div>':'')+
    '<label class="l" style="margin-top:12px">Notes<input type="text" data-r="note" placeholder="Optional" value="'+esc(er?er.e.note||'':'')+'"></label>'+
    '<div class="row" style="margin-top:12px"><button type="button" class="btn big cyan" id="rmX">Cancel</button><button type="button" class="btn pri big" id="rmSv">Save</button></div>');
-  const gs=()=>{const el=$('#rmGs',w);if(!el)return;let t=0,n=0;RM_GR.forEach(r=>{const v=num($('[data-r='+r[0]+']',w).value);if(v!=null){t+=v;n++;}});el.textContent=n?'total '+(Math.round(t*100)/100)+' %':'';el.style.color=n&&Math.abs(t-100)>1?'var(--bad)':'';};
+  const gs=()=>{const el=$('#rmGs',w);if(!el)return;let t=0,n=0;rmGr(m).forEach(r=>{const v=num($('[data-r='+r[0]+']',w).value);if(v!=null){t+=v;n++;}});el.textContent=n?'total '+(Math.round(t*100)/100)+' %':'';el.style.color=n&&Math.abs(t-100)>1?'var(--bad)':'';};
   gs();w.oninput=gs;
   $('#rmX').onclick=()=>{S.rm.edit=null;w.remove();};$('#rmSv').onclick=rmSave;
   const f=$('[data-r=supplier]',w);if(f)f.focus();
@@ -2097,12 +2100,12 @@ function openRmForm(m,er){
 function rmViewHtml(r){
   const e=r.e,v=e.v||{},m=rmMatOf(r.area),f=x=>x==null?'\u2013':fmtN(x);
   const ln=(l,val,u)=>'<div class="hl"><span>'+esc(l)+'</span><b>'+val+(u?' <small>'+esc(u)+'</small>':'')+'</b></div>';
-  const qa=rmRes(m).map(q=>ln(q[1],q[0]==='color'?esc(v.color==null?'\u2013':v.color):f(v[q[0]]),v[q[0]]!=null?q[2]:'')).join('');
-  let gt=0,gn=0;RM_GR.forEach(q=>{const n=num(v[q[0]]);if(n!=null){gt+=n;gn++;}});
+  const qa=rmRes(m).map(q=>ln(q[1],q[3]==='text'?esc(v[q[0]]==null?'\u2013':v[q[0]]):f(v[q[0]]),v[q[0]]!=null?q[2]:'')).join('');
+  let gt=0,gn=0;rmGr(m).forEach(q=>{const n=num(v[q[0]]);if(n!=null){gt+=n;gn++;}});
   const tot=gn?Math.round(gt*100)/100:null;
   return '<div class="muted small" style="margin-bottom:10px">'+esc(v.supplier||'\u2013')+' \u00b7 received '+esc(v.recDate||'\u2013')+(v.lot?' \u00b7 lot '+esc(v.lot):'')+'</div>'+
    '<div class="hview" style="columns:2 240px"><div class="hgrp"><h4>Quality</h4>'+qa+'</div>'+
-   (m==='semo'?'<div class="hgrp"><h4>Granulation</h4>'+RM_GR.map(q=>ln(q[1],f(v[q[0]]),v[q[0]]!=null?'%':'')).join('')+'<div class="hl rmtot"><span>Total</span><b>'+(tot==null?'\u2013':fmtN(tot)+' <small>%</small>')+'</b></div></div>':'')+'</div>'+
+   (rmGr(m).length?'<div class="hgrp"><h4>Granulation</h4>'+rmGr(m).map(q=>ln(q[1],f(v[q[0]]),v[q[0]]!=null?'%':'')).join('')+'<div class="hl rmtot"><span>Total</span><b>'+(tot==null?'\u2013':fmtN(tot)+' <small>%</small>')+'</b></div></div>':'')+'</div>'+
    '<div class="muted small">Decision: <b>'+esc(v.decision||'not set')+'</b> \u00b7 tested '+esc(r.date)+' '+hm(r.min)+' by '+nmH(e.by)+(e.editedBy?' (edited by '+nmH(e.editedBy)+')':'')+(e.note?'<br>Note: '+esc(e.note):'')+'</div>'+
    '<div class="row" style="margin-top:10px"><button type="button" class="btn pri rvEd">'+(editLeft(e)>0?'Edit ('+left5(editLeft(e))+' left)':'Edit')+'</button></div>';
 }
@@ -2126,7 +2129,7 @@ async function rmSave(){
   if(!S.db)return toast('No database connection.',true);
   const box=$('#rmDlg'),m=S.rm.fm,o=rmCollect(box),er=rmEdRow();
   const sup=(o.supplier||'').trim(),vals={};
-  rmRes(m).concat(m==='semo'?RM_GR:[]).forEach(r=>{vals[r[0]]=r[0]==='color'?((o.color||'').trim()||null):num(o[r[0]]);});
+  rmRes(m).concat(rmGr(m)).forEach(r=>{vals[r[0]]=r[3]==='text'?((o[r[0]]||'').trim()||null):num(o[r[0]]);});
   const bad=[];
   const mk=(sel,b)=>{const el=$(sel,box);if(el)el.closest('.fld').classList.toggle('need',b);};
   mk('[data-r=supplier]',!sup);if(!sup)bad.push('Supplier name');
@@ -2134,7 +2137,7 @@ async function rmSave(){
   const any=Object.keys(vals).some(k=>vals[k]!=null);if(!any)bad.push('at least one result');
   if(bad.length){toast('Fill: '+bad.join(', ')+'.',true);return;}
   let gnote='';
-  if(m==='semo'){let t=0,n=0;RM_GR.forEach(r=>{if(vals[r[0]]!=null){t+=vals[r[0]];n++;}});if(n&&Math.abs(t-100)>1)gnote=' Granulation adds up to '+(Math.round(t*100)/100)+' % (it should be about 100).';}
+  if(rmGr(m).length){let t=0,n=0;rmGr(m).forEach(r=>{if(vals[r[0]]!=null){t+=vals[r[0]];n++;}});if(n&&Math.abs(t-100)>1)gnote=' Granulation adds up to '+(Math.round(t*100)/100)+' % (it should be about 100).';}
   const what=RM[m].name+' · '+(S.rm.fk==='sample'?'supplier sample':'batch')+' from '+sup+(er?' (changes)':'')+'.'+gnote;
   let who;
   if(unlockOn()){const okc=await ask({title:'Do you want to save?',msg:what+' Saving as shift leader '+S.unlock.name+'.',ok:'Yes, save'});if(!okc)return;who={name:S.unlock.name,id:S.unlock.id,leader:true};}
@@ -4771,6 +4774,29 @@ function rawSetupHTML(){
    '<div style="'+grid+'" class="muted small"><span></span><b style="grid-column:span 2">Macaroni</b><b style="grid-column:span 2">Spaghetti</b></div>'+rows+
    '<div class="muted small" style="margin-top:10px"><b>Regrinding</b> (one box, shared by both lines)</div>'+rg+'</section>';
 }
+function rmFRow(kind,r){
+  const res=kind==='res';
+  return '<div class="prow rmfrow" data-k="'+kind+'" data-id="'+esc(r[0])+'" style="display:grid;grid-template-columns:minmax(120px,1fr)'+(res?' 90px 110px':'')+' auto;gap:8px;align-items:center;margin:6px 0"><input type="text" class="rf-l" placeholder="Name" value="'+esc(r[1]||'')+'">'+(res?'<input type="text" class="rf-u" placeholder="Unit" value="'+esc(r[2]||'')+'"><select class="rf-t"><option value="num"'+(r[3]==='text'?'':' selected')+'>Number</option><option value="text"'+(r[3]==='text'?' selected':'')+'>Text</option></select>':'')+'<span style="white-space:nowrap"><button type="button" class="btn sm s-up" aria-label="Move up">\u2191</button> <button type="button" class="btn sm s-dn" aria-label="Move down">\u2193</button> <button type="button" class="btn sm rm-del" aria-label="Remove" title="Remove">\ud83d\uddd1</button></span></div>';
+}
+function rmSetupHTML(){
+  const blk=m=>'<div class="card" style="margin:12px 0" data-m="'+m+'"><h3 style="margin:0 0 4px">'+esc(RM[m].name)+'</h3><div class="muted small">Results</div><div class="rf-res">'+rmF(m).res.map(r=>rmFRow('res',r)).join('')+'</div><div class="row" style="margin:4px 0 10px"><button type="button" class="btn sm rm-add" data-k="res">+ Add result</button></div><div class="muted small">Granulation (% retained on each sieve, total is shown) \u00b7 leave empty if not used</div><div class="rf-gr">'+rmF(m).gr.map(r=>rmFRow('gr',r)).join('')+'</div><div class="row" style="margin:4px 0 0"><button type="button" class="btn sm rm-add" data-k="gr">+ Add size</button></div></div>';
+  return '<section class="card" data-rmset="1"><h2>Flour &amp; semolina tests</h2><p class="muted small">These are the boxes the lab fills for each test, and what shows in the list. Boxes can be added, renamed, moved or removed. Tests saved earlier keep their old values; a removed box simply stops showing.</p>'+blk('flour')+blk('semo')+'</section>';
+}
+function saveRmSetup(){
+  const sec=$('section[data-rmset]');if(!sec)return;
+  let msg=null;
+  writeCfg(cfg=>{
+    const out={};
+    ['flour','semo'].forEach(m=>{
+      const box=$('[data-m="'+m+'"]',sec),seen={};
+      const get=k=>$$('.rmfrow[data-k="'+k+'"]',box).map(r=>{const l=($('.rf-l',r).value||'').trim();if(!l)return null;let id=r.dataset.id;if(!id||seen[id])id='x'+Date.now().toString(36)+Math.floor(Math.random()*999);seen[id]=1;return k==='res'?[id,l,($('.rf-u',r).value||'').trim(),$('.rf-t',r).value==='text'?'text':'num']:[id,l];}).filter(Boolean);
+      out[m]={res:get('res'),gr:get('gr')};
+      if(!out[m].res.length)msg=msg||'Each material needs at least one result.';
+    });
+    if(msg){toast(msg,true);return false;}
+    cfg.rmF=out;
+  },'the flour and semolina tests setup');
+}
 function saveRawSetup(){
   const sec=$('section[data-raw]');if(!sec)return;
   let msg=null;
@@ -4797,7 +4823,7 @@ function saveRawSetup(){
       (aid==='both'?['pack_mac','pack_spa']:[aid]).forEach(a2=>{const a=cfg.areas.find(x=>x.id===a2);if(!a)return;[id,two[id]].filter(Boolean).forEach(pid=>{const p=a.params.find(q=>q.id===pid);if(p){p.min=mn;p.max=xv;}});});});
   },'the raw materials setup');
 }
-const SET_GEN=[['plant','Plant','⚙️'],['raw','Raw materials','🧵'],['ops','Operators and passwords','👥'],['acct','Tablet account passwords','🔑']];
+const SET_GEN=[['plant','Plant','⚙️'],['raw','Raw materials','🧵'],['rm','Flour & semolina tests','🌾'],['ops','Operators and passwords','👥'],['acct','Tablet account passwords','🔑']];
 const SET_CATS=[['Press','🍝',['macaroni','spaghetti']],['Packaging','📦',['pack_mac','pack_spa']],['Laboratory','🧪',['lab_mac','lab_spa']],['Boiler & Chiller','🔥',['boiler']],['Reverse Osmosis','💧',['ro']]];
 const SET_SUB={macaroni:'Macaroni',spaghetti:'Spaghetti',pack_mac:'Macaroni',pack_spa:'Spaghetti',lab_mac:'Macaroni',lab_spa:'Spaghetti'};
 function setupMenu(c,sec){
@@ -4818,6 +4844,7 @@ function setupShell(){
   if(sec==='ops'){if(!S.opsDraft||!S.setupEditing)S.opsDraft=cloneOps();}else S.opsDraft=null;
   if(sec==='acct'){if(!S.acctDraft||!S.setupEditing)S.acctDraft={};}else S.acctDraft=null;
   if(sec==='raw')return menu+rawSetupHTML()+'<div class="row" style="margin-top:12px"><button class="btn pri big" id="sSave">Save raw materials</button></div>';
+  if(sec==='rm')return menu+rmSetupHTML()+'<div class="row" style="margin-top:12px"><button class="btn pri big" id="sSave">Save flour &amp; semolina tests</button></div>';
   if(sec==='ops')return menu+'<div id="opHost"></div><div class="row" style="margin-top:12px"><button class="btn pri big" id="sSave">Save operators</button></div>';
   if(sec==='acct')return menu+'<div id="acctHost"></div><div class="row" style="margin-top:12px"><button class="btn pri big" id="sSave">Save account passwords</button></div>';
   const a=c.areas.find(x=>x.id===sec);
@@ -4874,13 +4901,15 @@ function bindSetup(rootSel,lim){
     const wdl=e.target.closest('.rw-delwin');if(wdl){if(wdl.closest('.rwwins').querySelectorAll('.rwwin').length<=1){toast('Keep at least one window.',true);return;}wdl.closest('.rwwin').remove();S.setupEditing=true;return;}
     const fsh=e.target.closest('.rw-fromsh');if(fsh){const bf=Math.max(0,Math.min(240,Math.round(Number($('#rwBef').value))||0)),af=Math.max(1,Math.min(240,Math.round(Number($('#rwAft').value))||30));const sts=(S.cfg.shifts||[]).map(x=>Number(x.start)*60).filter(x=>!isNaN(x)).sort((a,b)=>a-b);const box=fsh.closest('section').querySelector('.rwwins');box.innerHTML=sts.map(st=>rwWinRow([Math.max(0,st-bf),Math.min(1439,st+af)])).join('');S.setupEditing=true;return;}
     const fo4=e.target.closest('.rw-four');if(fo4){const bf=Math.max(0,Math.min(240,Math.round(Number($('#rwBef').value))||0)),af=Math.max(1,Math.min(240,Math.round(Number($('#rwAft').value))||30));const P4=[[420,'Shift C · record at 07:00','N'],[900,'Shift A · record at 15:00','D'],[1140,'Shift B part 1 · record at 19:00','D'],[1380,'Shift B part 2 · record at 23:00','N']];fo4.closest('section').querySelector('.rwwins').innerHTML=P4.map(q=>rwWinRow([Math.max(0,q[0]-bf),Math.min(1439,q[0]+af),q[1],q[2]])).join('');S.setupEditing=true;return;}
+    const rdl=e.target.closest('.rm-del');if(rdl){rdl.closest('.rmfrow').remove();S.setupEditing=true;return;}
+    const rad=e.target.closest('.rm-add');if(rad){const k=rad.dataset.k,bx=rad.closest('.card'),host=$(k==='res'?'.rf-res':'.rf-gr',bx);host.insertAdjacentHTML('beforeend',rmFRow(k,['','','','num']));const nr=host.lastElementChild;nr.dataset.id='x'+Date.now().toString(36)+Math.floor(Math.random()*999);$('.rf-l',nr).focus();S.setupEditing=true;return;}
     const wad=e.target.closest('.rw-addwin');if(wad){wad.closest('.row').insertAdjacentHTML('beforebegin',rwWinRow(null));S.setupEditing=true;return;}
     const zdl=e.target.closest('.zl-del');if(zdl){const box=zdl.closest('.zlbox');if(box.querySelectorAll('.zlrow').length<=1){toast('Keep at least one zone.',true);return;}zdl.closest('.zlrow').remove();S.setupEditing=true;return;}
     const zad=e.target.closest('.zl-add');if(zad){const row=zad.closest('.row');row.insertAdjacentHTML('beforebegin',zlRowHTML('',{}));const nr=row.previousElementSibling;nr.querySelector('.zl-name').focus();S.setupEditing=true;return;}
     const del=e.target.closest('.s-del');if(del){del.closest('.prow').remove();S.setupEditing=true;return;}
     const add=e.target.closest('.s-add');if(add){const l=add.closest('section').querySelector('.plist');l.insertAdjacentHTML('beforeend',paramRow({id:'p_'+Date.now().toString(36)+Math.floor(Math.random()*99),label:'',unit:'',group:'',min:null,max:null,total:false}));l.lastElementChild.querySelector('input').focus();S.setupEditing=true;}
   };
-  const sv=$('#sSave');if(sv)sv.onclick=()=>{const sec=S.setupSec||'plant';if(sec==='plant')savePlant();else if(sec==='ops')saveOps();else if(sec==='acct')saveAcct();else if(sec==='raw')saveRawSetup();else saveArea(sec);};
+  const sv=$('#sSave');if(sv)sv.onclick=()=>{const sec=S.setupSec||'plant';if(sec==='plant')savePlant();else if(sec==='ops')saveOps();else if(sec==='acct')saveAcct();else if(sec==='raw')saveRawSetup();else if(sec==='rm')saveRmSetup();else saveArea(sec);};
   if((S.setupSec||'plant')==='ops'&&$('#opHost'))opsPanel($('#opHost'),true);
   if((S.setupSec||'plant')==='acct'&&$('#acctHost'))acctPanel($('#acctHost'));
   {const cl=$('#sClear');if(cl)cl.onclick=clearTest;}
