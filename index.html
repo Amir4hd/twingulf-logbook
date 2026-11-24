@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v128';
+const APP_V='plant-v129';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -1098,7 +1098,7 @@ function lowBattTick(){
     if(!low){if(old)old.remove();S.lowBatNext=0;return;}
     if(old||Date.now()<(S.lowBatNext||0))return;
     const w=document.createElement('div');w.id='lowBat';w.className='ovl';w.style.zIndex=99999;
-    w.innerHTML='<div class="dlg" role="alertdialog" aria-modal="true" style="max-width:340px;text-align:center"><div style="font-size:42px;line-height:1">\ud83d\udd0b</div><h2 style="margin:6px 0">'+T('Battery low','Batterie faible')+' \u00b7 '+pc+'%</h2><p style="margin:0 0 12px">'+T('Please connect the charger to this tablet.','Veuillez brancher le chargeur de cette tablette.')+'</p><button type="button" class="btn pri big" id="lowBatOk" style="width:100%">OK</button></div>';
+    w.innerHTML='<div class="dlg" role="alertdialog" aria-modal="true" style="max-width:340px;text-align:center"><svg viewBox="0 0 64 32" width="84" height="42" aria-hidden="true" style="color:#e5484d"><rect x="2" y="3" width="52" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="4"/><rect x="56" y="11" width="6" height="10" rx="2" fill="currentColor"/><rect x="7" y="8" width="9" height="16" rx="2" fill="currentColor"/></svg><h2 style="margin:6px 0;color:#e5484d">'+T('Battery low','Batterie faible')+' \u00b7 '+pc+'%</h2><p style="margin:0 0 12px">'+T('Please connect the charger to this tablet.','Veuillez brancher le chargeur de cette tablette.')+'</p><button type="button" class="btn pri big" id="lowBatOk" style="width:100%">OK</button></div>';
     document.body.appendChild(w);
     $('#lowBatOk').onclick=()=>{w.remove();S.lowBatNext=Date.now()+120000;};
   }catch(e){}
