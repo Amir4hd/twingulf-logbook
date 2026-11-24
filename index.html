@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v127';
+const APP_V='plant-v128';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -1090,6 +1090,20 @@ function readBatt(){
     readBatt();setInterval(readBatt,60000);
   }catch(e){}
 })();
+/* low battery reminder: at 15% or less and not charging, ask to charge; again every 2 minutes after OK */
+function lowBattTick(){
+  try{
+    const b=S.batt;if(!b||b.level==null||isNaN(b.level))return;
+    const pc=Math.round(b.level*100),low=pc<=15&&!b.charging,old=$('#lowBat');const T=(en,f)=>LANG==='fr'?f:en;
+    if(!low){if(old)old.remove();S.lowBatNext=0;return;}
+    if(old||Date.now()<(S.lowBatNext||0))return;
+    const w=document.createElement('div');w.id='lowBat';w.className='ovl';w.style.zIndex=99999;
+    w.innerHTML='<div class="dlg" role="alertdialog" aria-modal="true" style="max-width:340px;text-align:center"><div style="font-size:42px;line-height:1">\ud83d\udd0b</div><h2 style="margin:6px 0">'+T('Battery low','Batterie faible')+' \u00b7 '+pc+'%</h2><p style="margin:0 0 12px">'+T('Please connect the charger to this tablet.','Veuillez brancher le chargeur de cette tablette.')+'</p><button type="button" class="btn pri big" id="lowBatOk" style="width:100%">OK</button></div>';
+    document.body.appendChild(w);
+    $('#lowBatOk').onclick=()=>{w.remove();S.lowBatNext=Date.now()+120000;};
+  }catch(e){}
+}
+setInterval(lowBattTick,5000);
 async function beat(){
   if(!S.db||!S.acct||!S.acct.role)return;
   if(LOCKED_ROLE(S.acct.role)&&!S.sessionOk)return;
