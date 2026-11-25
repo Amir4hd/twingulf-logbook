@@ -204,7 +204,7 @@ svg.ch text{fill:var(--mut);font:11px var(--f-m)}
 svg.ch .grid{stroke:var(--line);stroke-width:1}
 svg.ch .band{fill:var(--okbg);opacity:.7}
 svg.ch .ln{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
-#trZ{position:relative;margin-top:4px}.trzb{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card,transparent);color:inherit;font:inherit;cursor:pointer;text-align:left}.trzp{position:absolute;z-index:30;left:0;top:100%;margin-top:4px;min-width:100%;background:var(--panel,#222);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.45)}.trzp[hidden]{display:none}.trzc{display:flex;align-items:center;gap:10px;padding:9px 10px;font-size:16px;cursor:pointer;white-space:nowrap;border-radius:8px}.trzc:hover{background:rgba(127,127,127,.15)}.trzc input{width:18px;height:18px;margin:0}.trzc i{width:10px;height:10px;border-radius:50%;display:inline-block}svg.ch .hov{fill:none;stroke:var(--text,#fff);stroke-width:2;pointer-events:none}.chtip{position:absolute;z-index:5;pointer-events:none;background:var(--panel,#222);color:var(--text,#fff);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap}svg.ch .pt{fill:var(--accent)} svg.ch .pt.x{fill:var(--bad)}
+#trZ{position:relative;margin-top:4px}.trzb{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card,transparent);color:inherit;font:inherit;cursor:pointer;text-align:left}.trzp{position:absolute;z-index:30;left:0;top:100%;margin-top:4px;min-width:100%;background:var(--panel,#222);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.45)}.trzp[hidden]{display:none}.trzc{display:flex;align-items:center;gap:10px;padding:9px 10px;font-size:16px;cursor:pointer;white-space:nowrap;border-radius:8px}.trzc:hover{background:rgba(127,127,127,.15)}.trzc input{width:18px;height:18px;margin:0}.trzc i{width:10px;height:10px;border-radius:50%;display:inline-block}.labeh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 8px}.labeh h3{margin:0}.labavg{font-weight:600;white-space:nowrap}svg.ch .hov{fill:none;stroke:var(--text,#fff);stroke-width:2;pointer-events:none}.chtip{position:absolute;z-index:5;pointer-events:none;background:var(--panel,#222);color:var(--text,#fff);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap}svg.ch .pt{fill:var(--accent)} svg.ch .pt.x{fill:var(--bad)}
 svg.ch .lim{stroke:var(--warn);stroke-width:1.2;stroke-dasharray:5 4}
 .empty{padding:22px;border:2px dashed var(--line);border-radius:8px;color:var(--mut);text-align:center}
 .ovl{position:fixed;inset:0;background:rgba(10,16,13,.6);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v134';
+const APP_V='plant-v135';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -1969,7 +1969,7 @@ const labOK=()=>LABS.every(id=>canSee(area(id)));
 function renderLab(){
   S.lab={docs:{},edit:{},dirty:{}};
   $('#main').innerHTML='<div class="card"><div class="row" style="justify-content:space-between"><div><h2>Lab Moisture · timed entries</h2><div class="muted small">The time is recorded automatically when you save · <span id="labWhen"></span></div></div>'+(adminEff()?'<label class="l" style="width:190px">Date<input type="date" id="labDt" value="'+S.date+'" max="'+S.today+'"></label>':'<div class="labnav" id="labTog"><button type="button" class="btn sm" data-b="1" aria-label="Previous day">‹</button><b class="labdl" id="labDl"></b><button type="button" class="btn sm" data-b="-1" aria-label="Next day">›</button></div>')+'</div></div>'+
-   '<div id="pinMsg"></div><div class="labgrid">'+LABS.map(id=>'<section class="labcol" id="lc_'+id+'"><h3 class="labh">'+LAB_T[id]+'</h3><div class="card" id="lf_'+id+'"></div><div class="card"><h3>Entries on this date</h3><div id="lr_'+id+'" class="tscroll"></div></div></section>').join('')+'</div>';
+   '<div id="pinMsg"></div><div class="labgrid">'+LABS.map(id=>'<section class="labcol" id="lc_'+id+'"><h3 class="labh">'+LAB_T[id]+'</h3><div class="card" id="lf_'+id+'"></div><div class="card"><div class="labeh"><h3>Entries on this date</h3><span class="chip labavg" id="la_'+id+'" hidden></span></div><div id="lr_'+id+'" class="tscroll"></div></div></section>').join('')+'</div>';
   const labBack=()=>Math.max(0,Math.round((parseYmd(S.today)-parseYmd(S.date))/864e5));
   const labNavPaint=()=>{const n=labBack(),l=$('#labDl');if(l)l.textContent=n===0?'Today':n===1?'Yesterday':n+' days ago';$$('#labTog button').forEach(x=>{const nb=labBack()+Number(x.dataset.b);x.disabled=nb<0||nb>2;});};
   $$('#labTog button').forEach(b=>b.onclick=()=>{const nb=labBack()+Number(b.dataset.b);if(nb<0||nb>2)return;S.date=addDays(S.today,-nb);S.lab.edit={};S.lab.dirty={};labNavPaint();LABS.forEach(id=>paintLabForm(id));subLab();});
@@ -2004,6 +2004,8 @@ function paintLabList(id){
   const d=S.lab.docs[id];
   if(d==null){el.innerHTML='<div class="empty">'+(S.db?'Loading…':'No database connection.')+'</div>';return;}
   const es=entries(d).reverse();
+  {const av=$('#la_'+id);if(av){const fs=es.map(x=>x.e&&x.e.v&&String(x.e.v.zone||'').trim().toLowerCase()==='final'?num(x.e.v.result):null).filter(v=>v!=null);
+    if(S.date<S.today&&fs.length){av.hidden=false;av.textContent='Average final moisture '+fmtN(Math.round(fs.reduce((a,b)=>a+b,0)/fs.length*100)/100)+' % \u00b7 '+fs.length+' reading'+(fs.length>1?'s':'');}else av.hidden=true;}}
   if(!es.length){el.innerHTML='<div class="empty">No readings saved for '+S.date+' yet.</div>';return;}
   const chip=e=>editLeft(e)>0?' <span class="chip ok">editable '+left5(editLeft(e))+'</span>':'';
   el.innerHTML='<table class="elt"><thead><tr><th>Time</th><th>Zone</th><th class="n">Result</th><th>By</th></tr></thead><tbody>'+es.map(x=>{const e=x.e,v=e.v||{},rp0=(area(id)||{params:[]}).params.find(q=>q.id==='result'),st=rp0?pState(rp0,v.result,v.zone):'ok',oo=st==='high'||st==='low';
