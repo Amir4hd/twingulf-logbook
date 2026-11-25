@@ -204,7 +204,7 @@ svg.ch text{fill:var(--mut);font:11px var(--f-m)}
 svg.ch .grid{stroke:var(--line);stroke-width:1}
 svg.ch .band{fill:var(--okbg);opacity:.7}
 svg.ch .ln{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
-svg.ch .pt{fill:var(--accent)} svg.ch .pt.x{fill:var(--bad)}
+svg.ch .hov{fill:none;stroke:var(--text,#fff);stroke-width:2;pointer-events:none}.chtip{position:absolute;z-index:5;pointer-events:none;background:var(--panel,#222);color:var(--text,#fff);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap}svg.ch .pt{fill:var(--accent)} svg.ch .pt.x{fill:var(--bad)}
 svg.ch .lim{stroke:var(--warn);stroke-width:1.2;stroke-dasharray:5 4}
 .empty{padding:22px;border:2px dashed var(--line);border-radius:8px;color:var(--mut);text-align:center}
 .ovl{position:fixed;inset:0;background:rgba(10,16,13,.6);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v130';
+const APP_V='plant-v131';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4037,7 +4037,19 @@ async function paintTrend(){
   const out=pts.filter(q=>pState(p,q.v,q.z)!=='ok').length,avg=vs.reduce((a,b)=>a+b,0)/vs.length,last=pts[pts.length-1];
   const leg=multi?'<div class="row small" style="margin-bottom:8px">'+series.map(sr=>'<span class="chip" style="border:2px solid '+sr.color+'">'+esc(sr.name)+' · '+sr.pts.length+'</span>').join('')+'</div>':'';
   el.innerHTML=leg+'<div class="row small" style="margin-bottom:8px"><span class="chip acc">Last '+fmtN(last.v)+' '+esc(p.unit)+'</span><span class="chip">Avg '+fmtN(avg)+'</span><span class="chip">Min '+fmtN(Math.min.apply(null,vs))+'</span><span class="chip">Max '+fmtN(Math.max.apply(null,vs))+'</span><span class="chip '+(out?'warn':'ok')+'">'+out+' out of range</span><span class="muted">Limits: '+esc(limitText(p))+'</span></div>'+
-   '<svg class="ch" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+esc(p.label)+' trend">'+band+g+lim+lines+'</svg>';
+   '<div class="chw" style="position:relative"><svg class="ch" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+esc(p.label)+' trend">'+band+g+lim+lines+'<circle class="hov" r="6" style="display:none"/></svg><div class="chtip" hidden></div></div>';
+  {const svg=$('svg.ch',el),tip=$('.chtip',el),hv=$('.hov',el),wrap=$('.chw',el);
+   const all=[];series.forEach(sr=>sr.pts.forEach(q=>all.push({q,x:X(q.t),y:Y(q.v),c:sr.color})));
+   const show=ev=>{const r=svg.getBoundingClientRect();if(!r.width)return;const k=r.width/W,mx=(ev.clientX-r.left)/k,my2=(ev.clientY-r.top)/k;
+    let best=null,bd=1e9;all.forEach(o=>{const d=Math.hypot(o.x-mx,o.y-my2);if(d<bd){bd=d;best=o;}});
+    if(!best||bd*k>24){tip.hidden=true;hv.style.display='none';return;}
+    const q=best.q,dt=new Date(q.t),st=pState(p,q.v,q.z);
+    tip.innerHTML='<b>'+esc(fmtN(q.v))+' '+esc(p.unit||'')+'</b>'+(st==='ok'?'':' <span style="color:var(--warn)">'+(st==='high'?'\u25b2 high':'\u25bc low')+'</span>')+'<div class="muted small">'+DOW[dt.getDay()]+' '+(dt.getMonth()+1)+'/'+dt.getDate()+' \u00b7 '+pad(dt.getHours())+':'+pad(dt.getMinutes())+(q.z?' \u00b7 '+esc(q.z):'')+'</div>';
+    tip.hidden=false;hv.setAttribute('cx',best.x);hv.setAttribute('cy',best.y);hv.style.display='';
+    const wr=wrap.getBoundingClientRect(),px=best.x*k,py=best.y*k,tw=tip.offsetWidth,th=tip.offsetHeight;
+    let lx=px-tw/2;lx=Math.max(0,Math.min(wr.width-tw,lx));let ty=py-th-12;if(ty<0)ty=py+14;
+    tip.style.left=lx+'px';tip.style.top=ty+'px';};
+   svg.addEventListener('pointermove',show);svg.addEventListener('pointerdown',show);svg.addEventListener('pointerleave',()=>{tip.hidden=true;hv.style.display='none';});}
 }
 async function exportCsv(){
   const msg=$('#exMsg'),ar=area($('#exA').value),f=$('#exF').value,t=$('#exT').value;
