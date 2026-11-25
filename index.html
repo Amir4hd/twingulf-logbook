@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v137';
+const APP_V='plant-v138';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4710,11 +4710,12 @@ function ordersShell(){const f=S.pof,adm=adminEff();
   return '<div class="ctlrow" style="margin-bottom:10px;gap:8px;align-items:center" id="poBar"></div>'+
    '<div class="ctlrow" style="margin-bottom:12px"><label class="l" style="flex:2 1 220px">Search<input type="search" id="poQ" placeholder="Supplier, PO no., part, code" value="'+esc(f.q)+'"></label>'+
    '<label class="l" style="flex:0 0 auto;justify-content:flex-end"><span><input type="checkbox" id="poUrg"'+(f.urgent?' checked':'')+'> Urgent only</span></label>'+
-   '<button class="btn" id="poReq" style="align-self:flex-end">+ Request a part</button>'+(adm?'<button class="btn pri" id="poAdd" style="align-self:flex-end">+ New order</button>':'')+'</div><div id="poBody" style="display:flex;flex-direction:column;gap:14px"></div>';}
+   '<button class="btn" id="poReq" style="align-self:flex-end">+ Request a part</button>'+(adm?'<button class="btn" id="poImp" style="align-self:flex-end">Import order file</button><button class="btn pri" id="poAdd" style="align-self:flex-end">+ New order</button>':'')+'</div><div id="poBody" style="display:flex;flex-direction:column;gap:14px"></div>';}
 function bindOrders(){const f=S.pof;
   $('#poQ').oninput=e=>{f.q=e.target.value;paintOrders();};
   $('#poUrg').onchange=e=>{f.urgent=e.target.checked;paintOrders();};
   const a=$('#poAdd');if(a)a.onclick=()=>poEditor(null);
+  const im=$('#poImp');if(im)im.onclick=()=>poEditor(null,{autoImport:true});
   $('#poReq').onclick=()=>poRequest(null);
   const body=$('#poBody');
   body.onchange=e=>{const sl=e.target.closest('select[data-posel]');if(sl){const v=sl.value,id=sl.dataset.id;sl.value='';if(v)poAct(v,id);return;}
@@ -4796,9 +4797,13 @@ async function poAddReqs(target){
 }
 /* ---- the order window: header and items; paste the item list from Excel ---- */
 function poParsePaste(text){
-  const rows=parseTable(text).map(r=>r.map(c=>String(c==null?'':c).trim())).filter(r=>r.some(Boolean));if(!rows.length)return [];
-  const H=rows[0].map(h=>h.toLowerCase());const find=re=>H.findIndex(h=>re.test(h));
-  let ci={code:find(/code|part ?no|item ?no|ref|article|p\/n|sku/),name:find(/desc|name|item(?! ?no)|part(?! ?no)|material|product/),qty:find(/qty|quant|pcs|no\. ?of/),unit:find(/unit|uom/),price:find(/price|rate|cost|u\.?p/),spec:find(/size|spec|model|dimension/)};
+  let rows=parseTable(text).map(r=>r.map(c=>String(c==null?'':c).trim())).filter(r=>r.some(Boolean));if(!rows.length)return [];
+  /* supplier files often have a title, address and date above the table: start at the heading row */
+  {const hi=rows.slice(0,25).findIndex(r=>{const t=r.join(' | ').toLowerCase().replace(/\./g,'');return /qty|quant|qnty|pcs/.test(t)&&/desc|name|item|part|material|product|article/.test(t);});if(hi>0)rows=rows.slice(hi);}
+  rows=rows.filter(r=>!/^(sub ?total|grand total|total|amount|vat|discount)\b/i.test(r.filter(Boolean)[0]||''));
+  const H=rows[0].map(h=>h.toLowerCase().replace(/\./g,'').trim());const find=(...res)=>{for(const re of res){const i=H.findIndex(h=>re.test(h));if(i>=0)return i;}return -1;};
+  let ci={code:find(/code|part ?no|item ?no|^ref|article|p\/n|sku|^no$/),name:find(/desc/,/name/,/material|product/,/^item$|item(?! ?(no|code|#))/,/part(?! ?(no|code|#))/),qty:find(/qty|quant|qnty/,/^pcs$|no of/),unit:find(/^unit$|uom|^um$/,/unit(?! ?(price|cost|value))/),price:find(/unit ?price|price|rate|unit ?cost|^up$/,/cost/),spec:find(/size|spec|model|dimension/)};
+  if(ci.name===ci.code&&ci.code>=0)ci.name=-1;
   let data=rows;
   if(ci.name>=0||ci.qty>=0)data=rows.slice(1);
   else{/* no header: the longest text column is the name, numbers are quantity then price, a short code-like first column is the code */
@@ -4809,6 +4814,15 @@ function poParsePaste(text){
   return data.map(r=>{const g=k=>ci[k]>=0&&ci[k]!=null?(r[ci[k]]||''):'';const code=g('code'),name=g('name')||code;if(!name)return null;
     const key=code.toLowerCase();const p=key?S.parts.find(x=>String(x.code||'').toLowerCase()===key||String(x.uc||'').toLowerCase()===key):S.parts.find(x=>String(x.name||'').toLowerCase()===name.toLowerCase()&&(!g('spec')||String(x.spec||'').toLowerCase()===g('spec').toLowerCase()));
     return {id:poUid(),part:p?p.id:'',uc:p?(p.uc||''):'',name:p?p.name:name,spec:p?(p.spec||''):g('spec'),code:code||(p?(p.code||''):''),unit:g('unit')||(p&&p.unit)||'pcs',qty:poNum(num(g('qty'))||1),recv:0,price:num(g('price'))||(p?Number(p.price)||0:0),use:p?(p.use||'general'):'general',prio:'normal'};}).filter(Boolean);
+}
+/* an Excel (.xlsx/.xls) or .csv file as tab-separated text; the Excel reader is loaded only when needed */
+async function poFileText(f){
+  if(/\.(csv|txt)$/i.test(f.name))return await f.text();
+  if(!window.XLSX)await new Promise((ok,no)=>{const s=document.createElement('script');s.src='vendor/xlsx.full.min.js';s.onload=ok;s.onerror=()=>no(new Error('Could not load the Excel reader. Check the connection and try again.'));document.head.appendChild(s);});
+  const wb=window.XLSX.read(await f.arrayBuffer(),{type:'array'});
+  /* the sheet with the most filled rows is the item list */
+  let best='',n=-1;wb.SheetNames.forEach(nm=>{const rows=window.XLSX.utils.sheet_to_json(wb.Sheets[nm],{header:1,blankrows:false});if(rows.length>n){n=rows.length;best=nm;}});
+  return window.XLSX.utils.sheet_to_csv(wb.Sheets[best],{FS:'\t',blankrows:false});
 }
 function poEditor(o,seed){
   return new Promise(resolve=>{
@@ -4826,7 +4840,7 @@ function poEditor(o,seed){
           '<label class="l">Source<select id="poSrc"'+(edit?'':' disabled')+'>'+PO_SRC.map(x=>'<option value="'+x[0]+'"'+(W.src===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select></label><label class="l">Expected arrival (ETA)'+inp('poEta',W.eta,'','date')+'</label>'+
           '<label class="l">Priority<select id="poPrio"'+(edit?'':' disabled')+'><option value="normal">Normal</option><option value="urgent"'+(W.prio==='urgent'?' selected':'')+'>Urgent</option></select></label><label class="l">Tracking / B/L / AWB'+inp('poTrk',W.track)+'</label>'+
           '<label class="l" style="grid-column:1/-1">Note'+inp('poNote',W.note)+'</label></div><datalist id="poSups">'+sups.map(s=>'<option value="'+esc(s)+'">').join('')+'</datalist>'+
-        '<div class="row" style="align-items:center;gap:8px;margin-top:4px"><b style="flex:1">Items <span class="chip acc">'+W.items.length+'</span>'+(adm&&tot?' <span class="chip">'+money(tot)+'</span>':'')+'</b>'+(edit?'<button class="btn sm" id="poPasteBtn">Paste from Excel</button><button class="btn sm" id="poAddItem">+ Add item</button>':'')+'</div>'+
+        '<div class="row" style="align-items:center;gap:8px;margin-top:4px"><b style="flex:1">Items <span class="chip acc">'+W.items.length+'</span>'+(adm&&tot?' <span class="chip">'+money(tot)+'</span>':'')+'</b>'+(edit?'<button class="btn sm pri" id="poImpBtn">Import file</button><input type="file" id="poImpF" accept=".xlsx,.xls,.csv,.txt" hidden><button class="btn sm" id="poPasteBtn">Paste from Excel</button><button class="btn sm" id="poAddItem">+ Add item</button>':'')+'</div>'+
         '<div id="poPaste" hidden style="display:flex;flex-direction:column;gap:6px"><textarea id="poPasteT" rows="6" style="width:100%;font:13px ui-monospace,monospace" placeholder="Copy the rows from Excel (with or without the header row) and paste here. Columns such as: Code · Description · Qty · Unit · Price"></textarea><div class="row" style="gap:8px"><button class="btn pri sm" id="poPasteGo">Add these lines</button><span class="muted small">Codes found in the spare-parts list are linked automatically.</span></div></div>'+
         (W.items.length?'<div class="tscroll" style="max-height:46vh;overflow:auto"><table class="small"><thead><tr><th>#</th><th style="width:99%">Part</th><th>Qty</th><th>Unit</th>'+(adm?'<th>Price</th>':'')+'<th>Received</th>'+(edit?'<th></th>':'')+'</tr></thead><tbody>'+W.items.map((i,k)=>'<tr><td class="muted">'+(k+1)+'</td><td>'+(i.part?'<span class="chip acc mono" style="margin-right:4px">'+esc(i.uc||'list')+'</span>':'<span class="chip" title="Not in the spare-parts list yet">new</span> ')+(edit&&!i.part?'<input data-f="name" data-k="'+k+'" value="'+esc(i.name)+'" style="min-width:180px">':'<b>'+esc(i.name)+'</b>')+(i.spec?' <span class="mono">'+esc(i.spec)+'</span>':'')+(i.prio==='urgent'?' <span class="chip bad">Urgent</span>':'')+'<div class="muted">'+esc([i.code?'Code '+i.code:'',i.use&&i.use!=='general'?forName(i.use):'',i.reqBy?'asked by '+i.reqBy:''].filter(Boolean).join(' · '))+'</div></td>'+
           '<td>'+(edit?'<input data-f="qty" data-k="'+k+'" type="number" step="any" min="0" value="'+esc(i.qty)+'" style="width:80px">':'<b class="mono">'+fmtQ(i.qty)+'</b>')+'</td><td>'+(edit?'<input data-f="unit" data-k="'+k+'" value="'+esc(i.unit||'pcs')+'" style="width:60px">':esc(i.unit||''))+'</td>'+
@@ -4841,6 +4855,14 @@ function poEditor(o,seed){
     const bind=()=>{
       w.querySelector('#poNo2').onclick=()=>done(null);
       const pb=w.querySelector('#poPasteBtn');if(pb)pb.onclick=()=>{sync();const p=w.querySelector('#poPaste');p.hidden=!p.hidden;if(!p.hidden)w.querySelector('#poPasteT').focus();};
+      const ib=w.querySelector('#poImpBtn'),inf=w.querySelector('#poImpF');
+      if(ib)ib.onclick=()=>{sync();inf.value='';inf.click();};
+      if(inf)inf.onchange=async()=>{const f=inf.files&&inf.files[0];if(!f)return;const er=w.querySelector('#poErr');er.hidden=true;
+        try{const text=await poFileText(f);const lines=poParsePaste(text);if(!lines.length)throw new Error('No item lines found in '+f.name+'. The file needs columns such as Description and Qty.');
+          if(!W.supplier){const g=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\b(po|pi|proforma|invoice|order|quotation|quote)\b/ig,'').replace(/\d{3,}/g,'').trim();if(g&&g.length<=30)W.supplier=g.replace(/\b\w/g,c=>c.toUpperCase());}
+          W.items=W.items.concat(lines);draw();toast(lines.length+' line'+(lines.length===1?'':'s')+' imported from '+f.name+'. Check them, then save.');}
+        catch(e){er.textContent=e.message||String(e);er.hidden=false;}};
+      if(seed.autoImport&&inf&&!W._asked){W._asked=1;setTimeout(()=>inf.click(),50);}
       const pg=w.querySelector('#poPasteGo');if(pg)pg.onclick=()=>{sync();const lines=poParsePaste(w.querySelector('#poPasteT').value);if(!lines.length){const er=w.querySelector('#poErr');er.textContent='Nothing to add: paste rows copied from Excel.';er.hidden=false;return;}W.items=W.items.concat(lines);draw();toast(lines.length+' line'+(lines.length===1?'':'s')+' added. Check them, then save.');};
       const ai=w.querySelector('#poAddItem');if(ai)ai.onclick=async()=>{sync();const partOpts=[['','— Not in the parts list (type below) —']].concat(S.parts.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(p=>[p.id,(p.uc?p.uc+' · ':'')+p.name+(p.spec?' '+p.spec:'')]));
         const r=await stockDlg({title:'Add item',fields:[{id:'part',label:'Part from the spare-parts list',type:'select',options:partOpts},{id:'pname',label:'Part name (if not in the list)'},{id:'spec',label:'Size / model (optional)'},{id:'qty',label:'Quantity',type:'number',req:true},{id:'unit',label:'Unit',value:'pcs'},{id:'price',label:'Price per unit (optional)',type:'number'}],ok:'Add',validate:v=>(!v.part&&!v.pname.trim())?'Choose a part or type its name.':!(Number(v.qty)>0)?'Type a quantity above zero.':null});
