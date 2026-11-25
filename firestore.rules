@@ -1,41 +1,98 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
+    // Logistics storekeeper accounts (email starting with "store") are kept out of the factory system.
+    function isStoreEmail() { return request.auth != null && request.auth.token.email != null && request.auth.token.email.lower().matches('store.*@.*'); }
+    function signedIn() { return request.auth != null && !isStoreEmail(); }
     function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    // ---- Device / person allowlist (security step 1) ----
+    // security/mode {enforce:true|false}: while false (or missing) the factory system works exactly as before.
+    // accounts/{uid} {status:'active'|'blocked', kind, name, role}: when enforce is true, only active accounts (and admins) get in.
+    function enforcing() { return exists(/databases/$(database)/documents/security/mode) && get(/databases/$(database)/documents/security/mode).data.enforce == true; }
+    function active() { return exists(/databases/$(database)/documents/accounts/$(request.auth.uid)) && get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.status == 'active'; }
+    function ok() { return signedIn() && (isAdmin() || !enforcing() || active()); }
+
+    match /accounts/{id} { allow read: if signedIn() && (request.auth.uid == id || isAdmin()); allow write: if isAdmin(); }
+    match /security/{id} { allow read, write: if isAdmin(); }
 
     // The admin list is managed only in the Firebase console.
     match /admins/{id} { allow read: if signedIn(); allow write: if false; }
 
-    // Setup: everyone signed in can read, only admins can change.
-    match /config/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+    // Setup: every approved account can read, only admins can change.
+    match /config/{id} { allow read: if ok(); allow write: if isAdmin(); }
 
     // The shift leader tablet account may change the operators list (operators, passwords, active). Only the admin console assigns leaders in practice.
-    function isLeaderAcct() { return signedIn() && request.auth.token.email != null && request.auth.token.email.lower().matches('(shiftleader|leader|shift)@.*'); }
-    match /config/operators { allow write: if isLeaderAcct(); }
+    function isLeaderAcct() { return signedIn() && request.auth.token.email != null && request.auth.token.email.lower().matches('(shiftleader|leader|shift)[^@]*@.*'); }
+    match /config/operators { allow write: if isLeaderAcct() && ok(); }
 
     // Sanctions (employee list, codes and sanction letters): only the admin and the shift leader account can read. Only the admin can change the employee list and codes. The admin and shift leader can add sanctions; only the admin can delete them for good (the app hides deleted ones).
-    function isHrAcct() { return isAdmin() || isLeaderAcct(); }
+    function isHrAcct() { return isAdmin() || (isLeaderAcct() && ok()); }
     match /hr/{id}            { allow read: if isHrAcct(); allow write: if isAdmin(); }
     // The shift leader can add and edit employees in hr/employees but cannot make the list shorter. Deleting needs the admin (the app shows a request the admin approves).
-    match /hr/employees       { allow write: if isLeaderAcct() && request.resource.data.list.size() >= (resource == null ? 0 : resource.data.list.size()); }
+    match /hr/employees       { allow write: if isLeaderAcct() && ok() && request.resource.data.list.size() >= (resource == null ? 0 : resource.data.list.size()); }
     match /hr_sanctions/{id}  { allow read, create, update: if isHrAcct(); allow delete: if isAdmin(); }
 
-    // Maintenance tasks and history: any signed-in account can add and update; the admin and the maintenance account can delete.
-    function isMaintAcct() { return signedIn() && request.auth.token.email != null && request.auth.token.email.lower().matches('(maint|maintenance)@.*'); }
-    match /maint_tasks/{id}   { allow read, create, update: if signedIn(); allow delete: if isAdmin() || isMaintAcct(); }
-    match /maint_history/{id} { allow read, create, update: if signedIn(); allow delete: if isAdmin() || isMaintAcct(); }
+    // Maintenance tasks and history: any approved account can add and update; the admin and the maintenance account can delete.
+    function isMaintAcct() { return signedIn() && request.auth.token.email != null && request.auth.token.email.lower().matches('(maint|maintenance)[^@]*@.*'); }
+    match /maint_tasks/{id}   { allow read, create, update: if ok(); allow delete: if isAdmin() || (isMaintAcct() && ok()); }
+    match /maint_history/{id} { allow read, create, update: if ok(); allow delete: if isAdmin() || (isMaintAcct() && ok()); }
 
-    // Spare parts: any signed-in account can read, add and change stock. Only the admin can delete a part. The movement log can be added to but never changed or deleted.
-    match /parts/{id}       { allow read, create, update: if signedIn(); allow delete: if isAdmin(); }
-    match /part_moves/{id}  { allow read, create: if signedIn(); }
+    // Spare parts: any approved account can read, add and change stock. Only the admin can delete a part. The movement log can be added to but never changed or deleted.
+    match /parts/{id}        { allow read, create, update: if ok(); allow delete: if isAdmin(); }
+    match /part_moves/{id}   { allow read, create: if ok(); }
+    // Spare parts orders (added with the Orders feature; the old rules had no entry, so the app could not save them).
+    match /part_orders/{id}  { allow read, create, update: if ok(); allow delete: if isAdmin() || (isMaintAcct() && ok()); }
 
-    // Readings, regrinding, problem reports, press-to-packaging messages and tablet heartbeats: tablet accounts can read and write.
-    match /logs/{id}     { allow read, write: if signedIn(); allow delete: if isAdmin(); }
-    match /issues/{id}   { allow read, write: if signedIn(); allow delete: if isAdmin(); }
-    match /notices/{id}  { allow read, write: if signedIn(); allow delete: if isAdmin(); }
+    // Readings, regrinding, problem reports and press-to-packaging messages. Deleting a whole record is admin only
+    // (the app removes single readings with an update, which stays allowed). Maintenance can delete its own requests.
+    match /logs/{id}     { allow read, create, update: if ok(); allow delete: if isAdmin(); }
+    match /issues/{id}   { allow read, create, update: if ok(); allow delete: if isAdmin() || (isMaintAcct() && ok()); }
+    match /notices/{id}  { allow read, create, update: if ok(); allow delete: if isAdmin(); }
+
+    // Tablet heartbeats and one-open-tablet records: open to every signed-in factory account on purpose (cheap; the app needs them to show "waiting").
     match /presence/{id} { allow read, write: if signedIn(); }
-    // One open tablet per account: each account's session record.
     match /sessions/{id} { allow read, write: if signedIn(); }
+
+    // ===================== Twin Gulf Logistics (unchanged) =====================
+    // Admin = the same admins list as the factory system. Storekeeper = an account with an email starting with "store"
+    // and an active record in lg_users. Factory tablet accounts have no access to logistics data.
+    function lgUser() { return get(/databases/$(database)/documents/lg_users/$(request.auth.uid)).data; }
+    function lgStore() { return isStoreEmail() && exists(/databases/$(database)/documents/lg_users/$(request.auth.uid)) && lgUser().active == true; }
+    function lgAny() { return isAdmin() || lgStore(); }
+    // A storekeeper may change a day from its start until 09:00 the next morning, Nairobi time (UTC+3).
+    function lgDayOpen(d) {
+      let p = d.split('-');
+      let start = timestamp.date(int(p[0]), int(p[1]), int(p[2])) - duration.value(3, 'h');
+      return request.time >= start && request.time < start + duration.value(33, 'h');
+    }
+    match /lg_config/{id}   { allow read: if lgAny(); allow write: if isAdmin(); }
+    match /lg_history/{id}  { allow read: if lgAny(); allow write: if isAdmin(); }
+    match /lg_lots/{id}     { allow read: if lgAny(); allow write: if isAdmin(); }
+    match /lg_orders/{id}   { allow read: if lgAny(); allow write: if isAdmin(); }
+    match /lg_owner/{id}    { allow read, write: if isAdmin(); }
+    match /lg_users/{uid}   { allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid); allow write: if isAdmin(); }
+    // Production, dispatch, blend and downtime: the admin, or a storekeeper given that permission, within the day window.
+    match /lg_days/{d} {
+      allow read: if lgAny();
+      allow write: if isAdmin() || (lgStore() && lgUser().canProd == true && lgDayOpen(d));
+    }
+    // Receipts, issues, wastage and fuel: the admin, or the storekeeper within the day window. Only the admin deletes.
+    match /lg_store/{d} {
+      allow read: if lgAny();
+      allow create, update: if isAdmin() || (lgStore() && lgDayOpen(d));
+      allow delete: if isAdmin();
+    }
+    // Stock counts and correction requests: the storekeeper sends them, the admin decides.
+    match /lg_counts/{id} {
+      allow read: if lgAny();
+      allow create: if lgAny() && request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+    match /lg_requests/{id} {
+      allow read: if lgAny();
+      allow create: if lgAny() && request.resource.data.status == 'open';
+      allow update, delete: if isAdmin();
+    }
   }
 }
