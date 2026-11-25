@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v136';
+const APP_V='plant-v137';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4601,7 +4601,7 @@ function stockHTML(adm){
 }
 function orderHTML(ol){
   if(!ol.length)return '<section class="card"><h2>To order</h2><p class="muted">Nothing to order. Parts appear here when stock falls to the minimum or below.</p></section>';
-  return '<section class="card"><h2>To order <span class="chip warn">'+ol.length+'</span></h2><p class="muted small" style="margin:4px 0 10px">Suggested quantity brings each part back to twice its minimum.</p><div class="tscroll"><table><thead><tr><th>Supplier</th><th>Part</th><th>In stock</th><th>Min</th><th>Order</th><th></th></tr></thead><tbody>'+ol.map(p=>'<tr><td>'+esc(p.supplier||'–')+'</td><td><b>'+esc(p.name)+'</b>'+(p.spec?' <span class="mono small">'+esc(p.spec)+'</span>':'')+'<div class="muted small">'+esc([p.uc,p.code,p.cat].filter(Boolean).join(' · '))+'</div></td><td class="mono">'+fmtQ(p.qty)+' '+esc(p.unit||'')+'</td><td class="mono">'+fmtQ(p.min)+'</td><td><b class="mono">'+p.need+'</b> <span class="muted small">'+esc(p.unit||'')+'</span></td><td>'+(S.po.some(o=>o.part===p.id&&PO_OPEN.includes(o.status))?'<span class="chip ok">On order</span>':'<button class="btn sm pri" data-pact="order" data-pid="'+esc(p.id)+'">Order</button>')+'</td></tr>').join('')+'</tbody></table></div><div class="row" style="margin-top:12px"><button class="btn pri" id="pOrdCsv">Download order list</button></div></section>';
+  return '<section class="card"><h2>To order <span class="chip warn">'+ol.length+'</span></h2><p class="muted small" style="margin:4px 0 10px">Suggested quantity brings each part back to twice its minimum.</p><div class="tscroll"><table><thead><tr><th>Supplier</th><th>Part</th><th>In stock</th><th>Min</th><th>Order</th><th></th></tr></thead><tbody>'+ol.map(p=>'<tr><td>'+esc(p.supplier||'–')+'</td><td><b>'+esc(p.name)+'</b>'+(p.spec?' <span class="mono small">'+esc(p.spec)+'</span>':'')+'<div class="muted small">'+esc([p.uc,p.code,p.cat].filter(Boolean).join(' · '))+'</div></td><td class="mono">'+fmtQ(p.qty)+' '+esc(p.unit||'')+'</td><td class="mono">'+fmtQ(p.min)+'</td><td><b class="mono">'+p.need+'</b> <span class="muted small">'+esc(p.unit||'')+'</span></td><td>'+(poHasPart(p.id)?'<span class="chip ok">On order</span>':'<button class="btn sm pri" data-pact="order" data-pid="'+esc(p.id)+'">Order</button>')+'</td></tr>').join('')+'</tbody></table></div><div class="row" style="margin-top:12px"><button class="btn pri" id="pOrdCsv">Download order list</button></div></section>';
 }
 function movesHTML(){
   const q=S.pf.q.trim().toLowerCase();
@@ -4624,7 +4624,7 @@ async function partAct(act,id){
       const nq=await moveStock(id,out?-n:n,{type:out?'out':'in',use:r.vals.use||'',note:r.vals.note.trim(),by:r.by});
       toast((out?'Taken out. ':'Received. ')+p.name+': '+fmtQ(nq)+' '+(p.unit||'')+' now.');
       if(out&&(Number(p.min)||0)>0&&nq<=Number(p.min))toast(p.name+' is low: '+fmtQ(nq)+' left (minimum '+fmtQ(p.min)+').',true);
-    }else if(act==='order'){const ol=orderList().find(x=>x.id===id);await poEdit(null,{part:id,qty:ol?ol.need:'',unit:p.unit||'pcs',use:p.use||'general',supplier:p.supplier||'',note:'Low stock: '+fmtQ(p.qty)+' left (minimum '+fmtQ(p.min)+')'});}
+    }else if(act==='order'){const ol=orderList().find(x=>x.id===id);await poRequest(null,{part:id,qty:ol?ol.need:'',unit:p.unit||'pcs',use:p.use||'general',note:'Low stock: '+fmtQ(p.qty)+' left (minimum '+fmtQ(p.min)+')'});}
     else if(act==='edit')await partEdit(p);
     else if(act==='del'){
       const r=await stockDlg({title:'Delete this part?',msg:p.name+' ('+fmtQ(p.qty)+' '+(p.unit||'')+' in stock). Its past movements stay in the history.',ok:'Yes, delete'});if(!r)return;
@@ -4665,126 +4665,254 @@ async function partsCsv(kind){
     await dl.save({filename:name,data:'﻿'+[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n')});toast('File saved.');}
   catch(e){if(!(e&&e.code==='declined'))toast(dbErr(e),true);}
 }
-/* ---------- spare-parts orders (part_orders): requested → approved → ordered → shipped → arrived; also read by the Logistics app ---------- */
-S.po=[];S.pof={view:'open',q:'',urgent:false};
-const PO_ST=[['requested','Requested','acc'],['approved','Approved','acc'],['ordered','Ordered','warn'],['shipped','Shipped','warn'],['partial','Part arrived','warn'],['arrived','Arrived','ok'],['cancelled','Cancelled','']];
+/* ---------- spare-parts orders (part_orders), also read by the Logistics app ----------
+   An ORDER is one shipment from one supplier with many items: supplier, PO, source, ETA, tracking, status and history are kept
+   on the order; each item has its part, quantity, unit, price and received quantity.
+   A REQUEST is one part asked for by maintenance or the parts store; the admin approves it and adds it to an order.
+   Older single-part records are read as a one-item order (or a request) and rewritten in the new shape when next saved. */
+S.po=[];S.pof={view:'open',q:'',urgent:false};S.poSel={};
+const PO_ST={planned:['Preparing','acc'],ordered:['Ordered','warn'],shipped:['Shipped','warn'],partial:['Part arrived','warn'],arrived:['Arrived','ok'],cancelled:['Cancelled','']};
+const RQ_ST={requested:['Requested','acc'],approved:['Approved','ok'],added:['In an order','ok'],rejected:['Rejected','']};
 const PO_SRC=[['local','Local'],['sea','Import · sea'],['air','Import · air'],['courier','Courier']];
-const PO_OPEN=['requested','approved','ordered','shipped','partial'];
-const poSt=s=>PO_ST.find(x=>x[0]===s)||PO_ST[0];
-const poLate=o=>!!(o.eta&&o.eta<S.today&&['approved','ordered','shipped','partial'].includes(o.status));
+const PO_OPEN=['planned','ordered','shipped','partial'];
+const poSrcName=k=>(PO_SRC.find(x=>x[0]===k)||['',''])[1];
+const poNum=v=>Math.round((Number(v)||0)*1000)/1000;
+const poUid=()=>Math.random().toString(36).slice(2,9);
+function poNorm(d){
+  if(d.kind==='order')return Object.assign({},d,{items:(d.items||[]).map(i=>Object.assign({},i))});
+  if(d.kind==='request')return Object.assign({},d,{item:Object.assign({},d.item||{})});
+  const item={id:poUid(),part:d.part||'',uc:d.uc||'',name:d.name||'',spec:d.spec||'',code:d.code||'',unit:d.unit||'pcs',qty:poNum(d.qty),recv:poNum(d.recv),price:Number(d.price)||0,use:d.use||'general',prio:d.prio||'normal'};
+  const base={id:d.id,prio:d.prio||'normal',note:d.note||'',reqBy:d.reqBy||'',d:d.d||'',createdAt:d.createdAt||'',updatedAt:d.updatedAt||'',hist:d.hist||[],_old:true};
+  if(d.status==='requested')return Object.assign(base,{kind:'request',status:'requested',item});
+  return Object.assign(base,{kind:'order',status:d.status==='approved'?'planned':(d.status||'planned'),supplier:d.supplier||'',po:d.po||'',src:d.src||'local',eta:d.eta||'',track:d.track||'',arrivedAt:d.arrivedAt||'',items:[item]});
+}
+const poOrders=()=>S.po.filter(x=>x.kind==='order');
+const poReqs=()=>S.po.filter(x=>x.kind==='request');
+const poLate=o=>!!(o.kind==='order'&&o.eta&&o.eta<S.today&&['ordered','shipped','partial'].includes(o.status));
 const poDays=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
-const poLeft=o=>Math.max(0,(Number(o.qty)||0)-(Number(o.recv)||0));
+const poUrgent=o=>o.prio==='urgent'||(o.items||[]).some(i=>i.prio==='urgent');
+const poItemsLeft=o=>(o.items||[]).filter(i=>poNum(i.recv)<poNum(i.qty));
+const poValue=o=>(o.items||[]).reduce((s,i)=>s+Math.max(0,poNum(i.qty)-poNum(i.recv))*(Number(i.price)||0),0);
+const poLabel=o=>(o.supplier||'No supplier')+(o.po?' · '+o.po:'');
 function weekStartPO(){const d=new Date(S.today+'T12:00:00');d.setDate(d.getDate()-d.getDay());return ymd(d);}
-function subPO(){resub('po',()=>S.db.collection('part_orders').limit(1000).onSnapshot(snap=>{S.po=snap.docs.map(d=>Object.assign({id:d.id},d.data()));paintPOBadge();if(S.tab==='orders')paintTab();},e=>toast(dbErr(e),true)));}
-function paintPOBadge(){const b=$('#poBadge');if(!b)return;const n=S.po.filter(o=>poLate(o)||(o.prio==='urgent'&&PO_OPEN.includes(o.status))).length;b.hidden=!n;b.textContent=n;b.title=n+' urgent or overdue order'+(n===1?'':'s');}
-function ordersShell(){const f=S.pof;
+const poHasPart=pid=>S.po.some(x=>(x.kind==='order'&&PO_OPEN.includes(x.status)&&(x.items||[]).some(i=>i.part===pid&&poNum(i.recv)<poNum(i.qty)))||(x.kind==='request'&&(x.status==='requested'||x.status==='approved')&&x.item.part===pid));
+function subPO(){resub('po',()=>S.db.collection('part_orders').limit(1000).onSnapshot(snap=>{S.po=snap.docs.map(d=>poNorm(Object.assign({id:d.id},d.data())));paintPOBadge();if(S.tab==='orders')paintTab();if(S.tab==='parts'&&S.pf.view==='order')paintTab();},e=>toast(dbErr(e),true)));}
+function paintPOBadge(){const b=$('#poBadge');if(!b)return;const n=poOrders().filter(o=>PO_OPEN.includes(o.status)&&(poLate(o)||poUrgent(o))).length+(adminEff()?poReqs().filter(r=>r.status==='requested').length:0);b.hidden=!n;b.textContent=n;b.title='Urgent or overdue orders'+(adminEff()?' and requests to approve':'');}
+const poH=(st,by,note)=>({d:S.today,at:new Date().toISOString(),st,by:by||'',note:note||''});
+/* write the whole record in the new shape (also converts an older record) */
+async function poPut(x,changes,h){
+  const now=new Date().toISOString();const doc=Object.assign({},x,changes||{},{updatedAt:now});
+  if(h)doc.hist=(x.hist||[]).concat([h]).slice(-40);
+  delete doc.id;delete doc._old;
+  await S.db.doc('part_orders/'+x.id).set(JSON.parse(JSON.stringify(doc)));
+}
+function ordersShell(){const f=S.pof,adm=adminEff();
   return '<div class="ctlrow" style="margin-bottom:10px;gap:8px;align-items:center" id="poBar"></div>'+
-   '<div class="ctlrow" style="margin-bottom:12px"><label class="l" style="flex:2 1 220px">Search<input type="search" id="poQ" placeholder="Part, supplier, PO no., machine" value="'+esc(f.q)+'"></label>'+
+   '<div class="ctlrow" style="margin-bottom:12px"><label class="l" style="flex:2 1 220px">Search<input type="search" id="poQ" placeholder="Supplier, PO no., part, code" value="'+esc(f.q)+'"></label>'+
    '<label class="l" style="flex:0 0 auto;justify-content:flex-end"><span><input type="checkbox" id="poUrg"'+(f.urgent?' checked':'')+'> Urgent only</span></label>'+
-   '<button class="btn pri" id="poAdd" style="align-self:flex-end">+ New order</button></div><div id="poBody" style="display:flex;flex-direction:column;gap:14px"></div>';}
+   '<button class="btn" id="poReq" style="align-self:flex-end">+ Request a part</button>'+(adm?'<button class="btn pri" id="poAdd" style="align-self:flex-end">+ New order</button>':'')+'</div><div id="poBody" style="display:flex;flex-direction:column;gap:14px"></div>';}
 function bindOrders(){const f=S.pof;
   $('#poQ').oninput=e=>{f.q=e.target.value;paintOrders();};
   $('#poUrg').onchange=e=>{f.urgent=e.target.checked;paintOrders();};
-  $('#poAdd').onclick=()=>poEdit(null);
-  $('#poBody').onchange=e=>{const sl=e.target.closest('select[data-posel]');if(!sl)return;const v=sl.value,id=sl.dataset.id;sl.value='';if(v)poAct(v,id);};}
+  const a=$('#poAdd');if(a)a.onclick=()=>poEditor(null);
+  $('#poReq').onclick=()=>poRequest(null);
+  const body=$('#poBody');
+  body.onchange=e=>{const sl=e.target.closest('select[data-posel]');if(sl){const v=sl.value,id=sl.dataset.id;sl.value='';if(v)poAct(v,id);return;}
+    const cb=e.target.closest('input[data-rsel]');if(cb){S.poSel[cb.dataset.rsel]=cb.checked;paintOrders();return;}
+    const add=e.target.closest('select#rqAdd');if(add){const v=add.value;add.value='';if(v)poAddReqs(v);}};
+  body.onclick=e=>{const o=e.target.closest('[data-open]');if(o&&!e.target.closest('select'))poEditor(S.po.find(x=>x.id===o.dataset.open));};}
 function paintOrders(){
-  const el=$('#poBody');if(!el)return;const f=S.pof,adm=adminEff(),all=S.po,ws=weekStartPO();
-  const open=all.filter(o=>PO_OPEN.includes(o.status)),late=open.filter(poLate),urg=open.filter(o=>o.prio==='urgent'),arrW=all.filter(o=>(o.status==='arrived'||o.status==='partial')&&o.arrivedAt&&o.arrivedAt>=ws);
-  const val=open.reduce((s,o)=>s+poLeft(o)*(Number(o.price)||0),0);
-  const vb=$('#poBar');if(vb){vb.innerHTML=[['open','Open ('+open.length+')'],['arrived','Arrived'],['cancelled','Cancelled'],['all','All']].map(v=>'<button class="btn sm'+(f.view===v[0]?' pri':'')+'" data-v="'+v[0]+'">'+esc(v[1])+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="poCsv">Download list</button>';
+  const el=$('#poBody');if(!el)return;const f=S.pof,adm=adminEff(),ws=weekStartPO(),q=f.q.trim().toLowerCase();
+  const ords=poOrders(),reqs=poReqs(),open=ords.filter(o=>PO_OPEN.includes(o.status)),waiting=reqs.filter(r=>r.status==='requested'||r.status==='approved');
+  const late=open.filter(poLate),urg=open.filter(poUrgent),arrW=ords.filter(o=>o.arrivedAt&&o.arrivedAt>=ws&&(o.status==='arrived'||o.status==='partial')),val=open.reduce((s,o)=>s+poValue(o),0);
+  const vb=$('#poBar');if(vb){vb.innerHTML=[['open','Open orders ('+open.length+')'],['req','Requests'+(waiting.length?' ('+waiting.length+')':'')],['arrived','Arrived'],['cancelled','Cancelled'],['all','All']].map(v=>'<button class="btn sm'+(f.view===v[0]?' pri':'')+'" data-v="'+v[0]+'">'+esc(v[1])+'</button>').join('')+'<span style="flex:1"></span><button class="btn sm" id="poCsv">Download list</button>';
     $$('button[data-v]',vb).forEach(b=>b.onclick=()=>{f.view=b.dataset.v;paintOrders();});$('#poCsv').onclick=poCsv;}
-  const strip='<div class="row small"><span class="chip acc">'+open.length+' open</span>'+(urg.length?'<span class="chip bad">'+urg.length+' urgent</span>':'')+(late.length?'<span class="chip bad">'+late.length+' overdue</span>':'')+(arrW.length?'<span class="chip ok">'+arrW.length+' arrived this week</span>':'')+(adm&&val>0?'<span class="chip">On order '+money(val)+'</span>':'')+'</div>';
-  const q=f.q.trim().toLowerCase();
-  let list=all.filter(o=>f.view==='all'?true:f.view==='open'?PO_OPEN.includes(o.status):f.view==='arrived'?o.status==='arrived':o.status==='cancelled');
-  if(f.urgent)list=list.filter(o=>o.prio==='urgent');
-  if(q)list=list.filter(o=>[o.name,o.spec,o.uc,o.code,o.supplier,o.po,forName(o.use),o.note,o.track,o.reqBy].join(' ').toLowerCase().includes(q));
-  const rank=o=>(o.prio==='urgent'?0:2)+(poLate(o)?0:1);
+  const strip='<div class="row small"><span class="chip acc">'+open.length+' open order'+(open.length===1?'':'s')+'</span>'+(urg.length?'<span class="chip bad">'+urg.length+' urgent</span>':'')+(late.length?'<span class="chip bad">'+late.length+' overdue</span>':'')+(arrW.length?'<span class="chip ok">'+arrW.length+' arrived this week</span>':'')+(waiting.length?'<span class="chip warn">'+waiting.length+' request'+(waiting.length===1?'':'s')+' waiting</span>':'')+(adm&&val>0?'<span class="chip">On order '+money(val)+'</span>':'')+'</div>';
+  if(f.view==='req'){el.innerHTML=reqHTML(reqs,q,adm,strip);return;}
+  let list=ords.filter(o=>f.view==='all'?true:f.view==='open'?PO_OPEN.includes(o.status):o.status===f.view);
+  if(f.urgent)list=list.filter(poUrgent);
+  if(q)list=list.filter(o=>[o.supplier,o.po,o.track,o.note].concat((o.items||[]).map(i=>[i.name,i.spec,i.code,i.uc].join(' '))).join(' ').toLowerCase().includes(q));
+  const rank=o=>(poLate(o)?0:2)+(poUrgent(o)?0:1);
   list.sort((a,b)=>f.view==='open'?(rank(a)-rank(b)||String(a.eta||'9999').localeCompare(String(b.eta||'9999'))):String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
-  if(!all.length){el.innerHTML='<section class="card"><h2>Spare parts orders</h2><p class="muted">No orders yet. Use <b>+ New order</b>, or open <b>Spare parts → To order</b> and press <b>Order</b> on a part.</p></section>';return;}
-  el.innerHTML='<section class="card">'+strip+(list.length?'<div class="tscroll" style="margin-top:10px"><table><thead><tr><th style="width:1%">Status</th><th style="width:99%">Part</th><th style="width:1%;white-space:nowrap">Qty</th><th style="width:1%">Supplier</th><th style="width:1%;white-space:nowrap">ETA</th><th style="width:1%"></th></tr></thead><tbody>'+list.map(o=>{
-    const st=poSt(o.status),lt=poLate(o),last=(o.hist||[]).slice(-1)[0];
+  if(!ords.length&&!reqs.length){el.innerHTML='<section class="card"><h2>Spare parts orders</h2><p class="muted">No orders yet. '+(adm?'Use <b>+ New order</b> and paste the item list from Excel, or add the requests from maintenance.':'Use <b>+ Request a part</b>; the admin adds it to an order.')+'</p></section>';return;}
+  el.innerHTML='<section class="card">'+strip+(list.length?'<div class="tscroll" style="margin-top:10px"><table><thead><tr><th style="width:1%">Status</th><th style="width:99%">Order</th><th style="width:1%;white-space:nowrap">Items</th><th style="width:1%;white-space:nowrap">ETA</th><th style="width:1%"></th></tr></thead><tbody>'+list.map(o=>{
+    const st=PO_ST[o.status]||[o.status,''],lt=poLate(o),last=(o.hist||[]).slice(-1)[0],n=(o.items||[]).length,left=poItemsLeft(o).length,ui=(o.items||[]).filter(i=>i.prio==='urgent').length;
     const acts=poActs(o,adm);
-    return '<tr><td style="white-space:nowrap;'+(lt?'box-shadow:inset 4px 0 0 var(--bad,#d9534f)':o.prio==='urgent'?'box-shadow:inset 4px 0 0 var(--warn,#e0a020)':'')+'"><span class="chip '+st[2]+'">'+st[1]+'</span>'+(o.prio==='urgent'?'<div><span class="chip bad" style="margin-top:4px">Urgent</span></div>':'')+'</td>'+
-     '<td>'+(o.uc?'<span class="chip acc mono" style="margin-right:6px">'+esc(o.uc)+'</span>':'')+'<b>'+esc(o.name)+'</b>'+(o.spec?' <span class="mono small" style="background:var(--accentbg);padding:1px 6px;border-radius:5px">'+esc(o.spec)+'</span>':'')+
-      '<div class="muted small">'+[o.use&&o.use!=='general'?forName(o.use):'',o.po?'PO '+o.po:'',o.code?'Order code '+o.code:'',(PO_SRC.find(x=>x[0]===o.src)||['',''])[1],o.reqBy?'Requested by '+o.reqBy:''].filter(Boolean).map(esc).join(' · ')+'</div>'+
-      (last?'<div class="muted small" style="margin-top:2px">'+esc(last.d+' · '+poSt(last.st)[1]+(last.note?': '+last.note:'')+(last.by?' ('+last.by+')':''))+'</div>':'')+'</td>'+
-     '<td style="white-space:nowrap"><b class="mono">'+fmtQ(o.qty)+'</b> <span class="muted small">'+esc(o.unit||'')+'</span>'+(Number(o.recv)?'<div class="muted small">'+fmtQ(o.recv)+' received</div>':'')+(adm&&o.price?'<div class="muted small">'+money((Number(o.qty)||0)*o.price)+'</div>':'')+'</td>'+
-     '<td class="small">'+esc(o.supplier||'–')+'</td>'+
+    return '<tr data-open="'+esc(o.id)+'" style="cursor:pointer"><td style="white-space:nowrap;'+(lt?'box-shadow:inset 4px 0 0 var(--bad,#d9534f)':poUrgent(o)?'box-shadow:inset 4px 0 0 var(--warn,#e0a020)':'')+'"><span class="chip '+st[1]+'">'+st[0]+'</span>'+(poUrgent(o)?'<div><span class="chip bad" style="margin-top:4px">Urgent'+(ui&&o.prio!=='urgent'?' · '+ui+' item'+(ui===1?'':'s'):'')+'</span></div>':'')+'</td>'+
+     '<td><b style="font-size:16px">'+esc(o.supplier||'No supplier')+'</b>'+(o.po?' <span class="chip mono">'+esc(o.po)+'</span>':'')+'<div class="muted small">'+[poSrcName(o.src),o.track?'Tracking '+o.track:'',(o.items||[]).slice(0,3).map(i=>i.name).join(', ')+(n>3?' …':'')].filter(Boolean).map(esc).join(' · ')+'</div>'+
+      (last?'<div class="muted small" style="margin-top:2px">'+esc(last.d+' · '+(PO_ST[last.st]||[last.st])[0]+(last.note?': '+last.note:'')+(last.by?' ('+last.by+')':''))+'</div>':'')+'</td>'+
+     '<td style="white-space:nowrap"><b class="mono" style="font-size:16px">'+n+'</b> <span class="muted small">item'+(n===1?'':'s')+'</span>'+((o.status==='partial'||o.status==='arrived')&&left?'<div class="muted small">'+left+' still to come</div>':'')+(adm&&poValue(o)?'<div class="muted small">'+money(poValue(o))+'</div>':'')+'</td>'+
      '<td style="white-space:nowrap" class="mono small">'+(o.eta?esc(o.eta)+(lt?'<div><span class="chip bad">'+poDays(o.eta,S.today)+' d late</span></div>':''):'–')+'</td>'+
-     '<td style="white-space:nowrap">'+(acts.length?'<select data-posel data-id="'+esc(o.id)+'" aria-label="Action" style="min-height:44px;font-weight:600;min-width:120px;width:130px"><option value="">Action ▾</option>'+acts.map(a=>'<option value="'+a[0]+'">'+esc(a[1])+'</option>').join('')+'</select>':'')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted" style="margin-top:10px">No orders here.</p>')+'</section>';
+     '<td style="white-space:nowrap"><select data-posel data-id="'+esc(o.id)+'" aria-label="Action" style="min-height:44px;font-weight:600;min-width:120px;width:130px"><option value="">Action ▾</option>'+acts.map(a=>'<option value="'+a[0]+'">'+esc(a[1])+'</option>').join('')+'</select></td></tr>';}).join('')+'</tbody></table></div><p class="muted small" style="margin-top:8px">Tap an order to see and edit its items.</p>':'<p class="muted" style="margin-top:10px">No orders here.</p>')+'</section>';
 }
-/* what each person can do: admin runs the order; maintenance and the parts store can request, add notes and receive */
-function poActs(o,adm){const a=[],s=o.status;
-  if(adm&&s==='requested')a.push(['approve','Approve']);
-  if(adm&&(s==='requested'||s==='approved'))a.push(['ordered','Mark ordered']);
-  if(adm&&(s==='ordered'||s==='approved'))a.push(['shipped','Mark shipped']);
-  if(['ordered','shipped','partial','approved'].includes(s))a.push(['recv','Receive']);
+function reqHTML(reqs,q,adm,strip){
+  let list=reqs.filter(r=>S.pof.view==='req'&&(r.status==='requested'||r.status==='approved'));
+  if(q)list=list.filter(r=>[r.item.name,r.item.spec,r.item.code,r.reqBy,r.note].join(' ').toLowerCase().includes(q));
+  if(S.pof.urgent)list=list.filter(r=>r.prio==='urgent');
+  list.sort((a,b)=>(a.prio==='urgent'?0:1)-(b.prio==='urgent'?0:1)||String(a.d||'').localeCompare(String(b.d||'')));
+  const sel=list.filter(r=>S.poSel[r.id]);const targets=poOrders().filter(o=>o.status==='planned'||o.status==='ordered');
+  const bulk=adm&&list.length?'<div class="row" style="margin:10px 0 0;gap:8px;align-items:center"><span class="small muted">'+sel.length+' ticked</span><select id="rqAdd" style="min-height:44px;font-weight:600"'+(sel.length?'':' disabled')+'><option value="">Add ticked to an order ▾</option><option value="new">New order…</option>'+targets.map(o=>'<option value="'+esc(o.id)+'">'+esc(poLabel(o)+' ('+(PO_ST[o.status]||[''])[0]+', '+(o.items||[]).length+' items)')+'</option>').join('')+'</select></div>':'';
+  return '<section class="card">'+strip+bulk+(list.length?'<div class="tscroll" style="margin-top:10px"><table><thead><tr>'+(adm?'<th style="width:1%"></th>':'')+'<th style="width:1%">Status</th><th style="width:99%">Part</th><th style="width:1%">Qty</th><th style="width:1%;white-space:nowrap">Asked by</th><th style="width:1%"></th></tr></thead><tbody>'+list.map(r=>{const i=r.item,st=RQ_ST[r.status]||[r.status,''];
+    const acts=[];if(adm&&r.status==='requested')acts.push(['rapprove','Approve']);acts.push(['redit','Edit']);if(adm)acts.push(['rreject','Reject'],['rdel','Delete']);
+    return '<tr>'+(adm?'<td><input type="checkbox" data-rsel="'+esc(r.id)+'"'+(S.poSel[r.id]?' checked':'')+' style="width:22px;height:22px"></td>':'')+'<td style="white-space:nowrap"><span class="chip '+st[1]+'">'+st[0]+'</span>'+(r.prio==='urgent'?'<div><span class="chip bad" style="margin-top:4px">Urgent</span></div>':'')+'</td>'+
+      '<td>'+(i.uc?'<span class="chip acc mono" style="margin-right:6px">'+esc(i.uc)+'</span>':'')+'<b>'+esc(i.name)+'</b>'+(i.spec?' <span class="mono small">'+esc(i.spec)+'</span>':'')+'<div class="muted small">'+[forName(i.use),i.code?'Order code '+i.code:'',r.note].filter(Boolean).map(esc).join(' · ')+'</div></td>'+
+      '<td style="white-space:nowrap"><b class="mono">'+fmtQ(i.qty)+'</b> <span class="muted small">'+esc(i.unit||'')+'</span></td><td class="small">'+esc(r.reqBy||'–')+'<div class="muted small">'+esc(r.d||'')+'</div></td>'+
+      '<td><select data-posel data-id="'+esc(r.id)+'" aria-label="Action" style="min-height:44px;font-weight:600;width:120px"><option value="">Action ▾</option>'+acts.map(a=>'<option value="'+a[0]+'">'+esc(a[1])+'</option>').join('')+'</select></td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted" style="margin-top:10px">No requests waiting.</p>')+'</section>';
+}
+function poActs(o,adm){const a=[['open',adm&&o.status!=='arrived'&&o.status!=='cancelled'?'Open / edit items':'Open']],s=o.status;
+  if(adm&&s==='planned')a.push(['ordered','Mark ordered']);
+  if(adm&&(s==='ordered'||s==='planned'))a.push(['shipped','Mark shipped']);
+  if(['ordered','shipped','partial'].includes(s))a.push(['recv','Receive shipment']);
   if(s!=='cancelled')a.push(['note','Add note / ETA']);
-  if(adm||(s==='requested'))a.push(['edit','Edit']);
   if(adm&&PO_OPEN.includes(s))a.push(['cancel','Cancel order']);
   if(adm&&(s==='cancelled'||s==='arrived'))a.push(['reopen','Reopen']);
   if(adm)a.push(['del','Delete']);return a;}
-const poH=(st,by,note)=>({d:S.today,at:new Date().toISOString(),st,by:by||'',note:note||''});
-async function poSave(id,data,h){const now=new Date().toISOString();data.updatedAt=now;
-  if(h){const o=S.po.find(x=>x.id===id);data.hist=((o&&o.hist)||[]).concat([h]).slice(-30);}
-  await S.db.doc('part_orders/'+id).update(data);}
-async function poEdit(o,seed){
-  const adm=adminEff(),add=!o;seed=seed||{};const src=o||seed;
+/* ---- a request for one part (maintenance, parts store, or the admin from To order) ---- */
+async function poRequest(r,seed){
+  const adm=adminEff(),add=!r;seed=seed||{};const src=r?Object.assign({},r.item,{prio:r.prio,note:r.note}):seed;
   const partOpts=[['','— Not in the parts list (type below) —']].concat(S.parts.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(p=>[p.id,(p.uc?p.uc+' · ':'')+p.name+(p.spec?' '+p.spec:'')+' ('+fmtQ(p.qty)+' '+(p.unit||'')+' in stock)']));
-  const fields=[{id:'part',label:'Part from the spare-parts list',type:'select',options:partOpts,value:src.part||''},
-    {id:'name',label:'Part name (if not in the list)',value:src.part?'':(src.name||''),ph:'e.g. Bearing 6307 for dryer fan'},{id:'spec',label:'Size / model (optional)',value:src.part?'':(src.spec||'')},
-    {id:'qty',label:'Quantity',type:'number',req:true,value:src.qty||''},{id:'unit',label:'Unit',value:src.unit||'pcs'},
-    {id:'use',label:'Machine / area',type:'select',options:PART_FOR,value:src.use||'general'},
-    {id:'prio',label:'Priority',type:'select',options:[['normal','Normal'],['urgent','Urgent (machine stopped or at risk)']],value:src.prio||'normal'},
-    {id:'supplier',label:'Supplier (optional)',value:src.supplier||''},{id:'note',label:'Reason / note (optional)',value:add?(seed.note||''):(o.note||'')}];
-  if(adm)fields.push({id:'src',label:'Source',type:'select',options:PO_SRC,value:src.src||'local'},{id:'po',label:'PO / order no. (optional)',value:src.po||''},{id:'eta',label:'Expected arrival (ETA)',type:'date',value:src.eta||''},{id:'price',label:'Price per unit (admin only)',type:'number',value:src.price||''});
-  const pr=stockDlg({title:add?'New spare parts order':'Edit order: '+o.name,msg:add?(adm?'Saved as Approved. Maintenance requests are saved as Requested.':'Saved as a request; the admin approves and orders it.'):'',fields,ok:'Save',
-    validate:v=>{if(!v.part&&!v.name.trim())return 'Choose a part from the list or type its name.';if(!(Number(v.qty)>0))return 'Type a quantity above zero.';if(v.price&&!(Number(v.price)>=0))return 'Price must be a number.';return null;}});
-  /* choosing a part fills its machine, unit, supplier and price */
-  {const ps=$('#sd_part');if(ps)ps.addEventListener('change',()=>{const x=S.parts.find(y=>y.id===ps.value);if(!x)return;const set=(k,v)=>{const e=$('#sd_'+k);if(e&&v!=null&&v!=='')e.value=v;};
-    set('use',x.use||'general');set('unit',x.unit||'pcs');set('supplier',x.supplier||'');if(adm&&Number(x.price))set('price',x.price);const nm=$('#sd_name');if(nm)nm.value='';const sp=$('#sd_spec');if(sp)sp.value='';});}
-  const r=await pr;if(!r)return;const v=r.vals;const p=v.part?S.parts.find(x=>x.id===v.part):null;
-  const data={part:p?p.id:'',name:p?p.name:v.name.trim(),spec:p?(p.spec||''):v.spec.trim(),uc:p?(p.uc||''):'',code:p?(p.code||''):'',unit:(v.unit.trim()||(p&&p.unit)||'pcs'),qty:Number(v.qty),use:v.use,prio:v.prio,supplier:v.supplier.trim()||(p&&p.supplier)||'',note:v.note.trim()};
-  if(adm){data.src=v.src;data.po=v.po.trim();data.eta=v.eta||'';data.price=v.price===''?((p&&Number(p.price))||0):Number(v.price);}
+  const fields=[{id:'part',label:'Part from the spare-parts list',type:'select',options:partOpts,value:src.part||''},{id:'pname',label:'Part name (if not in the list)',value:src.part?'':(src.name||'')},{id:'spec',label:'Size / model (optional)',value:src.part?'':(src.spec||'')},
+    {id:'qty',label:'Quantity',type:'number',req:true,value:src.qty||''},{id:'unit',label:'Unit',value:src.unit||'pcs'},{id:'use',label:'Machine / area',type:'select',options:PART_FOR,value:src.use||'general'},
+    {id:'prio',label:'Priority',type:'select',options:[['normal','Normal'],['urgent','Urgent (machine stopped or at risk)']],value:src.prio||'normal'},{id:'note',label:'Reason (optional)',value:src.note||''}];
+  const pr=stockDlg({title:add?'Request a spare part':'Edit request: '+r.item.name,msg:add?(adm?'Saved as approved. Then add it to an order from Requests.':'The admin approves it and adds it to an order.'):'',fields,ok:add?'Send request':'Save',
+    validate:v=>(!v.part&&!v.pname.trim())?'Choose a part from the list or type its name.':!(Number(v.qty)>0)?'Type a quantity above zero.':null});
+  {const ps=$('#sd_part');if(ps)ps.addEventListener('change',()=>{const x=S.parts.find(y=>y.id===ps.value);if(!x)return;const s=(k,v)=>{const e=$('#sd_'+k);if(e&&v)e.value=v;};s('use',x.use||'general');s('unit',x.unit||'pcs');$('#sd_pname').value='';$('#sd_spec').value='';});}
+  const res=await pr;if(!res)return;const v=res.vals,p=v.part?S.parts.find(x=>x.id===v.part):null;
+  const item={id:(r&&r.item.id)||poUid(),part:p?p.id:'',uc:p?(p.uc||''):'',name:p?p.name:v.pname.trim(),spec:p?(p.spec||''):v.spec.trim(),code:p?(p.code||''):'',unit:v.unit.trim()||(p&&p.unit)||'pcs',qty:poNum(v.qty),recv:0,price:p?(Number(p.price)||0):0,use:v.use,prio:v.prio,supplier:p?(p.supplier||''):''};
   try{
-    if(add){const st=adm?'approved':'requested';Object.assign(data,{status:st,recv:0,reqBy:r.by||'',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),d:S.today,hist:[poH(st,r.by,adm?'Order created':(data.note||''))]});
-      if(!adm){data.src='local';data.po='';data.eta='';data.price=(p&&Number(p.price))||0;}
-      await S.db.collection('part_orders').add(data);toast(adm?'Order added.':'Request sent to the admin.');}
-    else{await poSave(o.id,data,poH(o.status,r.by,'Details edited'));toast('Order saved.');}
+    if(add){const st=adm?'approved':'requested';await S.db.collection('part_orders').add({kind:'request',status:st,item,prio:v.prio,note:v.note.trim(),reqBy:res.by||'',d:S.today,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),hist:[poH(st,res.by,v.note.trim())]});toast(adm?'Request saved. Add it to an order from Requests.':'Request sent to the admin.');}
+    else{await poPut(r,{item,prio:v.prio,note:v.note.trim()},poH(r.status,res.by,'Edited'));toast('Request saved.');}
   }catch(e){toast(e&&e.message&&!e.code?e.message:dbErr(e),true);}
+}
+/* ticked requests → a new or an existing order */
+async function poAddReqs(target){
+  const sel=poReqs().filter(r=>S.poSel[r.id]&&(r.status==='requested'||r.status==='approved'));if(!sel.length)return;
+  const items=sel.map(r=>Object.assign({},r.item,{id:poUid(),prio:r.prio||r.item.prio||'normal',reqBy:r.reqBy||'',reqId:r.id}));
+  if(target==='new'){const sup=items.map(i=>i.supplier).filter(Boolean);await poEditor(null,{supplier:sup.length&&sup.every(s=>s===sup[0])?sup[0]:'',items,reqIds:sel.map(r=>r.id)});return;}
+  const o=S.po.find(x=>x.id===target);if(!o)return;
+  try{await poPut(o,{items:(o.items||[]).concat(items)},poH(o.status,'Admin',items.length+' requested item'+(items.length===1?'':'s')+' added'));
+    for(const r of sel)await poPut(r,{status:'added',orderId:o.id},poH('added','Admin','Added to '+poLabel(o)));
+    S.poSel={};toast(items.length+' item'+(items.length===1?'':'s')+' added to '+poLabel(o)+'.');}catch(e){toast(e&&e.message&&!e.code?e.message:dbErr(e),true);}
+}
+/* ---- the order window: header and items; paste the item list from Excel ---- */
+function poParsePaste(text){
+  const rows=parseTable(text).map(r=>r.map(c=>String(c==null?'':c).trim())).filter(r=>r.some(Boolean));if(!rows.length)return [];
+  const H=rows[0].map(h=>h.toLowerCase());const find=re=>H.findIndex(h=>re.test(h));
+  let ci={code:find(/code|part ?no|item ?no|ref|article|p\/n|sku/),name:find(/desc|name|item(?! ?no)|part(?! ?no)|material|product/),qty:find(/qty|quant|pcs|no\. ?of/),unit:find(/unit|uom/),price:find(/price|rate|cost|u\.?p/),spec:find(/size|spec|model|dimension/)};
+  let data=rows;
+  if(ci.name>=0||ci.qty>=0)data=rows.slice(1);
+  else{/* no header: the longest text column is the name, numbers are quantity then price, a short code-like first column is the code */
+    const w=Math.max(...rows.map(r=>r.length));const isNum=v=>/^-?[\d.,]+$/.test(v)&&v!=='';const score=j=>rows.reduce((s,r)=>s+((r[j]||'').length),0);
+    const nums=[...Array(w).keys()].filter(j=>rows.filter(r=>isNum(r[j]||'')).length>=rows.length*0.7);const texts=[...Array(w).keys()].filter(j=>!nums.includes(j));
+    ci={name:texts.sort((a,b)=>score(b)-score(a))[0],qty:nums[0]!=null?nums[0]:-1,price:nums[1]!=null?nums[1]:-1,code:texts.length>1&&texts.find(j=>j!==texts[0]&&j<(texts[0]))!=null?texts.find(j=>j<texts[0]):-1,unit:-1,spec:-1};}
+  const num=v=>{v=String(v||'').replace(/[^\d.,-]/g,'');if(/,\d{3}(\D|$)/.test(v)||(/,/.test(v)&&/\./.test(v)))v=v.replace(/,/g,'');else v=v.replace(',','.');return Number(v)||0;};
+  return data.map(r=>{const g=k=>ci[k]>=0&&ci[k]!=null?(r[ci[k]]||''):'';const code=g('code'),name=g('name')||code;if(!name)return null;
+    const key=code.toLowerCase();const p=key?S.parts.find(x=>String(x.code||'').toLowerCase()===key||String(x.uc||'').toLowerCase()===key):S.parts.find(x=>String(x.name||'').toLowerCase()===name.toLowerCase()&&(!g('spec')||String(x.spec||'').toLowerCase()===g('spec').toLowerCase()));
+    return {id:poUid(),part:p?p.id:'',uc:p?(p.uc||''):'',name:p?p.name:name,spec:p?(p.spec||''):g('spec'),code:code||(p?(p.code||''):''),unit:g('unit')||(p&&p.unit)||'pcs',qty:poNum(num(g('qty'))||1),recv:0,price:num(g('price'))||(p?Number(p.price)||0:0),use:p?(p.use||'general'):'general',prio:'normal'};}).filter(Boolean);
+}
+function poEditor(o,seed){
+  return new Promise(resolve=>{
+    const adm=adminEff(),add=!o,edit=adm&&(add||PO_OPEN.includes(o.status));seed=seed||{};
+    const W=add?Object.assign({kind:'order',status:'planned',supplier:'',po:'',src:'local',eta:'',track:'',prio:'normal',note:'',items:[]},seed):JSON.parse(JSON.stringify(o));
+    W.items=(W.items||[]).map(i=>Object.assign({},i));
+    const old=$('#poDlg');if(old)old.remove();
+    const w=document.createElement('div');w.id='poDlg';w.className='ovl';
+    const sups=[...new Set(S.parts.map(p=>p.supplier).concat(poOrders().map(x=>x.supplier)).filter(Boolean))].sort();
+    const inp=(id,val,ph,type)=>'<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(edit?'':' disabled')+(id==='poSup'?' list="poSups"':'')+'>';
+    const draw=()=>{
+      const tot=W.items.reduce((s,i)=>s+poNum(i.qty)*(Number(i.price)||0),0);const st=PO_ST[W.status]||[W.status,''];
+      w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:1000px"><div class="row" style="align-items:center;gap:10px"><h2 style="margin:0;flex:1">'+(add?'New order':esc(poLabel(W)))+'</h2>'+(add?'':'<span class="chip '+st[1]+'">'+st[0]+'</span>')+(poLate(W)?'<span class="chip bad">'+poDays(W.eta,S.today)+' d late</span>':'')+'</div>'+
+        '<div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))"><label class="l">Supplier'+inp('poSup',W.supplier,'e.g. Pavan')+'</label><label class="l">PO / order no.'+inp('poNo',W.po)+'</label>'+
+          '<label class="l">Source<select id="poSrc"'+(edit?'':' disabled')+'>'+PO_SRC.map(x=>'<option value="'+x[0]+'"'+(W.src===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select></label><label class="l">Expected arrival (ETA)'+inp('poEta',W.eta,'','date')+'</label>'+
+          '<label class="l">Priority<select id="poPrio"'+(edit?'':' disabled')+'><option value="normal">Normal</option><option value="urgent"'+(W.prio==='urgent'?' selected':'')+'>Urgent</option></select></label><label class="l">Tracking / B/L / AWB'+inp('poTrk',W.track)+'</label>'+
+          '<label class="l" style="grid-column:1/-1">Note'+inp('poNote',W.note)+'</label></div><datalist id="poSups">'+sups.map(s=>'<option value="'+esc(s)+'">').join('')+'</datalist>'+
+        '<div class="row" style="align-items:center;gap:8px;margin-top:4px"><b style="flex:1">Items <span class="chip acc">'+W.items.length+'</span>'+(adm&&tot?' <span class="chip">'+money(tot)+'</span>':'')+'</b>'+(edit?'<button class="btn sm" id="poPasteBtn">Paste from Excel</button><button class="btn sm" id="poAddItem">+ Add item</button>':'')+'</div>'+
+        '<div id="poPaste" hidden style="display:flex;flex-direction:column;gap:6px"><textarea id="poPasteT" rows="6" style="width:100%;font:13px ui-monospace,monospace" placeholder="Copy the rows from Excel (with or without the header row) and paste here. Columns such as: Code · Description · Qty · Unit · Price"></textarea><div class="row" style="gap:8px"><button class="btn pri sm" id="poPasteGo">Add these lines</button><span class="muted small">Codes found in the spare-parts list are linked automatically.</span></div></div>'+
+        (W.items.length?'<div class="tscroll" style="max-height:46vh;overflow:auto"><table class="small"><thead><tr><th>#</th><th style="width:99%">Part</th><th>Qty</th><th>Unit</th>'+(adm?'<th>Price</th>':'')+'<th>Received</th>'+(edit?'<th></th>':'')+'</tr></thead><tbody>'+W.items.map((i,k)=>'<tr><td class="muted">'+(k+1)+'</td><td>'+(i.part?'<span class="chip acc mono" style="margin-right:4px">'+esc(i.uc||'list')+'</span>':'<span class="chip" title="Not in the spare-parts list yet">new</span> ')+(edit&&!i.part?'<input data-f="name" data-k="'+k+'" value="'+esc(i.name)+'" style="min-width:180px">':'<b>'+esc(i.name)+'</b>')+(i.spec?' <span class="mono">'+esc(i.spec)+'</span>':'')+(i.prio==='urgent'?' <span class="chip bad">Urgent</span>':'')+'<div class="muted">'+esc([i.code?'Code '+i.code:'',i.use&&i.use!=='general'?forName(i.use):'',i.reqBy?'asked by '+i.reqBy:''].filter(Boolean).join(' · '))+'</div></td>'+
+          '<td>'+(edit?'<input data-f="qty" data-k="'+k+'" type="number" step="any" min="0" value="'+esc(i.qty)+'" style="width:80px">':'<b class="mono">'+fmtQ(i.qty)+'</b>')+'</td><td>'+(edit?'<input data-f="unit" data-k="'+k+'" value="'+esc(i.unit||'pcs')+'" style="width:60px">':esc(i.unit||''))+'</td>'+
+          (adm?'<td>'+(edit?'<input data-f="price" data-k="'+k+'" type="number" step="any" min="0" value="'+esc(i.price||'')+'" style="width:90px">':(i.price?money(i.price):'–'))+'</td>':'')+'<td class="mono">'+(poNum(i.recv)?fmtQ(i.recv)+(poNum(i.recv)>=poNum(i.qty)?' ✓':''):'–')+'</td>'+(edit?'<td><button class="btn sm" data-rm="'+k+'" aria-label="Remove item"'+(poNum(i.recv)?' disabled':'')+'>×</button></td>':'')+'</tr>').join('')+'</tbody></table></div>':'<p class="muted">No items yet. '+(edit?'Paste the list from Excel or add items one by one.':'')+'</p>')+
+        (!add&&(o.hist||[]).length?'<details><summary class="small">History ('+o.hist.length+')</summary><div class="small muted" style="margin-top:6px">'+o.hist.slice().reverse().map(h=>esc(h.d+' · '+(PO_ST[h.st]||RQ_ST[h.st]||[h.st])[0]+(h.note?': '+h.note:'')+(h.by?' ('+h.by+')':''))).join('<br>')+'</div></details>':'')+
+        '<div id="poErr" class="status bad" hidden></div><div class="row" style="margin-top:6px"><button type="button" class="btn big" id="poNo2">'+(edit?'Cancel':'Close')+'</button>'+(edit?'<button type="button" class="btn pri big" id="poSave">'+(add?'Save order':'Save changes')+'</button>':'')+'</div></div>';
+      bind();};
+    const sync=()=>{if(!edit)return;const g=id=>{const e=w.querySelector('#'+id);return e?e.value:'';};W.supplier=g('poSup').trim();W.po=g('poNo').trim();W.src=g('poSrc');W.eta=g('poEta');W.prio=g('poPrio');W.track=g('poTrk').trim();W.note=g('poNote').trim();
+      w.querySelectorAll('[data-f]').forEach(e=>{const i=W.items[+e.dataset.k];if(!i)return;const f=e.dataset.f;i[f]=f==='qty'||f==='price'?poNum(e.value):e.value;});};
+    const done=v=>{w.remove();document.removeEventListener('keydown',onKey);resolve(v);};
+    const onKey=e=>{if(e.key==='Escape'&&!$('#dlg'))done(null);};
+    const bind=()=>{
+      w.querySelector('#poNo2').onclick=()=>done(null);
+      const pb=w.querySelector('#poPasteBtn');if(pb)pb.onclick=()=>{sync();const p=w.querySelector('#poPaste');p.hidden=!p.hidden;if(!p.hidden)w.querySelector('#poPasteT').focus();};
+      const pg=w.querySelector('#poPasteGo');if(pg)pg.onclick=()=>{sync();const lines=poParsePaste(w.querySelector('#poPasteT').value);if(!lines.length){const er=w.querySelector('#poErr');er.textContent='Nothing to add: paste rows copied from Excel.';er.hidden=false;return;}W.items=W.items.concat(lines);draw();toast(lines.length+' line'+(lines.length===1?'':'s')+' added. Check them, then save.');};
+      const ai=w.querySelector('#poAddItem');if(ai)ai.onclick=async()=>{sync();const partOpts=[['','— Not in the parts list (type below) —']].concat(S.parts.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(p=>[p.id,(p.uc?p.uc+' · ':'')+p.name+(p.spec?' '+p.spec:'')]));
+        const r=await stockDlg({title:'Add item',fields:[{id:'part',label:'Part from the spare-parts list',type:'select',options:partOpts},{id:'pname',label:'Part name (if not in the list)'},{id:'spec',label:'Size / model (optional)'},{id:'qty',label:'Quantity',type:'number',req:true},{id:'unit',label:'Unit',value:'pcs'},{id:'price',label:'Price per unit (optional)',type:'number'}],ok:'Add',validate:v=>(!v.part&&!v.pname.trim())?'Choose a part or type its name.':!(Number(v.qty)>0)?'Type a quantity above zero.':null});
+        if(!r)return;const v=r.vals,p=v.part?S.parts.find(x=>x.id===v.part):null;W.items.push({id:poUid(),part:p?p.id:'',uc:p?(p.uc||''):'',name:p?p.name:v.pname.trim(),spec:p?(p.spec||''):v.spec.trim(),code:p?(p.code||''):'',unit:v.unit.trim()||(p&&p.unit)||'pcs',qty:poNum(v.qty),recv:0,price:v.price!==''?Number(v.price):(p?Number(p.price)||0:0),use:p?(p.use||'general'):'general',prio:'normal'});draw();};
+      w.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{sync();W.items.splice(+b.dataset.rm,1);draw();});
+      const sv=w.querySelector('#poSave');if(sv)sv.onclick=async()=>{sync();const er=w.querySelector('#poErr');
+        if(!W.supplier){er.textContent='Type the supplier.';er.hidden=false;return;}if(!W.items.length){er.textContent='Add at least one item.';er.hidden=false;return;}
+        if(W.items.some(i=>!(poNum(i.qty)>0)||!String(i.name||'').trim())){er.textContent='Every item needs a name and a quantity above zero.';er.hidden=false;return;}
+        sv.disabled=true;
+        try{const now=new Date().toISOString();const items=W.items.map(i=>Object.assign({},i,{qty:poNum(i.qty),recv:poNum(i.recv),price:Number(i.price)||0}));
+          if(add){const doc={kind:'order',status:'planned',supplier:W.supplier,po:W.po,src:W.src,eta:W.eta,track:W.track,prio:W.prio,note:W.note,items,d:S.today,createdAt:now,updatedAt:now,reqBy:'Admin',hist:[poH('planned','Admin',items.length+' item'+(items.length===1?'':'s'))]};
+            const ref=await S.db.collection('part_orders').add(JSON.parse(JSON.stringify(doc)));
+            for(const id of (seed.reqIds||[])){const r=S.po.find(x=>x.id===id);if(r)await poPut(r,{status:'added',orderId:ref.id},poH('added','Admin','Added to '+poLabel(doc)));}
+            S.poSel={};toast('Order saved: '+items.length+' item'+(items.length===1?'':'s')+'. Mark it ordered when it is sent.');}
+          else{await poPut(o,{supplier:W.supplier,po:W.po,src:W.src,eta:W.eta,track:W.track,prio:W.prio,note:W.note,items},poH(o.status,'Admin','Details edited'+(items.length!==(o.items||[]).length?' ('+items.length+' items)':'')));toast('Order saved.');}
+          done(true);}catch(e){sv.disabled=false;er.textContent=e&&e.message&&!e.code?e.message:dbErr(e);er.hidden=false;}};
+    };
+    document.addEventListener('keydown',onKey);document.body.appendChild(w);draw();
+  });
+}
+/* ---- receive a shipment: tick or correct the quantities that came ---- */
+function poReceive(o){
+  return new Promise(resolve=>{
+    const left=o.items.map(i=>Math.max(0,poNum(i.qty)-poNum(i.recv)));const now=left.slice();const anyNew=o.items.some((i,k)=>!i.part&&left[k]>0);
+    const old=$('#poDlg');if(old)old.remove();const w=document.createElement('div');w.id='poDlg';w.className='ovl';
+    const draw=()=>{const n=now.filter(x=>x>0).length;
+      w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:860px"><h2 style="margin:0">Receive: '+esc(poLabel(o))+'</h2><p class="muted" style="margin:0">Set what came in this delivery. Everything ticked goes into spare-parts stock.</p>'+
+        '<div class="row" style="gap:8px"><button class="btn sm" id="rvAll">All still to come</button><button class="btn sm" id="rvNone">None</button><span class="muted small" id="rvCnt" style="align-self:center">'+n+' of '+o.items.length+' lines</span></div>'+
+        '<div class="tscroll" style="max-height:52vh;overflow:auto"><table class="small"><thead><tr><th style="width:99%">Part</th><th>Ordered</th><th>Received before</th><th>Now</th></tr></thead><tbody>'+o.items.map((i,k)=>'<tr'+(left[k]?'':' style="opacity:.55"')+'><td><b>'+esc(i.name)+'</b>'+(i.spec?' <span class="mono">'+esc(i.spec)+'</span>':'')+(i.part?'':' <span class="chip">new</span>')+'</td><td class="mono">'+fmtQ(i.qty)+' '+esc(i.unit||'')+'</td><td class="mono">'+(poNum(i.recv)?fmtQ(i.recv):'–')+'</td><td>'+(left[k]?'<input data-rv="'+k+'" type="number" step="any" min="0" max="'+left[k]+'" value="'+now[k]+'" style="width:80px">':'✓')+'</td></tr>').join('')+'</tbody></table></div>'+
+        (anyNew?'<label class="small"><input type="checkbox" id="rvNew" checked> Add the new parts to the spare-parts list</label>':'')+
+        '<div id="rvErr" class="status bad" hidden></div><div class="row"><button class="btn big" id="rvNo">Cancel</button><button class="btn pri big" id="rvGo"'+(n?'':' disabled')+'>Receive '+n+' line'+(n===1?'':'s')+'</button></div></div>';
+      w.querySelectorAll('[data-rv]').forEach(e=>e.oninput=()=>{const k=+e.dataset.rv;now[k]=Math.min(left[k],Math.max(0,poNum(e.value)));const b=w.querySelector('#rvGo');const c=now.filter(x=>x>0).length;b.disabled=!c;b.textContent='Receive '+c+' line'+(c===1?'':'s');w.querySelector('#rvCnt').textContent=c+' of '+o.items.length+' lines';});
+      w.querySelector('#rvAll').onclick=()=>{left.forEach((x,k)=>now[k]=x);draw();};w.querySelector('#rvNone').onclick=()=>{now.fill(0);draw();};
+      w.querySelector('#rvNo').onclick=()=>{w.remove();resolve(null);};
+      w.querySelector('#rvGo').onclick=async()=>{const addNew=!!(w.querySelector('#rvNew')&&w.querySelector('#rvNew').checked);w.hidden=true;
+        const tot=now.filter(x=>x>0).length;const r=await stockDlg({title:'Receive '+tot+' line'+(tot===1?'':'s')+'?',msg:poLabel(o),fields:[{id:'note',label:'Delivery note / invoice (optional)'}],ok:'Receive'});
+        if(!r){w.hidden=false;return;}
+        try{const items=o.items.map(i=>Object.assign({},i));
+          for(let k=0;k<items.length;k++){const q=now[k];if(!(q>0))continue;const i=items[k];let pid=i.part;
+            if(!pid&&addNew){const use=i.use||'general',cat='Other';const ref=await S.db.collection('parts').add({name:i.name,spec:i.spec||'',cat,code:i.code||'',use,unit:i.unit||'pcs',loc:'',supplier:o.supplier||'',min:0,price:Number(i.price)||0,qty:0,uc:nextUC(ucLetters(use,cat)),grp:ucPrefix(use,cat),createdAt:new Date().toISOString()});pid=ref.id;i.part=pid;}
+            if(pid)await moveStock(pid,q,{type:'in',use:i.use||'',note:['Order '+poLabel(o),r.vals.note.trim()].filter(Boolean).join(' · '),by:r.by});
+            i.recv=poNum(poNum(i.recv)+q);}
+          const full=items.every(i=>poNum(i.recv)>=poNum(i.qty));const nL=items.filter(i=>poNum(i.recv)<poNum(i.qty)).length;
+          await poPut(o,{items,status:full?'arrived':'partial',arrivedAt:S.today},poH(full?'arrived':'partial',r.by,tot+' line'+(tot===1?'':'s')+' received'+(full?'':' · '+nL+' still to come')+(r.vals.note.trim()?' · '+r.vals.note.trim():'')));
+          toast(full?'Shipment received in full and added to stock.':'Received. '+nL+' line'+(nL===1?'':'s')+' still to come.');w.remove();resolve(true);}
+        catch(e){w.hidden=false;const er=w.querySelector('#rvErr');er.textContent=e&&e.message&&!e.code?e.message:dbErr(e);er.hidden=false;}};};
+    document.body.appendChild(w);draw();
+  });
 }
 async function poAct(act,id){
   const o=S.po.find(x=>x.id===id);if(!o)return;
   try{
-    if(act==='edit')return poEdit(o);
-    if(act==='approve'){const r=await stockDlg({title:'Approve: '+o.name,msg:fmtQ(o.qty)+' '+(o.unit||'')+(o.reqBy?' · requested by '+o.reqBy:''),fields:[{id:'note',label:'Note (optional)'}],ok:'Approve'});if(!r)return;
-      await poSave(id,{status:'approved'},poH('approved',r.by,r.vals.note.trim()));toast('Approved.');}
-    else if(act==='ordered'||act==='shipped'){const sh=act==='shipped';
-      const r=await stockDlg({title:(sh?'Shipped: ':'Ordered: ')+o.name,msg:fmtQ(o.qty)+' '+(o.unit||''),ok:'Save',fields:(sh?[{id:'eta',label:'Expected arrival (ETA)',type:'date',value:o.eta||''},{id:'track',label:'Tracking / B/L / AWB (optional)',value:o.track||''}]:[{id:'po',label:'PO / order no.',value:o.po||''},{id:'supplier',label:'Supplier',value:o.supplier||''},{id:'src',label:'Source',type:'select',options:PO_SRC,value:o.src||'local'},{id:'eta',label:'Expected arrival (ETA)',type:'date',value:o.eta||''},{id:'price',label:'Price per unit (admin only)',type:'number',value:o.price||''}]).concat([{id:'note',label:'Note (optional)'}])});
-      if(!r)return;const v=r.vals,d={status:act,eta:v.eta||''};
-      if(sh)d.track=v.track.trim();else Object.assign(d,{po:v.po.trim(),supplier:v.supplier.trim(),src:v.src,price:v.price===''?(o.price||0):Number(v.price)});
-      await poSave(id,d,poH(act,r.by,[v.note.trim(),v.eta?'ETA '+v.eta:''].filter(Boolean).join(' · ')));toast(sh?'Marked shipped.':'Marked ordered.');}
-    else if(act==='note'){const r=await stockDlg({title:'Update: '+o.name,ok:'Save',fields:[{id:'eta',label:'Expected arrival (ETA)',type:'date',value:o.eta||''},{id:'note',label:'Note',value:'',ph:'e.g. supplier confirmed, delayed at port'}],validate:v=>!v.note.trim()&&v.eta===(o.eta||'')?'Type a note or change the ETA.':null});if(!r)return;
-      const d={eta:r.vals.eta||''};await poSave(id,d,poH(o.status,r.by,[r.vals.note.trim(),r.vals.eta!==(o.eta||'')?'ETA '+(r.vals.eta||'none'):''].filter(Boolean).join(' · ')));toast('Saved.');}
-    else if(act==='recv'){const left=poLeft(o);const p=o.part?S.parts.find(x=>x.id===o.part):null;
-      const fields=[{id:'qty',label:'Quantity received'+(o.unit?' ('+o.unit+')':''),type:'number',req:true,value:left||''},{id:'note',label:'Invoice / delivery note (optional)'}];
-      if(!p)fields.push({id:'cat',label:'Add to the spare-parts list?',type:'select',options:[['yes','Yes, add it to stock'],['no','No, just mark it received']],value:'yes'});
-      const r=await stockDlg({title:'Receive: '+o.name,msg:'Ordered '+fmtQ(o.qty)+', received so far '+fmtQ(o.recv||0)+'.'+(p?' It goes into spare-parts stock ('+fmtQ(p.qty)+' '+(p.unit||'')+' now).':''),fields,ok:'Receive',validate:v=>Number(v.qty)>0?null:'Type a quantity above zero.'});
-      if(!r)return;const n=Number(r.vals.qty);let pid=o.part;
-      if(!p&&r.vals.cat==='yes'){const use=o.use||'general',cat='Other';const ref=await S.db.collection('parts').add({name:o.name,spec:o.spec||'',cat,code:o.code||'',use,unit:o.unit||'pcs',loc:'',supplier:o.supplier||'',min:0,price:Number(o.price)||0,qty:0,uc:nextUC(ucLetters(use,cat)),grp:ucPrefix(use,cat),createdAt:new Date().toISOString()});pid=ref.id;}
-      if(pid)await moveStock(pid,n,{type:'in',use:o.use||'',note:['Order'+(o.po?' '+o.po:''),r.vals.note.trim()].filter(Boolean).join(' · '),by:r.by});
-      const rec=(Number(o.recv)||0)+n,full=rec>=(Number(o.qty)||0);
-      await poSave(id,Object.assign({recv:rec,status:full?'arrived':'partial',arrivedAt:S.today},pid&&!o.part?{part:pid}:{}),poH(full?'arrived':'partial',r.by,fmtQ(n)+' '+(o.unit||'')+' received'+(r.vals.note.trim()?' · '+r.vals.note.trim():'')));
-      toast(full?'Received in full. '+(pid?'Added to stock.':''):'Part received: '+fmtQ(rec)+' of '+fmtQ(o.qty)+'.');}
-    else if(act==='cancel'){const r=await stockDlg({title:'Cancel this order?',msg:o.name+' · '+fmtQ(o.qty)+' '+(o.unit||''),fields:[{id:'note',label:'Reason (optional)'}],ok:'Yes, cancel'});if(!r)return;await poSave(id,{status:'cancelled'},poH('cancelled',r.by,r.vals.note.trim()));toast('Order cancelled.');}
-    else if(act==='reopen'){const st=Number(o.recv)>0?'partial':'approved';await poSave(id,{status:st},poH(st,'Admin','Reopened'));toast('Reopened.');}
-    else if(act==='del'){const r=await stockDlg({title:'Delete this order?',msg:o.name+'. Use Cancel instead to keep it in the history.',ok:'Yes, delete'});if(!r)return;await S.db.doc('part_orders/'+id).delete();toast('Order deleted.');}
+    if(act==='open')return poEditor(o);
+    if(act==='recv')return poReceive(o);
+    if(act==='rapprove'){await poPut(o,{status:'approved'},poH('approved','Admin',''));toast('Approved. Tick it and add it to an order.');return;}
+    if(act==='redit')return poRequest(o);
+    if(act==='rreject'){const r=await stockDlg({title:'Reject this request?',msg:o.item.name+' · '+fmtQ(o.item.qty)+' '+(o.item.unit||''),fields:[{id:'note',label:'Reason (optional)'}],ok:'Reject'});if(!r)return;await poPut(o,{status:'rejected'},poH('rejected',r.by,r.vals.note.trim()));toast('Request rejected.');return;}
+    if(act==='ordered'||act==='shipped'){const sh=act==='shipped';
+      const r=await stockDlg({title:(sh?'Shipped: ':'Ordered: ')+poLabel(o),msg:(o.items||[]).length+' items',ok:'Save',fields:(sh?[{id:'eta',label:'Expected arrival (ETA)',type:'date',value:o.eta||''},{id:'track',label:'Tracking / B/L / AWB (optional)',value:o.track||''}]:[{id:'po',label:'PO / order no.',value:o.po||''},{id:'src',label:'Source',type:'select',options:PO_SRC,value:o.src||'local'},{id:'eta',label:'Expected arrival (ETA)',type:'date',value:o.eta||''}]).concat([{id:'note',label:'Note (optional)'}])});
+      if(!r)return;const v=r.vals,d={status:act,eta:v.eta||''};if(sh)d.track=v.track.trim();else Object.assign(d,{po:v.po.trim(),src:v.src});
+      await poPut(o,d,poH(act,r.by,[v.note.trim(),v.eta?'ETA '+v.eta:''].filter(Boolean).join(' · ')));toast(sh?'Marked shipped.':'Marked ordered.');}
+    else if(act==='note'){const r=await stockDlg({title:'Update: '+poLabel(o),ok:'Save',fields:[{id:'eta',label:'Expected arrival (ETA)',type:'date',value:o.eta||''},{id:'note',label:'Note',ph:'e.g. supplier confirmed, at port, customs'}],validate:v=>!v.note.trim()&&v.eta===(o.eta||'')?'Type a note or change the ETA.':null});if(!r)return;
+      await poPut(o,{eta:r.vals.eta||''},poH(o.status,r.by,[r.vals.note.trim(),r.vals.eta!==(o.eta||'')?'ETA '+(r.vals.eta||'none'):''].filter(Boolean).join(' · ')));toast('Saved.');}
+    else if(act==='cancel'){const r=await stockDlg({title:'Cancel this order?',msg:poLabel(o)+' · '+(o.items||[]).length+' items',fields:[{id:'note',label:'Reason (optional)'}],ok:'Yes, cancel'});if(!r)return;await poPut(o,{status:'cancelled'},poH('cancelled',r.by,r.vals.note.trim()));toast('Order cancelled.');}
+    else if(act==='reopen'){const st=(o.items||[]).some(i=>poNum(i.recv)>0)?'partial':'ordered';await poPut(o,{status:st},poH(st,'Admin','Reopened'));toast('Reopened.');}
+    else if(act==='del'||act==='rdel'){const r=await stockDlg({title:'Delete this '+(o.kind==='request'?'request':'order')+'?',msg:(o.kind==='request'?o.item.name:poLabel(o))+(o.kind==='order'?'. Use Cancel instead to keep it in the history.':''),ok:'Yes, delete'});if(!r)return;await S.db.doc('part_orders/'+id).delete();toast('Deleted.');}
   }catch(e){toast(e&&e.message&&!e.code?e.message:dbErr(e),true);}
 }
 async function poCsv(){
-  if(!S.po.length){toast('No orders yet.',true);return;}const adm=adminEff(),q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
-  const head=['Status','Priority','Part','Size / model','UC','Machine / area','Qty','Received','Unit','Supplier','PO no.','Source','ETA','Days late','Requested by','Created','Note'].concat(adm?['Price','Value']:[]);
-  const rows=S.po.slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||''))).map(o=>[poSt(o.status)[1],o.prio==='urgent'?'Urgent':'Normal',o.name,o.spec||'',o.uc||'',forName(o.use),fmtQ(o.qty),fmtQ(o.recv||0),o.unit||'',o.supplier||'',o.po||'',(PO_SRC.find(x=>x[0]===o.src)||['',''])[1],o.eta||'',poLate(o)?poDays(o.eta,S.today):'',o.reqBy||'',o.d||'',o.note||''].concat(adm?[o.price||0,Math.round((Number(o.qty)||0)*(Number(o.price)||0)*100)/100]:[]));
+  const ords=poOrders();if(!ords.length){toast('No orders yet.',true);return;}const adm=adminEff(),q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const head=['Supplier','PO no.','Order status','Priority','Source','ETA','Days late','Tracking','Part','Size / model','Code','UC','Qty','Received','Unit','Asked by'].concat(adm?['Price','Value']:[]);
+  const rows=[];ords.slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||''))).forEach(o=>(o.items||[]).forEach(i=>rows.push([o.supplier||'',o.po||'',(PO_ST[o.status]||[o.status])[0],poUrgent(o)?'Urgent':'Normal',poSrcName(o.src),o.eta||'',poLate(o)?poDays(o.eta,S.today):'',o.track||'',i.name,i.spec||'',i.code||'',i.uc||'',fmtQ(i.qty),fmtQ(i.recv||0),i.unit||'',i.reqBy||''].concat(adm?[i.price||0,Math.round(poNum(i.qty)*(Number(i.price)||0)*100)/100]:[]))));
   try{const dl=await window.claude.use('downloads');if(!dl){toast('Download is not available in this view.',true);return;}
     await dl.save({filename:'spare_parts_orders_'+S.today+'.csv',data:'﻿'+[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n')});toast('File saved.');}catch(e){toast(dbErr(e),true);}
 }
