@@ -204,7 +204,7 @@ svg.ch text{fill:var(--mut);font:11px var(--f-m)}
 svg.ch .grid{stroke:var(--line);stroke-width:1}
 svg.ch .band{fill:var(--okbg);opacity:.7}
 svg.ch .ln{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round}
-#trZ{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.trzc{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);border-radius:999px;padding:6px 12px;font-size:15px;cursor:pointer;min-height:38px;background:var(--card,transparent)}.trzc input{width:18px;height:18px;margin:0}.trzc i{width:10px;height:10px;border-radius:50%;display:inline-block}svg.ch .hov{fill:none;stroke:var(--text,#fff);stroke-width:2;pointer-events:none}.chtip{position:absolute;z-index:5;pointer-events:none;background:var(--panel,#222);color:var(--text,#fff);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap}svg.ch .pt{fill:var(--accent)} svg.ch .pt.x{fill:var(--bad)}
+#trZ{position:relative;margin-top:4px}.trzb{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card,transparent);color:inherit;font:inherit;cursor:pointer;text-align:left}.trzp{position:absolute;z-index:30;left:0;top:100%;margin-top:4px;min-width:100%;background:var(--panel,#222);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.45)}.trzp[hidden]{display:none}.trzc{display:flex;align-items:center;gap:10px;padding:9px 10px;font-size:16px;cursor:pointer;white-space:nowrap;border-radius:8px}.trzc:hover{background:rgba(127,127,127,.15)}.trzc input{width:18px;height:18px;margin:0}.trzc i{width:10px;height:10px;border-radius:50%;display:inline-block}svg.ch .hov{fill:none;stroke:var(--text,#fff);stroke-width:2;pointer-events:none}.chtip{position:absolute;z-index:5;pointer-events:none;background:var(--panel,#222);color:var(--text,#fff);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap}svg.ch .pt{fill:var(--accent)} svg.ch .pt.x{fill:var(--bad)}
 svg.ch .lim{stroke:var(--warn);stroke-width:1.2;stroke-dasharray:5 4}
 .empty{padding:22px;border:2px dashed var(--line);border-radius:8px;color:var(--mut);text-align:center}
 .ovl{position:fixed;inset:0;background:rgba(10,16,13,.6);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v132';
+const APP_V='plant-v133';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -3576,7 +3576,7 @@ function ovLoad(v){
 }
 function subAdmin(){
   const from=addDays(S.today,-6);
-  resub('logs',()=>S.db.collection('logs').where('date','>=',from).limit(200).onSnapshot(snap=>{
+  resub('logs',()=>S.db.collection('logs').where('date','>=',from).limit(1500).onSnapshot(snap=>{
     const m={};snap.docs.forEach(d=>{m[d.id]=d.data();});S.logs=Object.assign({},S.ovLogs||{},m);paintTab();},e=>toast(dbErr(e),true)));
   resub('issues',()=>S.db.collection('issues').orderBy('ts','desc').limit(80).onSnapshot(snap=>{
     notifyIssues(snap);S.issues=snap.docs.map(d=>Object.assign({id:d.id},d.data()));paintBadge();if(S.tab==='issues'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
@@ -3612,7 +3612,7 @@ async function loadPM(){
   if(!S.db||!S.tasks.length){S.mlogs={};paintTab();return;}
   const min=S.tasks.map(t=>t.lastDone||S.today).sort()[0];
   try{
-    const snap=await S.db.collection('logs').where('date','>=',min).limit(1000).get();
+    const snap=await S.db.collection('logs').where('date','>=',min).limit(5000).get();
     const m={};snap.docs.forEach(d=>{m[d.id]=d.data();});S.mlogs=m;S.mTrunc=snap.size>=1000;
   }catch(e){toast(dbErr(e),true);}
   paintMtBadge();paintTab();
@@ -3968,35 +3968,37 @@ function trendShell(){
   const a=S.cfg.areas;if(!area(S.trend.area))S.trend.area=a[0].id;
   const ar=area(S.trend.area);if(!numParams(ar).find(p=>p.id===S.trend.param))S.trend.param=numParams(ar)[0].id;
   return '<section class="card"><div class="ctlrow"><label class="l">Area<select id="trA">'+a.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===S.trend.area?' selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label>'+
-   '<label class="l">Reading<select id="trP"></select></label><div class="l" id="trZW" hidden>Zones (tick one or more)<div id="trZ" class="trzs"></div></div><label class="l">Period<select id="trD">'+[1,3,7].map(d=>'<option value="'+d+'"'+(!S.trend.custom&&d===S.trend.days?' selected':'')+'>Last '+d+(d>1?' days':' day')+'</option>').join('')+'<option value="c"'+(S.trend.custom?' selected':'')+'>Custom dates…</option></select></label>'+
+   '<label class="l">Reading<select id="trP"></select></label><div class="l" id="trZW" hidden>Zone<div id="trZ" class="trzs"></div></div><label class="l">Period<select id="trD">'+[1,3,7].map(d=>'<option value="'+d+'"'+(!S.trend.custom&&d===S.trend.days?' selected':'')+'>Last '+d+(d>1?' days':' day')+'</option>').join('')+'<option value="c"'+(S.trend.custom?' selected':'')+'>Custom dates…</option></select></label>'+
    '<label class="l" id="trFW"'+(S.trend.custom?'':' hidden')+'>From<input type="date" id="trF" value="'+esc(S.trend.from||addDays(S.today,-6))+'"></label><label class="l" id="trTW"'+(S.trend.custom?'':' hidden')+'>To<input type="date" id="trT" value="'+esc(S.trend.to||S.today)+'"></label></div><p class="muted small" id="trHint"'+(S.trend.custom?'':' hidden')+'>For a single day, choose the same date in From and To.</p><div id="chartBody" style="margin-top:14px"></div></section>'+
    '<section class="card"><h2>Export hourly data (CSV)</h2><div class="ctlrow"><label class="l">Area<select id="exA">'+a.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('')+'</select></label>'+
    '<label class="l">From<input type="date" id="exF" value="'+addDays(S.today,-6)+'"></label><label class="l">To<input type="date" id="exT" value="'+S.today+'"></label><button class="btn pri" id="exGo">Download CSV</button></div><p class="muted small" id="exMsg">Opens in Excel. One row per hour, one column per reading.</p></section>';
 }
 function numParams(a){return a.params.filter(p=>(p.kind||'num')==='num');}
 function trZSel(zp){const zs=zp.options,sel=Array.isArray(S.trend.zsel)?S.trend.zsel.filter(z=>zs.indexOf(z)>=0):[];return sel.length?sel:zs.slice();}
+function trZTxt(zp,sel){return sel.length===zp.options.length?'All zones (one line each)':sel.join(', ');}
+if(!window.__trZOut){window.__trZOut=1;document.addEventListener('click',ev=>{const pn=$('#trZ .trzp');if(!pn||pn.hidden)return;if(ev.target.closest&&ev.target.closest('#trZ'))return;pn.hidden=true;},true);}
 function fillTrendParams(){
   const ar=area(S.trend.area);$('#trP').innerHTML=numParams(ar).map(p=>'<option value="'+esc(p.id)+'"'+(p.id===S.trend.param?' selected':'')+'>'+esc(p.label)+' ('+esc(p.unit)+')</option>').join('');
   const zp=ar.params.find(p=>p.id==='zone'&&p.options),zw=$('#trZW');
   if(zp){const zs=zp.options,sel=trZSel(zp);
-    $('#trZ').innerHTML=zs.map((z,i)=>'<label class="trzc" style="border-color:'+TCOL[i%TCOL.length]+'"><input type="checkbox" value="'+esc(z)+'"'+(sel.indexOf(z)>=0?' checked':'')+'><i style="background:'+TCOL[i%TCOL.length]+'"></i>'+esc(z)+'</label>').join('');zw.hidden=false;}
+    const was=$('#trZ .trzp:not([hidden])');
+    $('#trZ').innerHTML='<button type="button" class="trzb" aria-haspopup="true"><span class="trzt">'+esc(trZTxt(zp,sel))+'</span><span aria-hidden="true">\u25be</span></button><div class="trzp" role="group"'+(was?'':' hidden')+'>'+zs.map((z,i)=>'<label class="trzc"><input type="checkbox" value="'+esc(z)+'"'+(sel.indexOf(z)>=0?' checked':'')+'><i style="background:'+TCOL[i%TCOL.length]+'"></i>'+esc(z)+'</label>').join('')+'</div>';zw.hidden=false;}
   else zw.hidden=true;
 }
 function bindTrend(){
   fillTrendParams();
   $('#trA').onchange=e=>{S.trend.area=e.target.value;S.trend.param=numParams(area(S.trend.area))[0].id;S.trend.zsel=null;fillTrendParams();paintTrend();};
   $('#trP').onchange=e=>{S.trend.param=e.target.value;paintTrend();};
-  $('#trZ').onchange=e=>{const bx=$$('input',$('#trZ')),on=bx.filter(x=>x.checked);if(!on.length){e.target.checked=true;toast('Keep at least one zone ticked.',true);return;}S.trend.zsel=on.length===bx.length?null:on.map(x=>x.value);paintTrend();};
+  $('#trZ').onclick=e=>{const b=e.target.closest('.trzb');if(b){const pn=$('#trZ .trzp');pn.hidden=!pn.hidden;}};
+  $('#trZ').onchange=e=>{const bx=$$('input',$('#trZ')),on=bx.filter(x=>x.checked);if(!on.length){e.target.checked=true;toast('Keep at least one zone ticked.',true);return;}S.trend.zsel=on.length===bx.length?null:on.map(x=>x.value);{const zp=area(S.trend.area).params.find(q=>q.id==='zone'&&q.options);if(zp)$('#trZ .trzt').textContent=trZTxt(zp,trZSel(zp));}paintTrend();};
   const cu=()=>{$('#trFW').hidden=$('#trTW').hidden=$('#trHint').hidden=!S.trend.custom;};
   $('#trD').onchange=e=>{if(e.target.value==='c'){S.trend.custom=true;S.trend.from=$('#trF').value;S.trend.to=$('#trT').value;}else{S.trend.custom=false;S.trend.days=Number(e.target.value);}cu();paintTrend();};
   $('#trF').onchange=()=>{S.trend.from=$('#trF').value;paintTrend();};$('#trT').onchange=()=>{S.trend.to=$('#trT').value;paintTrend();};
   $('#exGo').onclick=exportCsv;
 }
 async function trendDocs(ar,f,t){
-  const out=[];const have=f>=addDays(S.today,-6);
-  if(have){Object.keys(S.logs).forEach(id=>{const d=S.logs[id];if(d.area===ar.id&&d.date>=f&&d.date<=t)out.push(d);});return out;}
-  const key=f+'|'+t;if(!S.trend.cache||S.trend.cache.key!==key){
-    const snap=await S.db.collection('logs').where('date','>=',f).where('date','<=',t).limit(1000).get();
+  const key=f+'|'+t+'|'+Math.floor(Date.now()/60000);if(!S.trend.cache||S.trend.cache.key!==key){
+    const snap=await S.db.collection('logs').where('date','>=',f).where('date','<=',t).limit(5000).get();
     S.trend.cache={key:key,docs:snap.docs.map(d=>d.data())};}
   return S.trend.cache.docs.filter(d=>d.area===ar.id);
 }
@@ -4057,7 +4059,7 @@ async function exportCsv(){
   if(!f||!t||f>t){msg.textContent='Choose a valid date range.';return;}
   msg.textContent='Collecting data…';
   try{
-    const snap=await S.db.collection('logs').where('date','>=',f).where('date','<=',t).limit(1000).get();
+    const snap=await S.db.collection('logs').where('date','>=',f).where('date','<=',t).limit(5000).get();
     const docs=snap.docs.map(d=>d.data()).filter(d=>d.area===ar.id).sort((a,b)=>a.date<b.date?-1:1);
     const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
     const head=['Date','Time','Shift','Operator','Running','Downtime min','Downtime reason'].concat(ar.params.map(p=>p.label+' ('+p.unit+')'),['Out of range','Late entry','Notes']);
