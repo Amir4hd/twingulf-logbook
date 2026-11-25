@@ -89,7 +89,8 @@ export async function onRequestPost({ request, env }) {
   try {
     if (b.action === 'scan') {
       const users = await listUsers(tok), have = await listDocIds(tok);
-      return json(200, { users: users.map((u) => Object.assign(u, { listed: !!have[u.uid], other: !roleOf(u.email) })) });
+      for (const u of users) u.admin = await isAdminUid(u.uid, tok);
+      return json(200, { users: users.map((u) => Object.assign(u, { listed: !!have[u.uid], other: !u.admin && !roleOf(u.email) })) });
     }
     if (b.action === 'import') { /* give every existing sign-in account that is not listed yet an 'active' record (so switching the lock on later does not shut anyone out) */
       const users = await listUsers(tok), have = await listDocIds(tok); let n = 0;

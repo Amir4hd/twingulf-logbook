@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v140';
+const APP_V='plant-v141';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -3388,18 +3388,20 @@ function paintAccess(){
   const last={};(S.devs||[]).forEach(x=>{const t=new Date(x.sts||x.ts).getTime();if(x.email&&(!last[x.email]||t>last[x.email].t))last[x.email]={t:t,model:x.model||''};});
   let rows=accs.map(a=>({uid:a.id,name:a.name||'',email:a.email||'',kind:a.kind||'',status:a.status||'active',role:a.role||''}));
   const known={};rows.forEach(r=>{known[r.uid]=1;});
-  (S.acScan||[]).forEach(u=>{if(!known[u.uid]&&!u.listed){known[u.uid]=1;rows.push({uid:u.uid,name:String(u.email).split('@')[0],email:u.email,kind:'',status:(u.other||!ROLE_OF_PREFIX[String(u.email||'').toLowerCase().split('@')[0].replace(/[^a-z]/g,'')])?'other':(u.disabled?'blocked':'new'),role:''});}});
+  (S.acScan||[]).forEach(u=>{if(!known[u.uid]&&!u.listed){known[u.uid]=1;rows.push({uid:u.uid,name:String(u.email).split('@')[0],email:u.email,kind:'',status:u.admin?'admin':((u.other||(u.other==null&&!ROLE_OF_PREFIX[String(u.email||'').toLowerCase().split('@')[0].replace(/[^a-z]/g,'')]))?'other':(u.disabled?'blocked':'new')),role:''});}});
   (S.pres||[]).forEach(x=>{if(x.waiting&&x.uid&&!known[x.uid]){known[x.uid]=1;rows.push({uid:x.uid,name:String(x.email||'').split('@')[0],email:x.email||'',kind:'',status:'new',role:'',model:x.model||'',seen:new Date(x.sts||x.ts).getTime()});}});
   let demo=false;
   if(!live&&!rows.length){demo=true;rows=[{uid:'d1',name:'press1',email:'press1@local.com',kind:'tablet',status:'active'},{uid:'d2',name:'lab1',email:'lab1@local.com',kind:'tablet',status:'active'},{uid:'d3',name:'Ahmed (shift leader)',email:'leader2@local.com',kind:'person',status:'active'},{uid:'d4',name:'old tablet',email:'press3@local.com',kind:'tablet',status:'blocked'},{uid:'d5',name:'phone',email:'maint2@local.com',kind:'person',status:'new'}];}
-  const ord={new:0,active:1,blocked:2,other:3};rows.sort((a,b)=>(ord[a.status]-ord[b.status])||String(a.name).localeCompare(String(b.name)));
+  const ord={new:0,active:1,blocked:2,admin:3,other:4};rows.sort((a,b)=>(ord[a.status]-ord[b.status])||String(a.name).localeCompare(String(b.name)));
   const newN=rows.filter(r=>r.status==='new').length,actN=rows.filter(r=>r.status==='active').length;
-  const chip=st=>st==='other'?'<span class="chip">Other system</span>':st==='active'?'<span class="chip ok">Approved</span>':st==='blocked'?'<span class="chip bad">Blocked</span>':'<span class="chip warn">Waiting</span>';
+  const chip=st=>st==='admin'?'<span class="chip acc">Admin</span>':st==='other'?'<span class="chip">Other system</span>':st==='active'?'<span class="chip ok">Approved</span>':st==='blocked'?'<span class="chip bad">Blocked</span>':'<span class="chip warn">Waiting</span>';
   const body=rows.map(r=>{const l=last[r.email],seen=l?acAgo(Date.now()-l.t):(r.seen?acAgo(Date.now()-r.seen):'\u2013');
+    if(r.status==='admin')return '<tr><td><b>'+esc(r.name||'\u2013')+'</b><div class="muted small">'+esc(String(r.email))+'</div></td><td>Person</td><td>'+chip(r.status)+'</td><td class="muted small" colspan="2">The admin always has access and cannot be blocked here.</td></tr>';
     if(r.status==='other')return '<tr data-uid="'+esc(r.uid)+'"><td><b>'+esc(r.name||'\u2013')+'</b><div class="muted small">'+esc(String(r.email))+'</div></td><td>\u2013</td><td>'+chip(r.status)+'</td><td class="muted small" colspan="2">Not a logbook account (another system on this Firebase project). It is never approved or changed here.</td></tr>';
     const btns=r.status==='active'?'<button type="button" class="btn sm" data-ac="block">Block</button> <button type="button" class="btn sm" data-ac="revoke">Sign out</button>':'<button type="button" class="btn sm pri" data-ac="approve">Approve</button>';
     return '<tr data-uid="'+esc(r.uid)+'" data-em="'+esc(r.email)+'" data-nm="'+esc(r.name)+'"><td><b>'+esc(r.name||'\u2013')+'</b><div class="muted small">'+esc(String(r.email).replace(/@local\.com$/,''))+'</div></td><td>'+(r.kind==='tablet'?'Tablet':r.kind==='person'?'Person':'\u2013')+'</td><td>'+chip(r.status)+'</td><td class="muted small">'+esc(seen)+(l&&l.model?'<div>'+esc(l.model)+'</div>':'')+'</td><td style="white-space:nowrap">'+btns+' <button type="button" class="btn sm" data-ac="remove" title="Remove this account for good" aria-label="Remove">\ud83d\uddd1</button></td></tr>';}).join('');
   el.innerHTML='<section class="card"><h2 style="margin:0 0 4px">Who and what can open the logbook</h2><p class="muted small" style="margin:0 0 10px">Every tablet and every person has their own account. Only approved accounts can read or save data, and this is checked on the server, not just in the app. Blocking cuts the access straight away.</p>'+
+   (S.accErr?'<div class="status bad" style="margin-bottom:10px"><b>The approved list cannot be read yet.</b> The Firestore rules in Firebase are the old ones. Publish the new rules (guide, step 1). Approvals you pressed are saved and will show once the new rules are published.</div>':'')+
    (demo?'<div class="status warn" style="margin-bottom:10px">Preview with sample rows. In the live app this shows your real accounts.</div>':'')+
    '<div class="row" style="align-items:center;gap:10px;flex-wrap:wrap"><span class="chip '+(mode?'ok':'warn')+'" style="font-size:15px">Server lock: '+(mode?'ON':'OFF')+'</span><button type="button" class="btn sm'+(mode?'':' pri')+'" id="acMode">'+(mode?'Turn the lock off':'Turn the lock on')+'</button><button type="button" class="btn sm" id="acScan">Check sign-in accounts</button><button type="button" class="btn sm" id="acImp">Approve all current accounts</button></div>'+
    '<p class="muted small" style="margin:8px 0 0">While the lock is OFF nothing changes for anyone. Before turning it ON: press <b>Approve all current accounts</b> so every tablet in use today stays approved, then test with one tablet.</p></section>'+
@@ -3676,7 +3678,7 @@ function subAdmin(){
     paintMtBadge();if(S.tab==='maint'||S.tab==='jobs'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
   resub('devs',()=>S.db.collection('sessions').limit(60).onSnapshot(snap=>{
     S.devs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.devsAt=Date.now();paintDevBadge();if(S.tab==='devices')paintTab();},e=>{}));
-  resub('acc',()=>S.db.collection('accounts').limit(300).onSnapshot(snap=>{S.acc=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.tab==='access'&&!S.acBusy)paintTab();},e=>{S.acc=[];}));
+  resub('acc',()=>S.db.collection('accounts').limit(300).onSnapshot(snap=>{S.acc=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.accErr=false;if(S.tab==='access'&&!S.acBusy)paintTab();},e=>{S.acc=[];S.accErr=true;if(S.tab==='access'&&!S.acBusy)paintTab();}));
   resub('secm',()=>S.db.doc('security/mode').onSnapshot(sn=>{S.secMode=sn.exists?!!(sn.data()&&sn.data().enforce):false;if(S.tab==='access'&&!S.acBusy)paintTab();},e=>{}));
   resub('pres',()=>S.db.collection('presence').limit(100).onSnapshot(snap=>{S.pres=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.tab==='access'&&!S.acBusy)paintTab();},e=>{}));
   resub('parts',()=>S.db.collection('parts').limit(1500).onSnapshot(snap=>{

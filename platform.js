@@ -54,7 +54,7 @@
         document.body.appendChild(f);
         f.querySelector('form').onsubmit=async ev=>{ev.preventDefault();
           try{let un=f.querySelector('#lgE').value.trim().toLowerCase();if(un.indexOf('@')<0)un+='@local.com';await auth.signInWithEmailAndPassword(un,f.querySelector('#lgP').value);}
-          catch(e){f.querySelector('#lgX').textContent=(navigator.onLine?'Wrong user name or password.':'No internet. You must be online for the first sign-in.');}};
+          catch(e){f.querySelector('#lgX').textContent=(e&&e.code==='auth/user-disabled'?'This account is blocked. Ask the admin to approve it.':navigator.onLine?'Wrong user name or password.':'No internet. You must be online for the first sign-in.');}};
       });
     });
     return ready;
