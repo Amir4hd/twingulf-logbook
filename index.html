@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v129';
+const APP_V='plant-v130';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -2006,7 +2006,7 @@ function paintLabList(id){
   const es=entries(d).reverse();
   if(!es.length){el.innerHTML='<div class="empty">No readings saved for '+S.date+' yet.</div>';return;}
   const chip=e=>editLeft(e)>0?' <span class="chip ok">editable '+left5(editLeft(e))+'</span>':'';
-  el.innerHTML='<table class="elt"><thead><tr><th>Time</th><th>Zone</th><th class="n">Result</th><th>By</th></tr></thead><tbody>'+es.map(x=>{const e=x.e,v=e.v||{},rp0=a.params.find(q=>q.id==='result'),st=rp0?pState(rp0,v.result,v.zone):'ok',oo=st==='high'||st==='low';
+  el.innerHTML='<table class="elt"><thead><tr><th>Time</th><th>Zone</th><th class="n">Result</th><th>By</th></tr></thead><tbody>'+es.map(x=>{const e=x.e,v=e.v||{},rp0=(area(id)||{params:[]}).params.find(q=>q.id==='result'),st=rp0?pState(rp0,v.result,v.zone):'ok',oo=st==='high'||st==='low';
     return '<tr class="'+(labRo()?'':'clk')+(oo?' oor':'')+(S.lab.edit[id]===x.k?' sel':'')+'" data-k="'+esc(x.k)+'"><td class="mono">'+hm(x.min)+'</td><td>'+esc(v.zone==null?'–':v.zone)+'</td><td class="n mono">'+fmtN(v.result)+(oo?' <span class="oar" title="'+(st==='high'?'Too high':'Too low')+'">'+(st==='high'?'\u25b2':'\u25bc')+'</span>':'')+'</td><td><b>'+nmH(e.by)+'</b>'+(e.editedBy?' <span class="edi" title="Edited by '+esc(e.editedBy)+'">✎</span>':'')+chip(e)+(adminEff()?' <button type="button" class="delgap delstop" data-k="'+esc(x.k)+'" title="Delete this reading (admin)" aria-label="Delete reading">🗑</button>':'')+(e.note?'<div class="muted small">'+esc(e.note)+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table>';
   $$('.delstop',el).forEach(b=>b.onclick=ev=>{ev.stopPropagation();labDel(id,b.dataset.k);});
   if(!labRo())$$('tr.clk',el).forEach(r=>r.onclick=()=>{S.lab.edit[id]=r.dataset.k;S.lab.dirty[id]=false;paintLabForm(id);paintLabList(id);});
