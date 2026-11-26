@@ -54,7 +54,7 @@
         document.body.appendChild(f);
         f.querySelector('form').onsubmit=async ev=>{ev.preventDefault();
           try{let un=f.querySelector('#lgE').value.trim().toLowerCase();if(un.indexOf('@')<0)un+='@local.com';await auth.signInWithEmailAndPassword(un,f.querySelector('#lgP').value);}
-          catch(e){f.querySelector('#lgX').textContent=(e&&e.code==='auth/user-disabled'?'This account is blocked. Ask the admin to approve it.':navigator.onLine?'Wrong user name or password.':'No internet. You must be online for the first sign-in.');}};
+          catch(e){f.querySelector('#lgX').textContent=(navigator.onLine?'Wrong user name or password.':'No internet. You must be online for the first sign-in.');}};
       });
     });
     return ready;
@@ -89,12 +89,6 @@
       let j={};try{j=await r.json();}catch(e){}
       if(!r.ok)throw new Error(j.error||('The server refused (code '+r.status+'). The one-time server setup may be missing.'));
       return true;},
-    api:async(body)=>{ /* admin access management (Control room > Access) */
-      const u=await signedIn();const tok=await u.getIdToken();
-      let r;try{r=await fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(body)});}catch(e){throw new Error('No connection to the server.');}
-      let j={};try{j=await r.json();}catch(e){}
-      if(!r.ok)throw new Error(j.error||('The server refused (code '+r.status+'). The one-time server setup may be missing.'));
-      return j;},
     can:async()=>true,isOwner:async()=>false};
   const downloads={save:async x=>{const b=new Blob([x.data],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=x.filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}};
   window.addEventListener('plant-write-error',e=>{const t=document.getElementById('toast');const m=(e.detail&&e.detail.code==='permission-denied')?'This account is not allowed to save that. Ask the admin.':'A saved entry could not be sent to the server.';if(t){t.className='toast bad';t.textContent=m;t.hidden=false;setTimeout(()=>{t.hidden=true},8000);}else alert(m);});

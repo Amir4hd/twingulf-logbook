@@ -469,7 +469,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v141';
+const APP_V='plant-v142';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -669,33 +669,12 @@ async function acquireSession(){
   return true;
 }
 function kicked(){S.sessionOk=false;unsub('sess');unsub('notices');unsub('dieM');unsub('dieS');unsub('clp');S.dev=null;S.gate='kicked';S.view='home';renderTop();renderHome();}
-/* network lock: devices outside the factory network can be blocked (Fully Kiosk tablets and the admin are always allowed) */
-async function netIp(force){
-  if(!force&&S.netIp&&Date.now()-(S.netIpAt||0)<300000)return S.netIp;
-  const urls=['/cdn-cgi/trace','https://1.1.1.1/cdn-cgi/trace'];
-  for(const u of urls){
-    try{const c=new AbortController(),t=setTimeout(()=>c.abort(),5000);const r=await fetch(u,{cache:'no-store',signal:c.signal});clearTimeout(t);if(!r.ok)continue;const m=(await r.text()).match(/^ip=(.+)$/m);if(m){S.netIp=m[1].trim();S.netIpAt=Date.now();return S.netIp;}}catch(e){}
-  }
-  return null;
-}
-async function netBlocked(){
-  const nl=S.cfg&&S.cfg.netLock;if(!nl||!nl.on)return false;
-  if(window.fully||S.isAdmin||(S.acct&&S.acct.role==='admin'))return false;
-  const ips=(nl.ips||[]).map(x=>String(x).trim()).filter(Boolean);if(!ips.length)return false;
-  const ip=await netIp();if(!ip)return false;
-  return ips.indexOf(ip)<0;
-}
-async function netTick(){try{if(!S.cfgLoaded||!S.db||!S.acct||!(S.cfg.netLock&&S.cfg.netLock.on))return;const b=await netBlocked();if(b&&!S.gate)evalGate();else if(!b&&S.gate==='netblock')evalGate();}catch(e){}}
-setInterval(netTick,120000);
-function denyBeat(){try{const a=S.acct;if(!S.db||!a||!a.uid)return;S.db.doc('presence/'+a.uid).set({uid:a.uid,email:a.email||'',dev:DEV(),model:DEVMODEL||'',waiting:true,ts:new Date().toISOString(),sts:S.db.serverTime});}catch(e){}}
 async function evalGate(){
   const a=S.acct;S.sessInfo=null;
   const stop=g=>{S.gate=g;S.dev=null;S.view='home';renderTop();renderHome();if(g==='approve')beat();};
   if(!S.db)return stop('nodb');
-  if(S.denied)return stop('denied');
   if(!a)return stop((S.user&&S.user.info)?'norole':'pick');
   if(!a.role)return stop('norole');
-  if(await netBlocked())return stop('netblock');
   if(LOCKED_ROLE(a.role)&&!S.sessionOk){if(!await acquireSession())return stop('refused');}
   if(NEED_APPROVAL(a.role)&&!approvalOk())return stop('approve');
   S.gate=null;S.dev={place:a.role,at:new Date().toISOString()};S.unlock=null;S.dirty=false;
@@ -725,14 +704,6 @@ function renderGate(){
     card('Preview sign-in','<p class="muted" style="margin:0">Test only. On the real tablets the account email decides the place. Choose which account to try:</p><div class="areas">'+(S.isAdmin?'<button class="acard" data-t="admin"><b>Admin</b><span>Everything</span></button>':'')+TEST_ACCTS.map(t=>'<button class="acard" data-t="'+t[0]+'"><b>'+esc(t[1])+'</b><span>'+esc(t[0])+'</span></button>').join('')+'</div>');
     $$('.acard[data-t]').forEach(b=>b.onclick=async()=>{ssSet('plant.test',b.dataset.t);S.sessionOk=false;await resolveAccount();evalGate();});
     return;
-  }
-  if(g==='denied'){
-    card('Waiting for admin approval','<p class="muted">This device is not approved yet'+(a&&a.email?' (account '+esc(String(a.email).replace(/@local\.com$/,''))+')':'')+'. Ask the admin to approve it in Control room \u203a Access. It opens by itself afterwards; press Try again if it does not.</p><div class="row"><button type="button" class="btn pri big" id="gtRetry">Try again</button><button type="button" class="btn" id="gtOut">Sign out</button></div>');
-    $('#gtRetry').onclick=()=>{S.denied=false;location.reload();};out();return;
-  }
-  if(g==='netblock'){
-    card('This page can\u2019t be reached','<p class="muted">This device is outside the factory network, so the logbook is closed here. Connect to the factory Wi-Fi and try again.</p><div class="row"><button type="button" class="btn pri big" id="gtRetry">Try again</button><button type="button" class="btn" id="gtOut">Sign out</button></div>');
-    $('#gtRetry').onclick=()=>{S.netIpAt=0;evalGate();};out();return;
   }
   if(g==='norole'){
     card('No place for this account','<p class="muted">'+(a?esc(a.email||'This account'):'This account')+' is not linked to a place. Use press@, lab@, pack@, shiftleader@ or maint@ accounts, or ask the admin.</p><button type="button" class="btn big" id="gtOut">Sign out</button>');out();return;
@@ -1204,7 +1175,7 @@ function go(view,areaId,tab){
   if(view==='mplace'&&S.tab!=='maint'&&S.tab!=='issues'&&S.tab!=='done'&&S.tab!=='parts'&&S.tab!=='jobs'&&S.tab!=='orders')S.tab='issues';
   if(view==='mplace'&&S.tab==='parts'&&!S.partsOnly)S.tab='issues';
   if(view==='mplace'&&S.partsOnly&&S.tab!=='orders')S.tab='parts';
-  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('acc');unsub('secm');unsub('pres');unsub('parts');unsub('moves');unsub('labA');unsub('labB');unsub('rawM');unsub('rawS');unsub('rawG');unsub('pkO');unsub('pkM');unsub('pkYM');unsub('pkYS');unsub('pkS');if(view!=='sanc'){unsub('hrE');unsub('hrC');unsub('hrS');}if(view!=='home')unsub('hrB');if(view!=='rm')S.rm=null;if(view!=='raw')S.raw=null;if(view!=='packm')S.pk=null;S.opsDraft=null;S.acctDraft=null;
+  unsub('day');unsub('regr');unsub('sumLogs');unsub('sumHist');unsub('areaIss');unsub('logs');unsub('issues');unsub('tasks');unsub('hist');unsub('devs');unsub('parts');unsub('moves');unsub('labA');unsub('labB');unsub('rawM');unsub('rawS');unsub('rawG');unsub('pkO');unsub('pkM');unsub('pkYM');unsub('pkYS');unsub('pkS');if(view!=='sanc'){unsub('hrE');unsub('hrC');unsub('hrS');}if(view!=='home')unsub('hrB');if(view!=='rm')S.rm=null;if(view!=='raw')S.raw=null;if(view!=='packm')S.pk=null;S.opsDraft=null;S.acctDraft=null;
   S.view=view;ensureNoticeSub();S.areaId=areaId||null;
   if(tab)S.tab=tab;
   if(view==='area'){S.date=S.today;S.hour=effH();S.lastHour=effH();S.day=null;S.dirty=false;S.editKey=null;S.unlock=null;S.entryOpen=false;lsSet('plant.view','area:'+areaId);}
@@ -3250,7 +3221,7 @@ async function sendIssue(){
   }catch(e){toast(dbErr(e),true);}
 }
 /* ---------- control room ---------- */
-const TABS=[['overview','Overview','📊'],['trends','Trends & export','📈'],['mgrp','Maintenance','🔧'],['points','Points','🏆'],['notices','Messages','📣'],['devices','Devices','📱'],['access','Access','🔐'],['setup','Setup','⚙️']];
+const TABS=[['overview','Overview','📊'],['trends','Trends & export','📈'],['mgrp','Maintenance','🔧'],['points','Points','🏆'],['notices','Messages','📣'],['devices','Devices','📱'],['setup','Setup','⚙️']];
 const MGRP=['issues','maint','jobs','parts','orders','done'];
 let lastM='issues';
 function paintSubtabs(){const el=$('#subtabs');if(!el)return;if(MGRP.indexOf(S.tab)<0){el.innerHTML='';return;}lastM=S.tab;el.innerHTML='<div class="tabs pro sub" role="tablist" style="margin-bottom:12px">'+MTABS.map(t=>'<button class="tab" role="tab" data-m="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==='issues'?' <span class="chip bad" id="issBadge" hidden></span>':'')+(t[0]==='parts'?' <span class="chip bad" id="lowBadge" hidden></span>':'')+(t[0]==='orders'?' <span class="chip bad" id="poBadge" hidden></span>':'')+(t[0]==='maint'?' <span class="chip bad prmiss" id="pmBadge" hidden></span> <span class="chip warn" id="pmSoon" hidden></span>':'')+(t[0]==='jobs'?' <span class="chip warn" id="jbBadge" hidden></span>':'')+'</button>').join('')+'</div>';$$('[data-m]',el).forEach(b=>b.onclick=()=>{S.tab=b.dataset.m;paintSubtabs();buildTab();});paintBadge();paintLowBadge();}
@@ -3374,58 +3345,6 @@ function devOnlineCount(){
   return all.filter(x=>ref-T(x)<=180000&&x.ready!==false).length;
 }
 function paintDevBadge(){const b=$('#devBadge');if(!b)return;const n=devOnlineCount();b.hidden=!n;b.textContent=n;b.title=n+' device'+(n===1?'':'s')+' online';}
-const acApi=body=>{if(!(S.user&&typeof S.user.api==='function'))return Promise.reject(new Error('This works only in the live app (not in the preview).'));return S.user.api(body);};
-async function acRun(btn,body,msg){
-  if(btn)btn.disabled=true;S.acBusy=true;
-  try{const r=await acApi(body);if(msg)toast(typeof msg==='function'?msg(r):msg);S.acBusy=false;if(body.action==='scan'||body.action==='import'){if(body.action==='scan')S.acScan=r.users;else{try{S.acScan=(await acApi({action:'scan'})).users;}catch(e){}}}paintAccess();return r;}
-  catch(e){S.acBusy=false;toast(dbErr(e),true);if(btn)btn.disabled=false;}
-}
-function acAgo(ms){const m=Math.round(ms/60000);return m<2?'just now':m<90?m+' min ago':m<2880?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago';}
-function paintAccess(){
-  const el=$('#acBody');if(!el)return;
-  const live=!!(S.user&&typeof S.user.api==='function');
-  const mode=!!S.secMode,accs=(S.acc||[]).slice();
-  const last={};(S.devs||[]).forEach(x=>{const t=new Date(x.sts||x.ts).getTime();if(x.email&&(!last[x.email]||t>last[x.email].t))last[x.email]={t:t,model:x.model||''};});
-  let rows=accs.map(a=>({uid:a.id,name:a.name||'',email:a.email||'',kind:a.kind||'',status:a.status||'active',role:a.role||''}));
-  const known={};rows.forEach(r=>{known[r.uid]=1;});
-  (S.acScan||[]).forEach(u=>{if(!known[u.uid]&&!u.listed){known[u.uid]=1;rows.push({uid:u.uid,name:String(u.email).split('@')[0],email:u.email,kind:'',status:u.admin?'admin':((u.other||(u.other==null&&!ROLE_OF_PREFIX[String(u.email||'').toLowerCase().split('@')[0].replace(/[^a-z]/g,'')]))?'other':(u.disabled?'blocked':'new')),role:''});}});
-  (S.pres||[]).forEach(x=>{if(x.waiting&&x.uid&&!known[x.uid]){known[x.uid]=1;rows.push({uid:x.uid,name:String(x.email||'').split('@')[0],email:x.email||'',kind:'',status:'new',role:'',model:x.model||'',seen:new Date(x.sts||x.ts).getTime()});}});
-  let demo=false;
-  if(!live&&!rows.length){demo=true;rows=[{uid:'d1',name:'press1',email:'press1@local.com',kind:'tablet',status:'active'},{uid:'d2',name:'lab1',email:'lab1@local.com',kind:'tablet',status:'active'},{uid:'d3',name:'Ahmed (shift leader)',email:'leader2@local.com',kind:'person',status:'active'},{uid:'d4',name:'old tablet',email:'press3@local.com',kind:'tablet',status:'blocked'},{uid:'d5',name:'phone',email:'maint2@local.com',kind:'person',status:'new'}];}
-  const ord={new:0,active:1,blocked:2,admin:3,other:4};rows.sort((a,b)=>(ord[a.status]-ord[b.status])||String(a.name).localeCompare(String(b.name)));
-  const newN=rows.filter(r=>r.status==='new').length,actN=rows.filter(r=>r.status==='active').length;
-  const chip=st=>st==='admin'?'<span class="chip acc">Admin</span>':st==='other'?'<span class="chip">Other system</span>':st==='active'?'<span class="chip ok">Approved</span>':st==='blocked'?'<span class="chip bad">Blocked</span>':'<span class="chip warn">Waiting</span>';
-  const body=rows.map(r=>{const l=last[r.email],seen=l?acAgo(Date.now()-l.t):(r.seen?acAgo(Date.now()-r.seen):'\u2013');
-    if(r.status==='admin')return '<tr><td><b>'+esc(r.name||'\u2013')+'</b><div class="muted small">'+esc(String(r.email))+'</div></td><td>Person</td><td>'+chip(r.status)+'</td><td class="muted small" colspan="2">The admin always has access and cannot be blocked here.</td></tr>';
-    if(r.status==='other')return '<tr data-uid="'+esc(r.uid)+'"><td><b>'+esc(r.name||'\u2013')+'</b><div class="muted small">'+esc(String(r.email))+'</div></td><td>\u2013</td><td>'+chip(r.status)+'</td><td class="muted small" colspan="2">Not a logbook account (another system on this Firebase project). It is never approved or changed here.</td></tr>';
-    const btns=r.status==='active'?'<button type="button" class="btn sm" data-ac="block">Block</button> <button type="button" class="btn sm" data-ac="revoke">Sign out</button>':'<button type="button" class="btn sm pri" data-ac="approve">Approve</button>';
-    return '<tr data-uid="'+esc(r.uid)+'" data-em="'+esc(r.email)+'" data-nm="'+esc(r.name)+'"><td><b>'+esc(r.name||'\u2013')+'</b><div class="muted small">'+esc(String(r.email).replace(/@local\.com$/,''))+'</div></td><td>'+(r.kind==='tablet'?'Tablet':r.kind==='person'?'Person':'\u2013')+'</td><td>'+chip(r.status)+'</td><td class="muted small">'+esc(seen)+(l&&l.model?'<div>'+esc(l.model)+'</div>':'')+'</td><td style="white-space:nowrap">'+btns+' <button type="button" class="btn sm" data-ac="remove" title="Remove this account for good" aria-label="Remove">\ud83d\uddd1</button></td></tr>';}).join('');
-  el.innerHTML='<section class="card"><h2 style="margin:0 0 4px">Who and what can open the logbook</h2><p class="muted small" style="margin:0 0 10px">Every tablet and every person has their own account. Only approved accounts can read or save data, and this is checked on the server, not just in the app. Blocking cuts the access straight away.</p>'+
-   (S.accErr?'<div class="status bad" style="margin-bottom:10px"><b>The approved list cannot be read yet.</b> The Firestore rules in Firebase are the old ones. Publish the new rules (guide, step 1). Approvals you pressed are saved and will show once the new rules are published.</div>':'')+
-   (demo?'<div class="status warn" style="margin-bottom:10px">Preview with sample rows. In the live app this shows your real accounts.</div>':'')+
-   '<div class="row" style="align-items:center;gap:10px;flex-wrap:wrap"><span class="chip '+(mode?'ok':'warn')+'" style="font-size:15px">Server lock: '+(mode?'ON':'OFF')+'</span><button type="button" class="btn sm'+(mode?'':' pri')+'" id="acMode">'+(mode?'Turn the lock off':'Turn the lock on')+'</button><button type="button" class="btn sm" id="acScan">Check sign-in accounts</button><button type="button" class="btn sm" id="acImp">Approve all current accounts</button></div>'+
-   '<p class="muted small" style="margin:8px 0 0">While the lock is OFF nothing changes for anyone. Before turning it ON: press <b>Approve all current accounts</b> so every tablet in use today stays approved, then test with one tablet.</p></section>'+
-   '<section class="card"><h3 style="margin:0 0 8px">Accounts <span class="muted small">'+actN+' approved'+(newN?' \u00b7 <b style="color:var(--warn)">'+newN+' waiting</b>':'')+'</span></h3><div class="tscroll"><table class="elt labt"><thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Last seen</th><th></th></tr></thead><tbody>'+(body||'<tr><td colspan="5" class="muted">No accounts listed yet. Press \u201cApprove all current accounts\u201d.</td></tr>')+'</tbody></table></div></section>'+
-   '<section class="card"><h3 style="margin:0 0 8px">Add a tablet or a person</h3><div class="ctlrow"><label class="l">Name<input type="text" id="acN" placeholder="e.g. Press tablet 2"></label><label class="l">User name<input type="text" id="acU" autocapitalize="none" placeholder="e.g. press2"></label><label class="l">Password<input type="text" id="acP" autocomplete="off" placeholder="at least 6"></label><label class="l">Type<select id="acK"><option value="tablet">Tablet</option><option value="person">Person</option></select></label><button type="button" class="btn pri" id="acAdd" style="align-self:flex-end">Create and approve</button></div><p class="muted small" id="acHint" style="margin:6px 0 0">The place comes from the start of the user name: press, lab, pack, maint or leader. Numbers are allowed (press2, lab2).</p></section>';
-  const roleName=u=>{const k=String(u||'').toLowerCase().replace(/[^a-z]/g,'');return ROLE_OF_PREFIX[k]||null;};
-  const uin=$('#acU');if(uin)uin.oninput=()=>{const r=roleName(uin.value);$('#acHint').textContent=r?'This account will open as: '+placeName(r)+'.':'The user name must start with press, lab, pack, maint or leader.';};
-  const need=()=>{if(!live){toast('This works only in the live app (not in the preview).',true);return false;}return true;};
-  $('#acScan').onclick=async e=>{if(!need())return;const r=await acRun(e.target,{action:'scan'});if(r){const n=(r.users||[]).filter(u=>!u.listed).length;toast(n?n+' sign-in account'+(n>1?'s':'')+' not approved yet.':'All sign-in accounts are listed.');}};
-  $('#acImp').onclick=async e=>{if(!need())return;if(!await ask({title:'Approve all current accounts?',msg:'Every sign-in account that exists today (and is not disabled) will be marked Approved, so nothing stops when the lock is turned on. Accounts you do not know should be removed first.',ok:'Yes, approve them'}))return;acRun(e.target,{action:'import'},r=>r.imported+' account'+(r.imported===1?'':'s')+' approved.');};
-  $('#acMode').onclick=async e=>{
-    if(!mode){const unl=(S.acScan||[]).filter(u=>!u.listed&&!u.disabled).length;
-      if(!await ask({title:'Turn the server lock ON?',msg:(unl?unl+' sign-in account(s) are not approved and will be locked out. ':'')+'From now only approved accounts can read or save data. '+(actN?actN+' account(s) are approved. ':'')+'You can turn it off again here at any time.',ok:'Turn it on'}))return;}
-    else if(!await ask({title:'Turn the server lock OFF?',msg:'Every signed-in account can read and save again, as before.',ok:'Turn it off'}))return;
-    try{await S.db.doc('security/mode').set({enforce:!mode,at:new Date().toISOString()});toast('Server lock '+(!mode?'ON':'OFF')+'.');}catch(er){toast(dbErr(er),true);}};
-  $$('[data-ac]',el).forEach(b=>b.onclick=async()=>{
-    if(!need())return;const tr=b.closest('tr'),uid=tr.dataset.uid,nm=tr.dataset.nm,act=b.dataset.ac;
-    if(act==='approve')return acRun(b,{action:'status',uid:uid,status:'active',email:tr.dataset.em,name:nm},nm+' approved.');
-    if(act==='block'){if(!await ask({title:'Block '+nm+'?',msg:'It loses access at once and cannot sign in until you approve it again.',ok:'Block'}))return;return acRun(b,{action:'status',uid:uid,status:'blocked'},nm+' blocked.');}
-    if(act==='revoke'){if(!await ask({title:'Sign '+nm+' out?',msg:'The device is signed out everywhere and needs the password to sign in again.',ok:'Sign out'}))return;return acRun(b,{action:'revoke',uid:uid},nm+' signed out.');}
-    if(act==='remove'){if(!await ask({title:'Remove '+nm+'?',msg:'The account is deleted for good. Saved readings stay.',ok:'Remove'}))return;return acRun(b,{action:'remove',uid:uid},nm+' removed.');}});
-  $('#acAdd').onclick=async e=>{if(!need())return;const un=($('#acU').value||'').trim().toLowerCase().replace(/@.*$/,'');if(!roleName(un)){toast('The user name must start with press, lab, pack, maint or leader.',true);return;}
-    const r=await acRun(e.target,{action:'create',email:un+'@local.com',password:$('#acP').value,name:($('#acN').value||'').trim()||un,kind:$('#acK').value},'Account created and approved.');if(r){$('#acU').value='';$('#acP').value='';$('#acN').value='';}};
-}
 function paintDevices(){
   const el=$('#devBody');if(!el)return;
   const T=x=>new Date(x.sts||x.ts).getTime();
@@ -3678,9 +3597,6 @@ function subAdmin(){
     paintMtBadge();if(S.tab==='maint'||S.tab==='jobs'||S.tab==='overview')paintTab();},e=>toast(dbErr(e),true)));
   resub('devs',()=>S.db.collection('sessions').limit(60).onSnapshot(snap=>{
     S.devs=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.devsAt=Date.now();paintDevBadge();if(S.tab==='devices')paintTab();},e=>{}));
-  resub('acc',()=>S.db.collection('accounts').limit(300).onSnapshot(snap=>{S.acc=snap.docs.map(d=>Object.assign({id:d.id},d.data()));S.accErr=false;if(S.tab==='access'&&!S.acBusy)paintTab();},e=>{S.acc=[];S.accErr=true;if(S.tab==='access'&&!S.acBusy)paintTab();}));
-  resub('secm',()=>S.db.doc('security/mode').onSnapshot(sn=>{S.secMode=sn.exists?!!(sn.data()&&sn.data().enforce):false;if(S.tab==='access'&&!S.acBusy)paintTab();},e=>{}));
-  resub('pres',()=>S.db.collection('presence').limit(100).onSnapshot(snap=>{S.pres=snap.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.tab==='access'&&!S.acBusy)paintTab();},e=>{}));
   resub('parts',()=>S.db.collection('parts').limit(1500).onSnapshot(snap=>{
     S.parts=snap.docs.map(d=>Object.assign({id:d.id},d.data()));paintLowBadge();if(S.tab==='parts')paintTab();},e=>toast(dbErr(e),true)));
   subPO();
@@ -3723,7 +3639,6 @@ function buildTab(){
   if(S.tab==='orders')t.innerHTML=ordersShell();
   if(S.tab==='notices')t.innerHTML='<div id="ntBody"></div>';
   if(S.tab==='devices')t.innerHTML='<div id="devBody"></div>';
-  if(S.tab==='access')t.innerHTML='<div id="acBody"></div>';
   if(S.tab==='issues')t.innerHTML='<div id="body" style="display:flex;flex-direction:column;gap:16px"></div>';
   if(S.tab==='points')t.innerHTML='<div id="ptBody"></div>';
   if(S.tab==='setup')t.innerHTML=setupShell();
@@ -3741,7 +3656,6 @@ function paintTab(){
   if(S.tab==='orders')paintOrders();
   if(S.tab==='notices')paintNtTab();
   if(S.tab==='devices')paintDevices();
-  if(S.tab==='access')paintAccess();
   if(S.tab==='points'&&S.pt.rows===null&&!S.pt.loading)ptLoad();else if(S.tab==='points')paintPoints();
 }
 function bindTab(){
@@ -5257,7 +5171,7 @@ function setupShell(){
     '<label class="l" style="margin-top:12px">Equipment in this area (one per line, used for problem reports and maintenance)<textarea class="s-eq">'+esc(a.equipment.join('\n'))+'</textarea></label></section>'+
     '<div class="row"><button class="btn pri big" id="sSave">Save '+esc(a.name)+'</button></div>';
   return menu+'<section class="card"><h2>Plant</h2><div class="ctlrow"><label class="l" style="flex:2 1 260px">Plant name<input type="text" id="sName" value="'+esc(c.plantName)+'"></label>'+
-   c.shifts.map((s,i)=>'<label class="l">'+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'<label class="l">Hourly entry window (minutes, 1 to 59)<input type="number" min="1" max="59" id="sEntry" value="'+(Number(c.entryMin)>=1&&Number(c.entryMin)<=59?Math.round(Number(c.entryMin)):20)+'"></label><label class="l">Packaging: highlight a reading when the gap since the last one is less than (minutes, 0 = off)<input type="number" min="0" max="240" id="sGap" value="'+(Number(c.gapWarnMin)>=0?Math.round(Number(c.gapWarnMin)):30)+'"></label><label class="l">Packaging: after the new day starts, still allow entries for Yesterday (last shift) for (minutes, 0 = off)<input type="number" min="0" max="180" id="sPkGrace" value="'+(Number(c.pkGraceMin)>=0?Math.round(Number(c.pkGraceMin)):0)+'"></label><label class="l">Data entry edit duration (minutes)<input type="number" min="1" max="60" id="sNtEdit" value="'+(Number(c.noticeEditMin)>=1?Math.round(Number(c.noticeEditMin)):5)+'"></label><label class="l" style="flex:1 1 100%;flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="sNeedAp"'+(c.needApproval===true?' checked':'')+' style="width:auto"> Ask for a shift leader password when a shift starts on the Press, Laboratory and Packaging tablets</label><div style="flex:1 1 100%;margin-top:6px"><label style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="sNetOn"'+((c.netLock&&c.netLock.on)?' checked':'')+' style="width:auto"> Block computers and phones that are outside the factory network</label><p class="muted small" style="margin:4px 0 6px">Tablets in the kiosk app and the admin are always allowed. A blocked device sees "This page can\u2019t be reached". The factory network is recognised by its public internet address (one per line). If your internet provider changes the address, update it here.</p><textarea id="sNetIps" rows="3" placeholder="e.g. 41.220.10.5" style="width:100%">'+esc(((c.netLock&&c.netLock.ips)||[]).join('\n'))+'</textarea><div class="row" style="margin-top:6px;align-items:center;gap:10px"><button type="button" class="btn sm" id="sNetAdd">Add this device\u2019s network</button><span class="muted small" id="sNetMe"></span></div></div></div><p class="muted small" style="margin:8px 0 0">Operators can enter an hourly reading only during the first minutes of the hour. After that only a shift leader can enter it (unlock button). Lab, packaging and RO entries are not affected.</p></section>'+
+   c.shifts.map((s,i)=>'<label class="l">'+esc(s.name)+' starts (hour)<input type="number" min="0" max="23" class="sShift" data-i="'+i+'" value="'+s.start+'"></label>').join('')+'<label class="l">Hourly entry window (minutes, 1 to 59)<input type="number" min="1" max="59" id="sEntry" value="'+(Number(c.entryMin)>=1&&Number(c.entryMin)<=59?Math.round(Number(c.entryMin)):20)+'"></label><label class="l">Packaging: highlight a reading when the gap since the last one is less than (minutes, 0 = off)<input type="number" min="0" max="240" id="sGap" value="'+(Number(c.gapWarnMin)>=0?Math.round(Number(c.gapWarnMin)):30)+'"></label><label class="l">Packaging: after the new day starts, still allow entries for Yesterday (last shift) for (minutes, 0 = off)<input type="number" min="0" max="180" id="sPkGrace" value="'+(Number(c.pkGraceMin)>=0?Math.round(Number(c.pkGraceMin)):0)+'"></label><label class="l">Data entry edit duration (minutes)<input type="number" min="1" max="60" id="sNtEdit" value="'+(Number(c.noticeEditMin)>=1?Math.round(Number(c.noticeEditMin)):5)+'"></label><label class="l" style="flex:1 1 100%;flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="sNeedAp"'+(c.needApproval===true?' checked':'')+' style="width:auto"> Ask for a shift leader password when a shift starts on the Press, Laboratory and Packaging tablets</label></div><p class="muted small" style="margin:8px 0 0">Operators can enter an hourly reading only during the first minutes of the hour. After that only a shift leader can enter it (unlock button). Lab, packaging and RO entries are not affected.</p></section>'+
    '<div class="row"><button class="btn pri big" id="sSave">Save plant</button><button class="btn" id="sReset">Restore starter setup</button></div>'+clearCardHTML();
 }
 function zoneLimCard(a){
@@ -5304,7 +5218,6 @@ function bindSetup(rootSel,lim){
     const wdl=e.target.closest('.rw-delwin');if(wdl){if(wdl.closest('.rwwins').querySelectorAll('.rwwin').length<=1){toast('Keep at least one window.',true);return;}wdl.closest('.rwwin').remove();S.setupEditing=true;return;}
     const fsh=e.target.closest('.rw-fromsh');if(fsh){const bf=Math.max(0,Math.min(240,Math.round(Number($('#rwBef').value))||0)),af=Math.max(1,Math.min(240,Math.round(Number($('#rwAft').value))||30));const sts=(S.cfg.shifts||[]).map(x=>Number(x.start)*60).filter(x=>!isNaN(x)).sort((a,b)=>a-b);const box=fsh.closest('section').querySelector('.rwwins');box.innerHTML=sts.map(st=>rwWinRow([Math.max(0,st-bf),Math.min(1439,st+af)])).join('');S.setupEditing=true;return;}
     const fo4=e.target.closest('.rw-four');if(fo4){const bf=Math.max(0,Math.min(240,Math.round(Number($('#rwBef').value))||0)),af=Math.max(1,Math.min(240,Math.round(Number($('#rwAft').value))||30));const P4=[[420,'Shift C · record at 07:00','N'],[900,'Shift A · record at 15:00','D'],[1140,'Shift B part 1 · record at 19:00','D'],[1380,'Shift B part 2 · record at 23:00','N']];fo4.closest('section').querySelector('.rwwins').innerHTML=P4.map(q=>rwWinRow([Math.max(0,q[0]-bf),Math.min(1439,q[0]+af),q[1],q[2]])).join('');S.setupEditing=true;return;}
-    const nad=e.target.closest('#sNetAdd');if(nad){(async()=>{const ip=await netIp(true),me=$('#sNetMe');if(!ip){toast('Could not read this device\u2019s network address.',true);return;}const ta=$('#sNetIps'),cur=ta.value.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);if(cur.indexOf(ip)<0){cur.push(ip);ta.value=cur.join('\n');}S.setupEditing=true;if(me)me.textContent='This device: '+ip;})();return;}
     const rdl=e.target.closest('.rm-del');if(rdl){rdl.closest('.rmfrow').remove();S.setupEditing=true;return;}
     const rad=e.target.closest('.rm-add');if(rad){const k=rad.dataset.k,bx=rad.closest('.card'),host=$(k==='res'?'.rf-res':'.rf-gr',bx);host.insertAdjacentHTML('beforeend',rmFRow(k,['','','','num']));const nr=host.lastElementChild;nr.dataset.id='x'+Date.now().toString(36)+Math.floor(Math.random()*999);$('.rf-l',nr).focus();S.setupEditing=true;return;}
     const wad=e.target.closest('.rw-addwin');if(wad){wad.closest('.row').insertAdjacentHTML('beforebegin',rwWinRow(null));S.setupEditing=true;return;}
@@ -5334,9 +5247,6 @@ function savePlant(){
     cfg.pkGraceMin=Math.max(0,Math.min(180,Math.round(Number($('#sPkGrace').value))||0));
     cfg.entryMin=Math.max(1,Math.min(59,Math.round(Number($('#sEntry').value))||20));
     cfg.needApproval=!!($('#sNeedAp')&&$('#sNeedAp').checked);
-    {const on=!!($('#sNetOn')&&$('#sNetOn').checked),ips=(($('#sNetIps')&&$('#sNetIps').value)||'').split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);
-     if(on&&!ips.length){toast('Add at least one allowed network address, or untick the block.',true);return false;}
-     cfg.netLock={on:on,ips:ips};}
     cfg.shifts=S.cfg.shifts.map((s,i)=>({name:s.name,start:Math.max(0,Math.min(23,Number($('.sShift[data-i="'+i+'"]').value)||0))}));
   },'the plant settings');
 }
@@ -5866,7 +5776,7 @@ async function boot(){
     if(snap.exists){const d=snap.data();if(d&&Array.isArray(d.areas)&&d.areas.length&&Array.isArray(d.shifts))c=migrateCfg(JSON.parse(JSON.stringify(Object.assign({},DEFAULT_CFG,d,{operators:d.operators||[]}))));}
     const j=JSON.stringify(c);if(j===S.cfgJ&&S.cfgLoaded)return;
     S.cfg=c;S.cfgJ=j;S.cfgLoaded=true;onCfg();
-  },e=>{if(e&&e.code==='permission-denied'&&!S.cfgLoaded){S.denied=true;denyBeat();evalGate();}else toast(dbErr(e),true);});
+  },e=>toast(dbErr(e),true));
   S.db.doc('logs/lines_status').onSnapshot(snap=>{S.lines=snap.exists&&snap.data().offs?snap.data().offs:{};lineRefresh();},e=>{});
   S.db.doc('logs/admin_acks').onSnapshot(snap=>{S.macks=snap.exists&&snap.data().a?snap.data().a:{};msgRefresh();},e=>{});
   S.db.doc('logs/admin_msgs').onSnapshot(snap=>{const first=!S.amInit;S.amInit=true;S.amsgs=snap.exists&&snap.data().msgs?snap.data().msgs:[];msgAlertCheck(first);msgRefresh();},e=>{});
