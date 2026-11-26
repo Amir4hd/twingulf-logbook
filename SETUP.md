@@ -58,3 +58,10 @@ The Control room > Setup > "Tablet account passwords" page needs a small server 
 3. Cloudflare > **Deployments** > latest Production row > **Retry deployment**.
 4. Open the app as admin, Control room > Setup > Tablet account passwords > Set new password.
 The new password needs at least 6 characters. A tablet already signed in stays signed in; the new password is used the next time it signs in.
+
+## Updating the app
+Push to the `main` branch on GitHub; Cloudflare publishes it in a minute or two. Every release raises the version in two places (`APP_V` in `index.html` and `V` in `sw.js`, they must match, for example `plant-v157`). Tablets show a small bar "New version available. Update now?" at the bottom; tapping it refreshes the app. Backup way: menu > About > Update now.
+
+## Tablet notes (Fully Kiosk)
+- Turn OFF "Reload on Screen On" and the auto-reload options (Web Auto Reload). The app keeps its own last screen and unsaved readings, but a reload is still slower than staying as it is.
+- If a Plus-only setting is on without a Plus licence, Fully Kiosk shows its own "Please get a license" text on the screen. That message is not from this app.
