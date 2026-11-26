@@ -528,6 +528,10 @@ function npShow(inp,root){
   root.classList.add('npOn');
 }
 function npConv(root){$$('input[type=number]',root).forEach(i=>{i.type='text';i.setAttribute('inputmode','none');i.dataset.np='1';});}
+function npApply(on){
+  if(on){$$('.ovl,[data-npscope]').forEach(numPadAttach);}
+  else{npHide();$$('input[data-np="1"]').forEach(i=>{i.type='number';i.removeAttribute('inputmode');delete i.dataset.np;});}
+}
 function numPadAttach(root){
   if(!npOn())return;
   /* text boxes that look like number boxes: a half-typed number such as "12." is kept as typed */
@@ -1107,7 +1111,7 @@ function toggleTopMenu(){
    '<div class="tms">Display</div><div class="tmc">'+
    '<button type="button" class="tmr" id="langBtn" role="menuitem" title="'+(LANG==='fr'?'Switch to English':'Passer en français')+'"><span class="ti">🌐</span>Language<span class="tv" id="langVal" data-nolang>'+(LANG==='fr'?'Français':'English')+' ›</span></button>'+
    '<button type="button" class="tmr" id="themeBtn" role="menuitem"><span class="ti">🌓</span>Theme<span class="tv" id="themeVal" data-nolang>'+themeLbl()+' ›</span></button>'+
-   '<button type="button" class="tmr" id="tmFs" role="menuitem"><span class="ti">🔠</span>Large text'+sw(fsOn())+'</button>'+'<button type="button" class="tmr" id="tmNp" role="menuitem"><span class="ti">🔢</span>Number pad'+sw(npOn())+'</button>'+
+   '<button type="button" class="tmr" id="tmFs" role="menuitem"><span class="ti">🔠</span>Large text'+sw(fsOn())+'</button>'+'<button type="button" class="tmr" id="tmNp" role="menuitem"><span class="ti">⌨</span>Keyboard<span class="tv" id="tmNpV" data-nolang>'+(npOn()?'System':'Default')+' ›</span></button>'+
    (S.dev&&S.dev.place==='admin'?'<button type="button" class="tmr" id="tmSnd" role="menuitem"><span class="ti">🔔</span>Sound'+sw(soundOn())+'</button>':'')+'</div>'+
    '<div class="tms">Tablet</div><div class="tmc">'+(canPrint()?'<button type="button" class="tmr" id="prBtn" role="menuitem"><span class="ti">🖨</span>Print<span class="tv">›</span></button>':'')+
    '<button type="button" class="tmr" id="tmHelp" role="menuitem"><span class="ti">❓</span>Help<span class="tv">›</span></button>'+
@@ -1122,7 +1126,7 @@ function toggleTopMenu(){
   const tsw=(b,on)=>{const q=$('.tmsw',b);if(q){q.classList.toggle('on',on);q.setAttribute('aria-checked',on?'true':'false');}};
   $('#tmX',m).onclick=()=>closeTopMenu();
   const tsd=$('#tmSnd',m);if(tsd)tsd.onclick=ev=>{const on=!soundOn();lsSet('plant.sound',on?'1':'0');tsw(ev.currentTarget,on);if(on)try{beep();}catch(e){}};
-  $('#tmNp',m).onclick=ev=>{const on=!npOn();lsSet('plant.np',on?'1':'0');tsw(ev.currentTarget,on);};
+  $('#tmNp',m).onclick=()=>{const on=!npOn();lsSet('plant.np',on?'1':'0');$('#tmNpV',m).textContent=(on?'System':'Default')+' ›';npApply(on);};
   $('#tmFs',m).onclick=ev=>{lsSet('plant.fs',fsOn()?'n':'l');applyFs();tsw(ev.currentTarget,fsOn());setBH();};
   $('#tmRef',m).onclick=async()=>{closeTopMenu();if(S.dirty&&!await ask({title:'Refresh the app?',msg:'You have readings typed but not saved. They will be lost.',ok:'Yes, refresh'}))return;refreshApp();};
   $('#tmAbout',m).onclick=()=>{closeTopMenu();aboutDlg();};
