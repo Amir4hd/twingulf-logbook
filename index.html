@@ -828,7 +828,7 @@ async function evalGate(){
 async function remoteOut(){if(S.killing)return;S.killing=true;try{toast('The admin signed this device out.');}catch(e){}await doSignOut();S.killing=false;}
 async function doSignOut(){
   try{if(S.db&&S.acct&&(S.sessionOk||!LOCKED_ROLE(S.acct.role||'')))await S.db.doc(sessPath()).delete();}catch(e){}
-  S.sessionOk=false;unsub('sess');unsub('kill');unsub('notices');unsub('dieM');unsub('dieS');unsub('clp');lsSet('plant.inAt','');lsSet('plant.appr','');lsSet('plant.view','');lsSet(SNAP_KEY,'');lsSet(DR_KEY,'');S.dev=null;S.unlock=null;
+  S.sessionOk=false;unsub('sess');unsub('kill');unsub('notices');unsub('dieM');unsub('dieS');unsub('clp');lsSet('plant.inAt','');lsSet('plant.appr','');lsSet('plant.view','');lsSet(SNAP_KEY,'');lsSet(DR_KEY,'');lsSet('plant.seenN','');lsSet('plant.mAl','');S.dev=null;S.unlock=null;
   if(S.user&&S.user.signOut){await S.user.signOut();return;}
   ssSet('plant.test','');S.acct=null;S.gate='pick';S.view='home';renderTop();renderHome();
 }
@@ -2636,13 +2636,14 @@ function msgAckList(m){const pls=[];(m.to||[]).forEach(t=>{const p=msgPlaceOf(t)
   return pls.map(p=>{const a=S.macks&&S.macks[m.id]&&S.macks[m.id][p],ok=a&&a.v===msgVer(m);return '<span style="margin-right:12px">'+esc(placeName(p))+': '+(ok?'<b style="color:var(--ok)">✓ '+(m.kind==='must'?nmH(a.by)+' ':'')+esc(fmt12(a.at))+'</b>':'<b style="color:var(--warn)">waiting</b>')+'</span>';}).join('');}
 function msgAlertCheck(initial){
   if(!S.dev||adminEff())return;
-  S.mAl=S.mAl||{};
+  if(!S.mAl){try{S.mAl=JSON.parse(lsGet('plant.mAl')||'null');}catch(e){}if(S.mAl)S.mAlKnown=true;else S.mAl={};}
   (S.amsgs||[]).forEach(m=>{
     if(S.mAl[m.id]===m.at+'|'+(m.editedAt||'')||!msgActive(m))return;
     S.mAl[m.id]=m.at+'|'+(m.editedAt||'');
-    if(initial||!msgRelevant(m))return;
+    if((initial&&!S.mAlKnown)||!msgRelevant(m))return;
     showBar('<span class="tx">📌 '+(m.kind==='must'?'Mandatory message':'Message')+' from admin: '+esc(m.text)+'</span>',m.sound===false);
   });
+  try{lsSet('plant.mAl',JSON.stringify(S.mAl));}catch(e){}
 }
 function msgTimes(w,now){
   const base=new Date(now);const at=t=>{const [h,m]=t.split(':').map(Number);const d=new Date(base);d.setHours(h,m,0,0);return d;};
@@ -3640,6 +3641,8 @@ function ntApply(){
   const vis=list.filter(n=>mine(n)&&!ntDeleted(n));
   const rel=vis.filter(ntRel);
   S.ntDel=p==='admin'?list.filter(n=>mine(n)&&ntDeleted(n)):[];
+  if(S.seenN===null){let st=null;try{st=JSON.parse(lsGet('plant.seenN')||'null');}catch(e){}
+    if(st&&typeof st==='object'){S.seenN=st;rel.forEach(n=>{if(S.seenN[n.id]&&ntOpen(n)&&n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now())S.arrAl[n.id]=n.arriveAt;});}}
   if(S.seenN===null){S.seenN={};rel.forEach(n=>{S.seenN[n.id]=n.editedAt||1;if(ntOpen(n)&&n.arriveAt&&new Date(n.arriveAt).getTime()<=Date.now())S.arrAl[n.id]=n.arriveAt;});}
   else{const fresh=rel.filter(n=>ntOpen(n)&&!S.seenN[n.id]),upd=rel.filter(n=>ntOpen(n)&&S.seenN[n.id]&&S.seenN[n.id]!==(n.editedAt||1));rel.forEach(n=>{S.seenN[n.id]=n.editedAt||1;});
     const gone=list.filter(n=>mine(n)&&ntDeleted(n)&&S.seenN[n.id]&&!S.ntGone[n.id]);gone.forEach(n=>{S.ntGone[n.id]=1;});
@@ -3647,6 +3650,7 @@ function ntApply(){
       if(upd.length)showBar('<span class="tx">Press corrected its message: '+ntLine(upd[0])+'</span>');
       if(fresh.length)showBar('<span class="tx">From press'+(fresh.length>1?' ('+fresh.length+' new)':'')+': '+ntLine(fresh[0])+' <span style="font-weight:400">(by '+nmH(fresh[0].by)+')</span></span>');
       if(gone.length)showBar('<span class="tx">Press deleted a message: '+ntLine(gone[0])+'</span>');}}
+  try{const keep={};list.forEach(n=>{if(S.seenN[n.id])keep[n.id]=S.seenN[n.id];});lsSet('plant.seenN',JSON.stringify(keep));}catch(e){}
   const sig=vis.map(n=>n.id+'|'+n.status+'|'+(n.editedAt||'')+'|'+(n.seenAt||'')+'|'+(ntRel(n)?1:0)).join(',')+'#'+(S.ntDel||[]).length;
   if(sig===S.ntSig&&S.notices)return;S.ntSig=sig;
   S.notices=vis;paintNoticeUI();
