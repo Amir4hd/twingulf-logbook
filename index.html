@@ -46,6 +46,7 @@ h3{font-size:17px;text-transform:uppercase;color:var(--mut)}
 .clock{font:600 17px var(--f-m);font-variant-numeric:tabular-nums;white-space:nowrap}.stk2.ctr{align-items:center}.stk2.ctr .clock{display:flex;flex-direction:column;align-items:center;gap:0}.stk2.ctr .clock span{font-size:34px;font-weight:700;line-height:1.05;letter-spacing:.03em}@media (max-width:700px){.stk2.ctr .clock span{font-size:22px}}
 .sync{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;white-space:nowrap}
 .dot{width:16px;height:16px;border-radius:50%;background:#58c184;box-shadow:0 0 0 3px rgba(88,193,132,.25)}
+.dot.conn{background:transparent;box-shadow:none;border:3px solid var(--line);border-top-color:var(--accent);box-sizing:border-box;animation:spn 1s linear infinite}
 .dot.off{background:#f0705f;box-shadow:0 0 0 3px rgba(240,112,95,.3)}
 .batt{display:inline-flex;align-items:center;gap:5px;font:600 14px var(--f-m);white-space:nowrap}.batt .bi{position:relative;width:26px;height:13px;border:2px solid currentColor;border-radius:3px;padding:1px}.batt .bi:after{content:'';position:absolute;right:-5px;top:2.5px;width:3px;height:6px;background:currentColor;border-radius:0 2px 2px 0}.batt .bi b{display:block;height:100%;background:#58c184;border-radius:1px}.batt.low{color:#f0705f}.batt.low .bi b{background:#f0705f}
 .bbtn{background:transparent;border:1px solid color-mix(in srgb,var(--bg) 45%,transparent);color:var(--bg);padding:8px 12px;border-radius:6px;min-height:40px}
@@ -542,6 +543,83 @@ function numPadAttach(root){
   const mo=new MutationObserver(()=>{if(!document.body.contains(root)){npHide();mo.disconnect();root._np=0;}});mo.observe(document.body,{childList:true,subtree:true});
 }
 
+/* ---------- last screen + draft: the app comes back exactly where it was, even if the tablet restarts the page ---------- */
+const DR_KEY='plant.draft',SNAP_KEY='plant.snap',CFGC_KEY='plant.cfgc';
+const drEls=()=>{const out=[];$$('#main input,#main select,#main textarea,.ovl input,.ovl select,.ovl textarea').forEach(e=>{if(out.indexOf(e)<0&&e.type!=='password'&&e.type!=='file'&&e.type!=='button'&&e.type!=='submit'&&e.type!=='hidden'&&!e.closest('#npad,[data-nodraft]'))out.push(e);});return out;};
+const drDesc=e=>e.id?('#'+e.id):[e.dataset.a,e.dataset.p,e.dataset.r,e.dataset.f,e.dataset.rv,e.dataset.k,e.name,(e.type==='radio'||e.type==='checkbox')?e.value:''].filter(Boolean).join(':');
+function drKeyed(){
+  const cnt={},out=[];
+  drEls().forEach(e=>{const d=drDesc(e);if(!d)return;const sc=e.id?'':((e.closest('[id]')||{}).id||'');const k0=sc+'|'+d;cnt[k0]=(cnt[k0]||0)+1;out.push({k:k0+'#'+cnt[k0],e:e});});
+  return out;
+}
+const drChanged=e=>{if(e.tagName==='SELECT'){const di=Array.from(e.options).findIndex(o=>o.defaultSelected);return e.selectedIndex!==(di<0?0:di);}if(e.type==='checkbox'||e.type==='radio')return e.checked!==e.defaultChecked;return e.value!==e.defaultValue;};
+const drVal=e=>(e.type==='checkbox'||e.type==='radio')?e.checked:e.value;
+function drCtx(){
+  const v=lsGet('plant.view')||'';
+  if(v.indexOf('area:')===0){if(S.editKey||S.viewKey)return null;return {hour:S.hour,date:S.date};}
+  if(v==='lab'){if(S.lab&&S.lab.edit&&Object.keys(S.lab.edit).some(k=>S.lab.edit[k]))return null;return {date:S.date};}
+  if(v==='packm'){if(S.pk&&S.pk.edit&&Object.keys(S.pk.edit).some(k=>S.pk.edit[k]))return null;return {date:S.pk&&S.pk.date};}
+  if(v==='ck'){if(S.ck&&S.ck.edit)return null;return {};}
+  return {};
+}
+function drCapture(force){
+  try{
+    if(!S.dev)return;
+    if(S.draftArmed&&!force)return;
+    const ctx=drCtx(),vals={};let n=0;
+    if(ctx)drKeyed().forEach(x=>{if(drChanged(x.e)){vals[x.k]=drVal(x.e);n++;}});
+    if(!n){if((force||!S.draftArmed)&&lsGet(DR_KEY))lsSet(DR_KEY,'');return;}
+    lsSet(DR_KEY,JSON.stringify({v:lsGet('plant.view')||'',t:Date.now(),ctx:ctx,vals:vals,ck:!!$('#ckDlg'),sy:Math.round(window.scrollY||0)}));
+  }catch(e){}
+}
+function drLoad(){
+  try{const d=JSON.parse(lsGet(DR_KEY)||'null');if(d&&d.vals&&Date.now()-d.t<12*3600000&&Object.keys(d.vals).length){S.draft=d;S.draftArmed=true;return;}}catch(e){}
+  S.draft=null;S.draftArmed=false;if(lsGet(DR_KEY))lsSet(DR_KEY,'');
+}
+function drDisarm(){if(!S.draftArmed)return;S.draftArmed=false;S.draft=null;if(S.drMo){S.drMo.disconnect();S.drMo=null;}}
+function drApply(){
+  try{
+    const d=S.draft;if(!S.draftArmed||!d)return;
+    if((lsGet('plant.view')||'')!==d.v)return;
+    const c=d.ctx||{};
+    if(d.v.indexOf('area:')===0){
+      if(c.date&&c.date!==S.today&&!adminEff()){drDisarm();return;}
+      if(c.hour!=null&&c.hour!==S.hour&&HRS().indexOf(c.hour)>=0){S.hour=c.hour;S.lastHour=c.hour;try{refreshStrip();renderForm();}catch(e){}}
+    }
+    if(d.ck&&d.v==='ck'&&!$('#ckDlg')&&$('#ckEnter')){try{openCkForm(null);}catch(e){}}
+    const m={};Object.keys(d.vals).forEach(k=>{m[k]=d.vals[k];});
+    drKeyed().forEach(x=>{
+      if(x.e._dr||!(x.k in m))return;x.e._dr=1;const v=m[x.k];
+      if((x.e.type==='checkbox'||x.e.type==='radio')){if(x.e.checked!==!!v){x.e.checked=!!v;x.e.dispatchEvent(new Event('change',{bubbles:true}));}}
+      else if(x.e.value!==String(v)){x.e.value=String(v);x.e.dispatchEvent(new Event('input',{bubbles:true}));if(x.e.tagName==='SELECT')x.e.dispatchEvent(new Event('change',{bubbles:true}));}
+    });
+    if(d.sy&&!S.drScr&&document.body.scrollHeight>window.innerHeight){S.drScr=1;window.scrollTo(0,d.sy);}
+  }catch(e){}
+}
+function drStart(){
+  drLoad();
+  if(S.draftArmed){
+    let tm=0;S.drMo=new MutationObserver(()=>{clearTimeout(tm);tm=setTimeout(drApply,30);});S.drMo.observe(document.body,{childList:true,subtree:true});
+    setTimeout(drDisarm,60000);
+  }
+  ['input','change'].forEach(ev=>document.addEventListener(ev,e=>{if(e.isTrusted)drCapture(true);},true));
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)drCapture(false);});
+  window.addEventListener('pagehide',()=>drCapture(false));
+  setInterval(()=>drCapture(false),3000);
+}
+function prePaint(){
+  try{
+    const sn=JSON.parse(lsGet(SNAP_KEY)||'null');
+    if(!sn||!sn.uid||!sn.role)return false;
+    const c=JSON.parse(lsGet(CFGC_KEY)||'null');
+    if(c&&Array.isArray(c.areas)&&c.areas.length&&Array.isArray(c.shifts))S.cfg=migrateCfg(c);
+    S.acct={uid:sn.uid,email:sn.email||'',role:sn.role};S.isAdmin=!!sn.adm;
+    if(NEED_APPROVAL(sn.role)&&!approvalOk()){S.acct=null;return false;}
+    S.gate=null;S.dev={place:sn.role,at:new Date().toISOString()};S.pre=true;
+    renderTop();restoreView();
+    return true;
+  }catch(e){S.pre=false;S.dev=null;S.acct=null;S.isAdmin=false;S.gate=null;return false;}
+}
 function applyFs(){try{document.documentElement.style.zoom=fsOn()?'1.15':'';}catch(e){}}
 applyTheme();applyFs();setInterval(applyTheme,60000);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#themeBtn');if(b){lsSet('plant.theme',THEMES[(THEMES.indexOf(themeMode())+1)%THEMES.length]);applyTheme();}},true);
@@ -707,9 +785,10 @@ window.addEventListener('pagehide',()=>{try{const m=tabsRead();delete m[SID()];l
 function nextShiftMs(){const st=S.cfg.shifts.map(x=>Number(x.start)).sort((a,b)=>a-b),n=new Date();let best=null;for(let d=0;d<2;d++)st.forEach(h=>{const t=new Date(n.getFullYear(),n.getMonth(),n.getDate()+d,h,0,0).getTime();if(t>n.getTime()&&(best===null||t<best))best=t;});return best||Date.now()+8*3600e3;}
 function approvalOk(){try{const a=JSON.parse(lsGet('plant.appr')||'null');return !!(a&&S.acct&&a.uid===S.acct.uid&&a.until>Date.now());}catch(e){return false;}}
 async function resolveAccount(){
-  S.acct=null;
-  if(S.user&&typeof S.user.info==='function'){try{const i=await S.user.info();S.acct={uid:i.uid,email:i.email||''};S.acct.role=S.isAdmin?'admin':roleOfEmail(S.acct.email);}catch(e){}}
-  else{const t=ssGet('plant.test');if(t){S.acct={uid:'test_'+t,email:t,test:true};S.acct.role=t==='admin'?(S.isAdmin?'admin':null):roleOfEmail(t);}}
+  let na=null;
+  if(S.user&&typeof S.user.info==='function'){try{const i=await S.user.info();na={uid:i.uid,email:i.email||''};na.role=S.isAdmin?'admin':roleOfEmail(na.email);}catch(e){}}
+  else{const t=ssGet('plant.test');if(t){na={uid:'test_'+t,email:t,test:true};na.role=t==='admin'?(S.isAdmin?'admin':null):roleOfEmail(t);}}
+  S.acct=na;
 }
 const sessPath=()=>'sessions/'+S.acct.uid+(LOCKED_ROLE(S.acct.role||'')?'':'_'+DEV()); /* press/lab/pack: one record per account; others: one per device */
 async function acquireSession(){
@@ -733,21 +812,23 @@ async function acquireSession(){
 function kicked(){S.sessionOk=false;unsub('sess');unsub('notices');unsub('dieM');unsub('dieS');unsub('clp');S.dev=null;S.gate='kicked';S.view='home';renderTop();renderHome();}
 async function evalGate(){
   const a=S.acct;S.sessInfo=null;
-  const stop=g=>{S.gate=g;S.dev=null;S.view='home';renderTop();renderHome();if(g==='approve')beat();};
+  const stop=g=>{S.pre=false;lsSet(SNAP_KEY,'');S.gate=g;S.dev=null;S.view='home';renderTop();renderHome();if(g==='approve')beat();};
   if(!S.db)return stop('nodb');
   if(!a)return stop((S.user&&S.user.info)?'norole':'pick');
   if(!a.role)return stop('norole');
   if(LOCKED_ROLE(a.role)&&!S.sessionOk){if(!await acquireSession())return stop('refused');}
   if(NEED_APPROVAL(a.role)&&!approvalOk())return stop('approve');
-  S.gate=null;S.dev={place:a.role,at:new Date().toISOString()};S.unlock=null;S.dirty=false;
+  S.gate=null;S.pre=false;S.dev={place:a.role,at:new Date().toISOString()};S.unlock=null;S.dirty=false;
+  lsSet(SNAP_KEY,JSON.stringify({uid:a.uid,email:a.email||'',role:a.role,adm:!!S.isAdmin}));
   if(!lsGet('plant.inAt'))lsSet('plant.inAt',S.db.serverTime||new Date().toISOString());
   resub('kill',()=>S.db.doc(sessPath()).onSnapshot(sn=>{const x=sn.exists?sn.data():null;if(x&&x.kill&&x.kill.at&&x.kill.at>(lsGet('plant.inAt')||''))remoteOut();},e=>{}));
   unsub('notices');ensureNoticeSub();ensureDieSub();ensureCleanSub();beat();renderTop();restoreView();
+  setTimeout(drDisarm,2500);
 }
 async function remoteOut(){if(S.killing)return;S.killing=true;try{toast('The admin signed this device out.');}catch(e){}await doSignOut();S.killing=false;}
 async function doSignOut(){
   try{if(S.db&&S.acct&&(S.sessionOk||!LOCKED_ROLE(S.acct.role||'')))await S.db.doc(sessPath()).delete();}catch(e){}
-  S.sessionOk=false;unsub('sess');unsub('kill');unsub('notices');unsub('dieM');unsub('dieS');unsub('clp');lsSet('plant.inAt','');lsSet('plant.appr','');lsSet('plant.view','');S.dev=null;S.unlock=null;
+  S.sessionOk=false;unsub('sess');unsub('kill');unsub('notices');unsub('dieM');unsub('dieS');unsub('clp');lsSet('plant.inAt','');lsSet('plant.appr','');lsSet('plant.view','');lsSet(SNAP_KEY,'');lsSet(DR_KEY,'');S.dev=null;S.unlock=null;
   if(S.user&&S.user.signOut){await S.user.signOut();return;}
   ssSet('plant.test','');S.acct=null;S.gate='pick';S.view='home';renderTop();renderHome();
 }
@@ -858,7 +939,7 @@ function renderTop(){
   const sub=[S.dev?placeName(S.dev.place):'',where].filter(Boolean).join(' · ');
   $('#top').innerHTML='<header class="bar'+(S.view==='packm'&&pkTop()?' pkb':'')+'"><div class="tl"><span class="brand">'+esc(S.cfg.plantName||'Plant Logbook')+'</span>'+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</div><span class="sp"></span>'+
    '<div class="stk2 ctr"><span class="clock" id="clock"><span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span></span></div>'+(S.view==='packm'&&pkTop()?'<div class="pkTopDay" id="pkTopDay"></div>':'')+'<span class="sp"></span>'+
-   '<div class="stk2"><span class="sync" title="Connection"><span class="dot'+(S.online&&S.db?'':' off')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'Connecting…')+'</span></span>'+
+   '<div class="stk2"><span class="sync" title="Connection"><span class="dot'+(S.db?(S.online?'':' off'):' conn')+'"></span>'+'<span class="txt">'+(S.db?(S.online?'Online':'Offline'):'Connecting…')+'</span></span>'+
    '<span class="batt" id="batt" hidden></span></div>'+
    (S.dev&&S.view!=='home'&&(S.view!=='mplace'||adminEff()||S.dev.place==='all'||S.dev.place==='maint')?'<button class="bbtn" id="goHome">'+(adminEff()?'Menu':'Switch area')+'</button>':'')+'<button class="bbtn" id="menuBtn" data-nolang type="button" aria-label="Settings menu" aria-haspopup="true" aria-expanded="false" title="Settings">&#9776;</button></header>';
   const gh=$('#goHome');if(gh)gh.onclick=()=>go('home');
@@ -1195,7 +1276,7 @@ async function peerStatus(){
 setInterval(()=>{
   try{checkArrivals();}catch(e){}
   try{msgAlertCheck();paintMmBlock();paintPinMsg();if(S.view==='admin'&&S.tab==='notices'&&!$('#msgDlg'))paintTab();}catch(e){}
-  if(S.dev&&S.acct&&NEED_APPROVAL(S.dev.place)&&!approvalOk()&&!S.dirty){S.dev=null;S.gate='approve';unsub('notices');S.view='home';renderTop();renderHome();return;}
+  if(!S.pre&&S.dev&&S.acct&&NEED_APPROVAL(S.dev.place)&&!approvalOk()&&!S.dirty){S.dev=null;S.gate='approve';unsub('notices');S.view='home';renderTop();renderHome();return;}
   const t=new Date(),c=$('#clock');if(c)c.innerHTML='<span>'+pad(t.getHours())+':'+pad(t.getMinutes())+'</span>';
   const d=pdate(t);
   if(d!==S.today){const od=S.today;S.today=d;if(S.ovDate===od)S.ovDate=d;if(S.view==='area'&&S.date===od&&!adminEff()){S.date=d;S.day=null;S.editKey=null;subDay();}}
@@ -1623,7 +1704,7 @@ function paintPkList(id){
   try{paintPkClean(id);}catch(e){}
   const el=$('#pkr_'+id);if(!el||!S.pk)return;
   const d=S.pk.docs[id];
-  if(d==null){el.innerHTML='<div class="empty">'+(S.db?'Loading…':'No database connection.')+'</div>';return;}
+  if(d==null){el.innerHTML='<div class="empty">'+((S.db||S.pre)?'Loading…':'No database connection.')+'</div>';return;}
   const all=entries(d),es=all.filter(x=>!(x.e&&x.e.ovr)).reverse(),gaps=gapOf(all),ro=pkRo();
   const pv=(()=>{try{const L=entries(S.pk.prev&&S.pk.prev[id]).filter(x=>x.e&&!x.e.ovr&&x.e.run!==false);return L.length?L[L.length-1]:null;}catch(e){return null;}})();
   const firstRun=all.find(x=>x.e&&!x.e.ovr&&x.e.run!==false);
@@ -2081,7 +2162,7 @@ function paintLabForm(id){
 function paintLabList(id){
   const el=$('#lr_'+id);if(!el||!S.lab)return;
   const d=S.lab.docs[id];
-  if(d==null){el.innerHTML='<div class="empty">'+(S.db?'Loading…':'No database connection.')+'</div>';return;}
+  if(d==null){el.innerHTML='<div class="empty">'+((S.db||S.pre)?'Loading…':'No database connection.')+'</div>';return;}
   const es=entries(d).reverse();
   {const av=$('#la_'+id);if(av){const fs=es.map(x=>x.e&&x.e.v&&String(x.e.v.zone||'').trim().toLowerCase()==='final'?num(x.e.v.result):null).filter(v=>v!=null);
     if(S.date<S.today&&fs.length){av.hidden=false;av.textContent='Average final moisture '+fmtN(Math.round(fs.reduce((a,b)=>a+b,0)/fs.length*100)/100)+' % \u00b7 '+fs.length+' reading'+(fs.length>1?'s':'');}else av.hidden=true;}}
@@ -6041,18 +6122,19 @@ function dbRetry(){
   const t=setInterval(go,3000);window.addEventListener('online',go);
 }
 async function boot(){
-  renderTop();renderHome();
+  if(!S.drOn){S.drOn=1;drStart();}
+  renderTop();if(!S.pre&&!prePaint())renderHome();
   await getDb();
   if(S.user){
     try{S.isAdmin=!!(await S.user.canEdit());}catch(e){}
     try{const w=await S.user.can('data.write');S.canWrite=(w!==false);}catch(e){}
   }
-  if(!S.db){S.gate='nodb';renderTop();renderHome();dbRetry();return;}
+  if(!S.db){if(!S.pre){S.gate='nodb';renderHome();}renderTop();dbRetry();return;}
   S.db.doc('config/main').onSnapshot(snap=>{
     let c=DEFAULT_CFG;
     if(snap.exists){const d=snap.data();if(d&&Array.isArray(d.areas)&&d.areas.length&&Array.isArray(d.shifts))c=migrateCfg(JSON.parse(JSON.stringify(Object.assign({},DEFAULT_CFG,d,{operators:d.operators||[]}))));}
     const j=JSON.stringify(c);if(j===S.cfgJ&&S.cfgLoaded)return;
-    S.cfg=c;S.cfgJ=j;S.cfgLoaded=true;onCfg();
+    S.cfg=c;S.cfgJ=j;S.cfgLoaded=true;try{lsSet(CFGC_KEY,JSON.stringify(c));}catch(e){}onCfg();
   },e=>toast(dbErr(e),true));
   S.db.doc('logs/lines_status').onSnapshot(snap=>{S.lines=snap.exists&&snap.data().offs?snap.data().offs:{};lineRefresh();},e=>{});
   S.db.doc('logs/admin_acks').onSnapshot(snap=>{S.macks=snap.exists&&snap.data().a?snap.data().a:{};msgRefresh();},e=>{});
