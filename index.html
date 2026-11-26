@@ -298,6 +298,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .sfoot{display:flex;justify-content:flex-end;gap:10px;margin:14px -24px -22px;padding:14px 24px;border-top:1px solid var(--line);background:var(--panel2);border-radius:0 0 14px 14px}.smain>.row:last-child{justify-content:flex-end}
 @media (max-width:900px){.sgrid{grid-template-columns:1fr}.sside{position:static}.sgrid .snav{flex-direction:row;flex-wrap:wrap}.sgrid .snav .sng{flex-direction:row;flex-wrap:wrap}.sgrid .snav .sngl{width:100%}.sgrid .snav .snb{width:auto}.sr{grid-template-columns:1fr}.sr .sc{justify-content:flex-start}}
 .splash{text-align:center;padding:48px 20px}.splash .spin{width:34px;height:34px;margin:0 auto 14px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spn 1s linear infinite}@keyframes spn{to{transform:rotate(360deg)}}
+.ckbar{display:flex;align-items:center;gap:10px;margin:0 0 10px;min-height:40px}.ckpk{text-align:center}.ckpk input{width:22px;height:22px}.ckcmp th,.ckcmp td{padding:8px 10px;vertical-align:top}.ckcmp .ckl{color:var(--mut);white-space:nowrap}.ckcmp .ckh th{background:var(--panel2);text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}.ckcmp td.ckdf{background:var(--accentbg)}
 #npad{position:fixed;right:12px;top:50%;transform:translateY(-50%);width:248px;z-index:10050;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 12px 34px rgba(0,0,0,.5);display:grid;grid-template-columns:repeat(3,1fr);gap:8px}#npad .npl{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--mut);min-height:26px;margin:-2px -2px 0;padding:2px 6px;border-radius:8px;background:var(--panel2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;touch-action:none}#npad button{min-height:58px;font:600 26px var(--f-m,inherit);border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--ink);touch-action:manipulation}#npad button:active{background:var(--accentbg)}#npad .npn{grid-column:span 2;font:600 18px var(--f-b,inherit);background:var(--accent);color:var(--onaccent);border-color:var(--accent)}#npad .npd{font:600 18px var(--f-b,inherit)}@media (max-height:560px){#npad button{min-height:46px;font-size:22px}}@media (max-width:700px){#npad{left:8px;right:8px;top:auto;bottom:8px;transform:none;width:auto}}
 #rmDlg h2{font-size:22px}#rmDlg .fld .ir input,#rmDlg .fld .ir select{font-size:16px!important;min-height:42px!important;padding-top:4px;padding-bottom:4px}#rmDlg .fld .fl,#rmDlg .l{font-size:13px}#rmDlg .fld .ir i{font-size:13px}#rmDlg .rmh{margin:12px 0 6px;font-size:14px}#rmDlg .dlg{padding:18px}#rmDlg .btn.big{min-height:48px;font-size:17px}#rmKindSel{font-size:20px;min-height:54px}label.l:has(#rmKindSel){font-size:15px}
 #rawSec .hint{display:none}#rawSec .fields{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}#rawSec fieldset.grp{padding:8px 10px 10px;margin:0 0 8px}#rawSec legend{font-size:13px;padding:0 6px}#rawSec .fld .fl{font-size:13px}#rawSec .fld .ir input{font-size:17px!important;min-height:42px!important}#rawSec .fld .ir i{font-size:12px}#rawSec .btn.big{min-height:46px;font-size:16px}
@@ -1291,7 +1292,7 @@ setInterval(()=>{
     refreshRecent();paintAreaIssues();
   }
   if(S.view==='rm'&&S.rm&&S.rm.rows&&!$('#rmDlg'))paintRmList();
-  if(S.view==='ck'&&S.ck&&S.ck.rows&&!$('#ckDlg'))paintCkList();
+  if(S.view==='ck'&&S.ck&&S.ck.rows&&!$('#ckDlg')&&!$('#ckCmp'))paintCkList();
   if(S.view==='raw'&&S.raw){if(S.unlock&&S.unlock.exp<=Date.now())S.unlock=null;paintRawStatus();if(rawReady()&&!$('#dlg'))paintRawLock();}
   try{const rt=rawToday();if(S.rawTd!==rt){const od=S.rawTd;S.rawTd=rt;if(od&&S.view==='raw'&&S.raw&&S.raw.date===od&&!adminEff()&&!RAWL.some(a=>S.raw.dirty[a])){S.raw.date=rt;S.raw.docs={pack_mac:null,pack_spa:null};S.raw.regr=null;S.raw.x={};const inf=rawInfo(rt);if(inf){const k=rawSlots().findIndex(q=>q.s===inf.sl.s);if(k>=0)S.raw.sel=k;}subRaw();rawRefresh();}}}catch(e){}
   if(S.view==='home')paintRawCard();
@@ -2441,16 +2442,52 @@ function ckViewHtml(r){
    '<div class="muted small">Tested '+esc(r.date)+' '+hm(r.min)+' by '+nmH(e.by)+(e.editedBy?' (edited by '+nmH(e.editedBy)+')':'')+(e.note?'<br>Note: '+esc(e.note):'')+'</div>'+
    '<div class="row" style="margin-top:10px"><button type="button" class="btn pri ckEd">'+(editLeft(e)>0?'Edit ('+left5(editLeft(e))+' left)':'Edit')+'</button></div>';
 }
-if(!window.__ckOut){window.__ckOut=1;document.addEventListener('click',ev=>{if(S.view!=='ck'||!S.ck||!S.ck.open)return;if(ev.target.closest&&ev.target.closest('#ckList tr.ckr,#ckList tr.ckx,.ovl'))return;S.ck.open=null;paintCkList();},true);}
+if(!window.__ckOut){window.__ckOut=1;document.addEventListener('click',ev=>{if(S.view!=='ck'||!S.ck||!S.ck.open)return;if(ev.target.closest&&ev.target.closest('#ckList tr.ckr,#ckList tr.ckx,#ckCmpBar,.ovl'))return;S.ck.open=null;paintCkList();},true);}
+/* compare two saved cooking tests side by side: A = older, B = newer, with the change between them */
+function openCkCompare(ra,rb){
+  const w=document.createElement('div');w.id='ckCmp';w.className='ovl';
+  const draw=()=>{
+    const A=ra.e.v||{},B=rb.e.v||{},cA=A.res||ckCalc(A),cB=B.res||ckCalc(B);
+    const f=(x,u)=>x==null?'–':fmtN(x)+(u?' <small>'+esc(u)+'</small>':'');
+    const dl=(a,b,dec,unit)=>{if(a==null||b==null)return '–';const d=b-a;if(Math.abs(d)<Math.pow(10,-dec)/2)return '<span class="muted">same</span>';const t=(d>0?'+':'−')+Math.abs(d).toFixed(dec)+(unit?' '+esc(unit):'');const pc=a!==0?' <small>('+(d>0?'+':'−')+Math.abs(d/a*100).toFixed(1)+' %)</small>':'';return '<b>'+t+'</b>'+pc;};
+    const same=(x,y)=>String(x==null?'':x)===String(y==null?'':y);
+    const row=(l,x,y,dx,dy)=>'<tr><td class="ckl">'+esc(l)+'</td><td'+(same(dx,dy)?'':' class="ckdf"')+'>'+x+'</td><td'+(same(dx,dy)?'':' class="ckdf"')+'>'+y+'</td><td></td></tr>';
+    const txt=(l,k)=>row(l,esc(A[k]||'–'),esc(B[k]||'–'),A[k],B[k]);
+    const blend=v=>(v.flourSup||'–')+' · '+(v.flourPct!=null?fmtN(v.flourPct)+' %':'–');
+    const blend2=v=>(v.semoSup||'–')+' · '+(v.semoPct!=null?fmtN(v.semoPct)+' %':'–');
+    const sec=t=>'<tr class="ckh"><th colspan="4">'+t+'</th></tr>';
+    const meas=[['Dry pasta weight','wd','g',A.wd,B.wd,1],['Pasta moisture','moist','%',A.moist,B.moist,1],['Dry volume','vd','mL',cA.vd,cB.vd,0]];
+    el.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:860px;width:96vw"><div class="row" style="justify-content:space-between;align-items:center;gap:10px"><h2 style="margin:0">Compare cooking tests</h2><button type="button" class="btn" id="ckCmpSw">⇄ Swap</button></div>'+
+     '<div class="tscroll" style="margin-top:10px"><table class="elt ckcmp"><thead><tr><th></th><th>A · '+esc(ra.date.slice(5))+' '+hm(ra.min)+'</th><th>B · '+esc(rb.date.slice(5))+' '+hm(rb.min)+'</th><th>Change (B − A)</th></tr></thead><tbody>'+
+     sec('Sample')+txt('Product','product')+txt('Lot','lot')+row('Flour',esc(blend(A)),esc(blend(B)),blend(A),blend(B))+row('Semolina',esc(blend2(A)),esc(blend2(B)),blend2(A),blend2(B))+
+     ((A.regrindPct!=null||B.regrindPct!=null)?row('Regrind',f(A.regrindPct,'%'),f(B.regrindPct,'%'),A.regrindPct,B.regrindPct):'')+
+     row('Tested by',nmH(ra.e.by),nmH(rb.e.by),ra.e.by,rb.e.by)+
+     sec('Measured')+meas.map(m=>'<tr><td class="ckl">'+m[0]+'</td><td>'+f(m[3],m[2])+'</td><td>'+f(m[4],m[2])+'</td><td>'+dl(m[3],m[4],m[5],m[2])+'</td></tr>').join('')+
+     sec('Results')+CK_RES.map(q=>'<tr><td class="ckl"><b>'+esc(q[1])+'</b></td><td>'+ckVal(q[0],cA[q[0]],q[3],q[2])+'</td><td>'+ckVal(q[0],cB[q[0]],q[3],q[2])+'</td><td>'+dl(cA[q[0]],cB[q[0]],q[3],q[2])+'</td></tr>').join('')+
+     '</tbody></table></div>'+
+     ((A.note||B.note)?'<div class="muted small" style="margin-top:8px">'+(A.note?'A note: '+esc(A.note)+'<br>':'')+(B.note?'B note: '+esc(B.note):'')+'</div>':'')+
+     '<div class="row" style="margin-top:12px;justify-content:flex-end"><button type="button" class="btn pri" id="ckCmpX">Close</button></div></div>';
+    $('#ckCmpX',el).onclick=()=>w.remove();
+    $('#ckCmpSw',el).onclick=()=>{const t=ra;ra=rb;rb=t;draw();};
+  };
+  const el=w;document.body.appendChild(w);draw();
+  w.addEventListener('click',e=>{if(e.target===w)w.remove();});
+}
 function paintCkList(){
   const el=$('#ckList');if(!el||!S.ck)return;
   if(S.ck.rows==null){el.innerHTML='<div class="empty">Loading…</div>';return;}
   const rows=S.ck.rows;
   if(!rows.length){el.innerHTML='<div class="empty">No cooking tests in the last 14 days.</div>';return;}
-  el.innerHTML='<table class="elt labt"><thead><tr><th>Date</th><th>Product</th><th>Flour / semolina</th><th>Cook time</th><th>Absorb.</th><th>By</th></tr></thead><tbody>'+rows.map((r,i)=>{const v=r.e.v||{},c=v.res||ckCalc(v),key=r.date+'|'+r.k,op=S.ck.open===key;
+  const sel=S.ck.sel=(S.ck.sel||[]).filter(k=>rows.some(r=>r.date+'|'+r.k===k));
+  const bar=sel.length===2?'<div class="ckbar" id="ckCmpBar"><b>2 tests selected</b><button type="button" class="btn pri" id="ckCmpGo">Compare</button><button type="button" class="btn" id="ckCmpClr">Clear</button></div>':'<div class="ckbar muted small" id="ckCmpBar">'+(sel.length===1?'Tick one more test to compare.':'Tick two tests to compare them side by side.')+(sel.length?' <button type="button" class="btn" id="ckCmpClr">Clear</button>':'')+'</div>';
+  el.innerHTML=bar+'<table class="elt labt"><thead><tr><th style="width:34px"></th><th>Date</th><th>Product</th><th>Flour / semolina</th><th>Cook time</th><th>Absorb.</th><th>By</th></tr></thead><tbody>'+rows.map((r,i)=>{const v=r.e.v||{},c=v.res||ckCalc(v),key=r.date+'|'+r.k,op=S.ck.open===key;
     const mix=(v.flourPct!=null?fmtN(v.flourPct):'–')+' / '+(v.semoPct!=null?fmtN(v.semoPct):'–')+' %'+(v.regrindPct!=null?' + '+fmtN(v.regrindPct)+' regrind':'');
-    return '<tr class="clk ckr'+(op?' rmopen':'')+'" data-i="'+i+'"><td class="mono"><span class="rmar">'+(op?'▼':'▶')+'</span> '+esc(r.date.slice(5))+' '+hm(r.min)+'</td><td><b>'+esc(v.product||'–')+'</b>'+(editLeft(r.e)>0?' <span class="chip ok">editable · '+Math.ceil(editLeft(r.e)/60000)+' min left</span>':'')+'</td><td><span class="muted small">'+esc((v.flourSup||'–')+' / '+(v.semoSup||'–'))+'</span><div>'+esc(mix)+'</div></td><td class="labres">'+ckVal('oct',c.oct,1,'min')+'</td><td class="labres">'+ckVal('abs',c.abs,1,'%')+'</td><td><b>'+nmH(r.e.by)+'</b>'+(r.e.editedBy?' <span class="edi" title="Edited by '+esc(r.e.editedBy)+'">✎</span>':'')+'</td></tr>'+(op?'<tr class="ckx"><td colspan="6">'+ckViewHtml(r)+'</td></tr>':'');}).join('')+'</tbody></table><p class="muted small" style="margin:8px 0 0">Tap a line to see all the results.</p>';
+    return '<tr class="clk ckr'+(op?' rmopen':'')+'" data-i="'+i+'"><td class="ckpk"><input type="checkbox" data-sel="'+esc(key)+'" aria-label="Select for comparison"'+(sel.indexOf(key)>=0?' checked':'')+'></td><td class="mono"><span class="rmar">'+(op?'▼':'▶')+'</span> '+esc(r.date.slice(5))+' '+hm(r.min)+'</td><td><b>'+esc(v.product||'–')+'</b>'+(editLeft(r.e)>0?' <span class="chip ok">editable · '+Math.ceil(editLeft(r.e)/60000)+' min left</span>':'')+'</td><td><span class="muted small">'+esc((v.flourSup||'–')+' / '+(v.semoSup||'–'))+'</span><div>'+esc(mix)+'</div></td><td class="labres">'+ckVal('oct',c.oct,1,'min')+'</td><td class="labres">'+ckVal('abs',c.abs,1,'%')+'</td><td><b>'+nmH(r.e.by)+'</b>'+(r.e.editedBy?' <span class="edi" title="Edited by '+esc(r.e.editedBy)+'">✎</span>':'')+'</td></tr>'+(op?'<tr class="ckx"><td colspan="7">'+ckViewHtml(r)+'</td></tr>':'');}).join('')+'</tbody></table><p class="muted small" style="margin:8px 0 0">Tap a line to see all the results.</p>';
   $$('tr.ckr',el).forEach(tr=>tr.onclick=()=>{const r=rows[Number(tr.dataset.i)],key=r.date+'|'+r.k;S.ck.open=S.ck.open===key?null:key;paintCkList();});
+  $$('input[data-sel]',el).forEach(cb=>{cb.onclick=ev=>ev.stopPropagation();cb.onchange=()=>{const k=cb.dataset.sel;let a=S.ck.sel.filter(x=>x!==k);if(cb.checked){a.push(k);if(a.length>2)a=a.slice(-2);}S.ck.sel=a;paintCkList();};});
+  $$('.ckpk',el).forEach(td=>td.onclick=ev=>ev.stopPropagation());
+  const clr=$('#ckCmpClr',el);if(clr)clr.onclick=()=>{S.ck.sel=[];paintCkList();};
+  const go=$('#ckCmpGo',el);if(go)go.onclick=()=>{const a=sel.map(k=>rows.find(r=>r.date+'|'+r.k===k)).filter(Boolean);if(a.length===2)openCkCompare(a[1],a[0]);};
   const ox=rows.find(r=>r.date+'|'+r.k===S.ck.open);
   $$('.ckEd',el).forEach(b=>b.onclick=ev=>{ev.stopPropagation();if(!ox)return;S.ck.edit={date:ox.date,k:ox.k};openCkForm(ox);});
 }
