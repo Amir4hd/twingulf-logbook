@@ -479,7 +479,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v148';
+const APP_V='plant-v149';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -516,7 +516,7 @@ function npShow(inp,root){
         p.addEventListener('pointermove',mv);p.addEventListener('pointerup',up);p.addEventListener('pointercancel',up);return;}
       const b=e.target.closest('button');if(!b||!npInp)return;const k=b.dataset.k,i=npInp;
       if(k==='done'){i.blur();npHide();return;}
-      if(k==='next'){const all=$$('input[data-np="1"]',i.closest('.ovl')||document).filter(x=>!x.disabled);const n=all[all.indexOf(i)+1];if(n){n.focus();n.scrollIntoView({block:'center'});}else{i.blur();npHide();}return;}
+      if(k==='next'){const all=$$('input[data-np="1"]',i.closest('.ovl,[data-npscope]')||document).filter(x=>!x.disabled);const n=all[all.indexOf(i)+1];if(n){n.focus();n.scrollIntoView({block:'center'});}else{i.blur();npHide();}return;}
       let v=npFresh?'':String(i.value||'');npFresh=false;
       if(k==='⌫'){v=String(i.value||'').slice(0,-1);}
       else if(k==='.'){if(v.indexOf('.')<0)v=(v===''?'0':v)+'.';}
@@ -527,12 +527,14 @@ function npShow(inp,root){
   const fl=inp.closest('.fld'),lb=fl&&$('.fl',fl);$('#npL',p).textContent=lb?lb.textContent:'';
   root.classList.add('npOn');
 }
+function npConv(root){$$('input[type=number]',root).forEach(i=>{i.type='text';i.setAttribute('inputmode','none');i.dataset.np='1';});}
 function numPadAttach(root){
   if(!npOn())return;
   /* text boxes that look like number boxes: a half-typed number such as "12." is kept as typed */
-  $$('input[type=number]',root).forEach(i=>{i.type='text';i.setAttribute('inputmode','none');i.dataset.np='1';});
+  npConv(root);
+  if(root._np)return;root._np=1;
   root.addEventListener('focusin',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.np==='1')npShow(t,root);else npHide();});
-  const mo=new MutationObserver(()=>{if(!document.body.contains(root)){npHide();mo.disconnect();}});mo.observe(document.body,{childList:true});
+  const mo=new MutationObserver(()=>{if(!document.body.contains(root)){npHide();mo.disconnect();root._np=0;}});mo.observe(document.body,{childList:true,subtree:true});
 }
 
 function applyFs(){try{document.documentElement.style.zoom=fsOn()?'1.15':'';}catch(e){}}
@@ -2058,6 +2060,7 @@ function paintLabForm(id){
   const a=area(id),e=labEntry(id),v=(e&&e.v)||{};
   if(labRo()){box.innerHTML='<div class="status">'+esc(S.date)+': read only. Go to Today to enter a reading.</div><div class="row" style="margin-top:8px"><button type="button" class="btn sm" data-lhu>\ud83d\udd13 Lab head: unlock editing</button></div>';const ub=$('[data-lhu]',box);if(ub)ub.onclick=labHeadUnlock;return;}
   box.innerHTML='<div class="labfs">'+a.params.map(p=>fieldHTML(p,v[p.id])).join('')+'</div><label class="l">Notes<input type="text" class="lnote" placeholder="Optional" value="'+esc(e?e.note||'':'')+'"></label><div class="status" data-lm></div><div class="row"><button type="button" class="btn pri big" data-ls>'+(e?'Save changes':'Save')+'</button>'+(e?'<button type="button" class="btn big" data-ln>New entry</button>':'')+'</div>';
+  box.dataset.npscope='1';numPadAttach(box);
   const m=$('[data-lm]',box);
   if(e){const l=editLeft(e);m.className='status '+(l>0?'ok':'bad');m.textContent=l>0?'Saved by '+e.by+'. You can change it for '+left5(l)+' more.':'Saved by '+e.by+'. Locked: only the lab head or a shift leader can change it now.';}
   else m.textContent='Fill the readings and press Save.';
