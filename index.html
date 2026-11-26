@@ -296,6 +296,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .scard .sgh{margin:20px 0 4px;font:700 12px var(--f-b,inherit);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}.sr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 24px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}.sr:last-of-type{border-bottom:0}.sr .sl{display:flex;flex-direction:column;gap:3px;min-width:0}.sr .sl b{font-size:16px}.sr .sc{display:flex;justify-content:flex-end}.sr .sc .fld{width:210px}.sr .sc .ir{min-height:44px}.sr .sc .ir input{font-size:17px;min-height:40px;text-align:right;width:100%}.sr .sc .ir i{font-style:normal;font-size:13px;padding-right:10px;color:var(--mut)}.sr .sc input[type=text]{text-align:left}.sr .sc .fld.wide{width:min(360px,100%)}.sck{width:28px;height:28px;accent-color:var(--accent)}
 .sfoot{display:flex;justify-content:flex-end;gap:10px;margin:14px -24px -22px;padding:14px 24px;border-top:1px solid var(--line);background:var(--panel2);border-radius:0 0 14px 14px}.smain>.row:last-child{justify-content:flex-end}
 @media (max-width:900px){.sgrid{grid-template-columns:1fr}.sside{position:static}.sgrid .snav{flex-direction:row;flex-wrap:wrap}.sgrid .snav .sng{flex-direction:row;flex-wrap:wrap}.sgrid .snav .sngl{width:100%}.sgrid .snav .snb{width:auto}.sr{grid-template-columns:1fr}.sr .sc{justify-content:flex-start}}
+#npad{position:fixed;right:12px;top:50%;transform:translateY(-50%);width:248px;z-index:10050;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 12px 34px rgba(0,0,0,.5);display:grid;grid-template-columns:repeat(3,1fr);gap:8px}#npad .npl{grid-column:1/-1;font-size:13px;color:var(--mut);min-height:18px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#npad button{min-height:58px;font:600 26px var(--f-m,inherit);border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--ink);touch-action:manipulation}#npad button:active{background:var(--accentbg)}#npad .npn{grid-column:span 2;font:600 18px var(--f-b,inherit);background:var(--accent);color:var(--onaccent);border-color:var(--accent)}#npad .npd{font:600 18px var(--f-b,inherit)}.ovl.npOn{padding-right:276px;box-sizing:border-box}@media (max-height:560px){#npad button{min-height:46px;font-size:22px}}@media (max-width:700px){#npad{left:8px;right:8px;top:auto;bottom:8px;transform:none;width:auto}.ovl.npOn{padding-right:16px;padding-bottom:330px}}
 #rmDlg h2{font-size:22px}#rmDlg .fld .ir input,#rmDlg .fld .ir select{font-size:16px!important;min-height:42px!important;padding-top:4px;padding-bottom:4px}#rmDlg .fld .fl,#rmDlg .l{font-size:13px}#rmDlg .fld .ir i{font-size:13px}#rmDlg .rmh{margin:12px 0 6px;font-size:14px}#rmDlg .dlg{padding:18px}#rmDlg .btn.big{min-height:48px;font-size:17px}#rmKindSel{font-size:20px;min-height:54px}label.l:has(#rmKindSel){font-size:15px}
 #rawSec .hint{display:none}#rawSec .fields{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}#rawSec fieldset.grp{padding:8px 10px 10px;margin:0 0 8px}#rawSec legend{font-size:13px;padding:0 6px}#rawSec .fld .fl{font-size:13px}#rawSec .fld .ir input{font-size:17px!important;min-height:42px!important}#rawSec .fld .ir i{font-size:12px}#rawSec .btn.big{min-height:46px;font-size:16px}
 .rawsec{margin-top:22px!important;padding-top:16px!important;border-top:2px solid var(--line)!important}
@@ -478,7 +479,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v146';
+const APP_V='plant-v147';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -489,6 +490,42 @@ function applyTheme(){
   const tv=document.getElementById('themeVal');if(tv)tv.textContent=themeLbl()+' ›';
 }
 const fsOn=()=>lsGet('plant.fs')==='l';
+/* ---------- on-screen number pad (tablets): replaces the big system keyboard for number boxes in the lab windows ---------- */
+const npOn=()=>{const v=lsGet('plant.np');return v==='1'||(v!=='0'&&!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches));};
+let npInp=null,npFresh=false;
+function npHide(){const p=$('#npad');if(p)p.remove();$$('.ovl.npOn').forEach(o=>o.classList.remove('npOn'));npInp=null;}
+function npFire(i){i.dispatchEvent(new Event('input',{bubbles:true}));}
+function npShow(inp,root){
+  npInp=inp;npFresh=true;
+  let p=$('#npad');
+  if(!p){
+    p=document.createElement('div');p.id='npad';
+    p.innerHTML='<div class="npl" id="npL"></div>'+['7','8','9','4','5','6','1','2','3','.','0','⌫'].map(k=>'<button type="button" data-k="'+k+'" aria-label="'+(k==='⌫'?'Backspace':k)+'">'+k+'</button>').join('')+'<button type="button" class="npn" data-k="next">Next ▸</button><button type="button" class="npd" data-k="done">Done</button>';
+    document.body.appendChild(p);
+    const stop=e=>e.preventDefault();
+    p.addEventListener('mousedown',stop);p.addEventListener('touchstart',stop,{passive:false});
+    p.addEventListener('click',e=>{
+      const b=e.target.closest('button');if(!b||!npInp)return;const k=b.dataset.k,i=npInp;
+      if(k==='done'){i.blur();npHide();return;}
+      if(k==='next'){const all=$$('input[data-np="1"]',i.closest('.ovl')||document).filter(x=>!x.disabled);const n=all[all.indexOf(i)+1];if(n){n.focus();n.scrollIntoView({block:'center'});}else{i.blur();npHide();}return;}
+      let v=npFresh?'':String(i.value||'');npFresh=false;
+      if(k==='⌫'){v=String(i.value||'').slice(0,-1);}
+      else if(k==='.'){if(v.indexOf('.')<0)v=(v===''?'0':v)+'.';}
+      else v+=k;
+      i.value=v;npFire(i);
+    });
+  }
+  const fl=inp.closest('.fld'),lb=fl&&$('.fl',fl);$('#npL',p).textContent=lb?lb.textContent:'';
+  root.classList.add('npOn');
+}
+function numPadAttach(root){
+  if(!npOn())return;
+  /* text boxes that look like number boxes: a half-typed number such as "12." is kept as typed */
+  $$('input[type=number]',root).forEach(i=>{i.type='text';i.setAttribute('inputmode','none');i.dataset.np='1';});
+  root.addEventListener('focusin',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.np==='1')npShow(t,root);else npHide();});
+  const mo=new MutationObserver(()=>{if(!document.body.contains(root)){npHide();mo.disconnect();}});mo.observe(document.body,{childList:true});
+}
+
 function applyFs(){try{document.documentElement.style.zoom=fsOn()?'1.15':'';}catch(e){}}
 applyTheme();applyFs();setInterval(applyTheme,60000);
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#themeBtn');if(b){lsSet('plant.theme',THEMES[(THEMES.indexOf(themeMode())+1)%THEMES.length]);applyTheme();}},true);
@@ -1059,7 +1096,7 @@ function toggleTopMenu(){
    '<div class="tms">Display</div><div class="tmc">'+
    '<button type="button" class="tmr" id="langBtn" role="menuitem" title="'+(LANG==='fr'?'Switch to English':'Passer en français')+'"><span class="ti">🌐</span>Language<span class="tv" id="langVal" data-nolang>'+(LANG==='fr'?'Français':'English')+' ›</span></button>'+
    '<button type="button" class="tmr" id="themeBtn" role="menuitem"><span class="ti">🌓</span>Theme<span class="tv" id="themeVal" data-nolang>'+themeLbl()+' ›</span></button>'+
-   '<button type="button" class="tmr" id="tmFs" role="menuitem"><span class="ti">🔠</span>Large text'+sw(fsOn())+'</button>'+
+   '<button type="button" class="tmr" id="tmFs" role="menuitem"><span class="ti">🔠</span>Large text'+sw(fsOn())+'</button>'+'<button type="button" class="tmr" id="tmNp" role="menuitem"><span class="ti">🔢</span>Number pad'+sw(npOn())+'</button>'+
    (S.dev&&S.dev.place==='admin'?'<button type="button" class="tmr" id="tmSnd" role="menuitem"><span class="ti">🔔</span>Sound'+sw(soundOn())+'</button>':'')+'</div>'+
    '<div class="tms">Tablet</div><div class="tmc">'+(canPrint()?'<button type="button" class="tmr" id="prBtn" role="menuitem"><span class="ti">🖨</span>Print<span class="tv">›</span></button>':'')+
    '<button type="button" class="tmr" id="tmHelp" role="menuitem"><span class="ti">❓</span>Help<span class="tv">›</span></button>'+
@@ -1074,6 +1111,7 @@ function toggleTopMenu(){
   const tsw=(b,on)=>{const q=$('.tmsw',b);if(q){q.classList.toggle('on',on);q.setAttribute('aria-checked',on?'true':'false');}};
   $('#tmX',m).onclick=()=>closeTopMenu();
   const tsd=$('#tmSnd',m);if(tsd)tsd.onclick=ev=>{const on=!soundOn();lsSet('plant.sound',on?'1':'0');tsw(ev.currentTarget,on);if(on)try{beep();}catch(e){}};
+  $('#tmNp',m).onclick=ev=>{const on=!npOn();lsSet('plant.np',on?'1':'0');tsw(ev.currentTarget,on);};
   $('#tmFs',m).onclick=ev=>{lsSet('plant.fs',fsOn()?'n':'l');applyFs();tsw(ev.currentTarget,fsOn());setBH();};
   $('#tmRef',m).onclick=async()=>{closeTopMenu();if(S.dirty&&!await ask({title:'Refresh the app?',msg:'You have readings typed but not saved. They will be lost.',ok:'Yes, refresh'}))return;refreshApp();};
   $('#tmAbout',m).onclick=()=>{closeTopMenu();aboutDlg();};
@@ -2109,7 +2147,7 @@ function rmOvl(id,html){
   const old=$('#'+id);if(old)old.remove();
   const w=document.createElement('div');w.id=id;w.className='ovl';
   w.innerHTML='<div class="dlg" role="dialog" aria-modal="true" style="max-width:680px;max-height:92vh;overflow:auto">'+html+'</div>';
-  document.body.appendChild(w);return w;
+  document.body.appendChild(w);numPadAttach(w);return w;
 }
 function openRmChoose(){
   const w=rmOvl('rmCh','<h2>What do you want to enter?</h2><p>'+esc(RM_K[S.rm.kind])+'</p><div class="row"><button type="button" class="btn pri big" data-m="flour" style="flex:1">Flour</button><button type="button" class="btn pri big" data-m="semo" style="flex:1">Semolina</button></div><button type="button" class="btn big cyan" id="rmChX" style="width:100%;margin-top:10px">Cancel</button>');
@@ -2265,7 +2303,7 @@ function openCkForm(er){
    '<section class="cks"><h4>Results <small>worked out for you</small></h4><div class="ckres" id="ckCalc"></div></section>'+
    '<label class="l" style="margin:4px 0 12px">Notes<input type="text" data-r="note" placeholder="Optional" value="'+esc(er?er.e.note||'':'')+'"></label></div></div></div>'+
    '<div class="ckft"><button type="button" class="btn big cyan" id="ckX">Cancel</button><button type="button" class="btn pri big" id="ckSv">Save</button></div></div>';
-  document.body.appendChild(w);
+  document.body.appendChild(w);numPadAttach(w);
   const ins=()=>{const o={};$$('[data-r]',w).forEach(i=>{o[i.dataset.r]=i.value;});return o;};
   const paint=()=>{
     const o=ins(),c=ckCalc(o),el=$('#ckCalc',w);
