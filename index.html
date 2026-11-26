@@ -478,7 +478,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v145';
+const APP_V='plant-v146';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -5331,11 +5331,11 @@ function saveRawSetup(){
 }
 const SET_ICO={plant:'<path d="M2 21h20"/><path d="M4 21V10l6 4v-4l6 4V5h4v16"/>',raw:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/>',rm:'<path d="M12 22V9"/><path d="M12 9c-2-1-3-3-3-5 2 1 3 3 3 5z"/><path d="M12 14c-2-1-4-1-5-3 2 0 4 1 5 3z"/><path d="M12 14c2-1 4-1 5-3-2 0-4 1-5 3z"/><path d="M12 19c-2-1-4-1-5-3 2 0 4 1 5 3z"/><path d="M12 19c2-1 4-1 5-3-2 0-4 1-5 3z"/>',ck:'<path d="M4 11h16v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-6z"/><path d="M2 11h2M20 11h2"/><path d="M8 7c0-1.5 1-1.5 1-3M12 7c0-1.5 1-1.5 1-3M16 7c0-1.5 1-1.5 1-3"/>',ops:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4.5 1.8 4.5 4.5"/>',acct:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9"/><path d="M16 7l3 3M14 9l2 2"/>',press:'<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/>',pack:'<path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/>',lab:'<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7.5 15h9"/>',boiler:'<path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9z"/>',ro:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',other:'<rect x="4" y="4" width="16" height="16" rx="3"/>'};
 const setIco=k=>'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(SET_ICO[k]||SET_ICO.other)+'</svg>';
-const SET_GEN=[['plant','Plant','plant'],['raw','Raw materials','raw'],['rm','Flour & semolina tests','rm'],['ck','Cooking test','ck'],['ops','Operators and passwords','ops'],['acct','Tablet account passwords','acct']];
-const SET_CATS=[['Press','press',['macaroni','spaghetti']],['Packaging','pack',['pack_mac','pack_spa']],['Laboratory','lab',['lab_mac','lab_spa']],['Boiler & Chiller','boiler',['boiler']],['Reverse Osmosis','ro',['ro']]];
-const SET_SUB={macaroni:'Macaroni',spaghetti:'Spaghetti',pack_mac:'Macaroni',pack_spa:'Spaghetti',lab_mac:'Macaroni',lab_spa:'Spaghetti'};
+const SET_GEN=[['plant','Plant','plant'],['raw','Raw materials','raw'],['ops','Operators and passwords','ops'],['acct','Tablet account passwords','acct']];
+const SET_CATS=[['Press','press',['macaroni','spaghetti']],['Packaging','pack',['pack_mac','pack_spa']],['Laboratory','lab',['lab_mac','lab_spa','rm','ck']],['Boiler & Chiller','boiler',['boiler']],['Reverse Osmosis','ro',['ro']]];
+const SET_SUB={rm:'Flour & semolina',ck:'Cooking test',macaroni:'Macaroni',spaghetti:'Spaghetti',pack_mac:'Macaroni',pack_spa:'Spaghetti',lab_mac:'Macaroni',lab_spa:'Spaghetti'};
 function setupMenu(c,sec){
-  const have=id=>c.areas.some(a=>a.id===id),used={};
+  const have=id=>id==='rm'||id==='ck'||c.areas.some(a=>a.id===id),used={};
   const cats=SET_CATS.map(k=>({n:k[0],ic:k[1],ids:k[2].filter(have)})).filter(k=>k.ids.length);
   cats.forEach(k=>k.ids.forEach(id=>{used[id]=1;}));
   const rest=c.areas.filter(a=>!used[a.id]);if(rest.length)cats.push({n:'Other',ic:'other',ids:rest.map(a=>a.id)});
@@ -5343,7 +5343,7 @@ function setupMenu(c,sec){
   const gen=SET_GEN.map(g=>'<button type="button" class="snb'+(g[0]===sec?' on':'')+'" data-s="'+g[0]+'" role="tab" aria-selected="'+(g[0]===sec)+'"><span aria-hidden="true">'+setIco(g[2])+'</span>'+esc(g[1])+'</button>').join('');
   const ct=cats.map(k=>'<button type="button" class="snb'+(k===cur?' on':'')+'" data-s="'+esc(k.ids[0])+'" role="tab" aria-selected="'+(k===cur)+'"><span aria-hidden="true">'+setIco(k.ic)+'</span>'+esc(k.n)+'</button>').join('');
   let sub='';
-  if(cur&&cur.ids.length>1)sub='<div class="sng sub"><div class="sngl">'+esc(cur.n)+' · choose the line</div><div class="sns" role="tablist">'+cur.ids.map(id=>{const a=c.areas.find(x=>x.id===id);return '<button type="button" class="'+(id===sec?'on':'')+'" data-s="'+esc(id)+'" role="tab" aria-selected="'+(id===sec)+'">'+esc(SET_SUB[id]||a.name)+'</button>';}).join('')+'</div></div>';
+  if(cur&&cur.ids.length>1)sub='<div class="sng sub"><div class="sngl">'+esc(cur.n)+' · choose</div><div class="sns" role="tablist">'+cur.ids.map(id=>{const a=c.areas.find(x=>x.id===id);return '<button type="button" class="'+(id===sec?'on':'')+'" data-s="'+esc(id)+'" role="tab" aria-selected="'+(id===sec)+'">'+esc(SET_SUB[id]||a.name)+'</button>';}).join('')+'</div></div>';
   window.__setupSub=sub?sub.replace('<div class="sng sub"><div class="sngl">','<div class="ssubl">').replace(/<\/div><div class="sns" role="tablist">/,'</div><div class="ssub" role="tablist">').replace(/<\/div><\/div>$/,'</div>'):'';
   return '<nav class="snav" aria-label="Setup sections"><div class="sng"><div class="sngl">General</div>'+gen+'</div><div class="sng"><div class="sngl">Lines and areas</div>'+ct+'</div></nav>';
 }
