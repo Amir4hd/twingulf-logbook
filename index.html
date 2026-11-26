@@ -296,7 +296,7 @@ details.d>summary{cursor:pointer;font:600 20px var(--f-d);text-transform:upperca
 .scard .sgh{margin:20px 0 4px;font:700 12px var(--f-b,inherit);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}.sr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 24px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}.sr:last-of-type{border-bottom:0}.sr .sl{display:flex;flex-direction:column;gap:3px;min-width:0}.sr .sl b{font-size:16px}.sr .sc{display:flex;justify-content:flex-end}.sr .sc .fld{width:210px}.sr .sc .ir{min-height:44px}.sr .sc .ir input{font-size:17px;min-height:40px;text-align:right;width:100%}.sr .sc .ir i{font-style:normal;font-size:13px;padding-right:10px;color:var(--mut)}.sr .sc input[type=text]{text-align:left}.sr .sc .fld.wide{width:min(360px,100%)}.sck{width:28px;height:28px;accent-color:var(--accent)}
 .sfoot{display:flex;justify-content:flex-end;gap:10px;margin:14px -24px -22px;padding:14px 24px;border-top:1px solid var(--line);background:var(--panel2);border-radius:0 0 14px 14px}.smain>.row:last-child{justify-content:flex-end}
 @media (max-width:900px){.sgrid{grid-template-columns:1fr}.sside{position:static}.sgrid .snav{flex-direction:row;flex-wrap:wrap}.sgrid .snav .sng{flex-direction:row;flex-wrap:wrap}.sgrid .snav .sngl{width:100%}.sgrid .snav .snb{width:auto}.sr{grid-template-columns:1fr}.sr .sc{justify-content:flex-start}}
-#npad{position:fixed;right:12px;top:50%;transform:translateY(-50%);width:248px;z-index:10050;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 12px 34px rgba(0,0,0,.5);display:grid;grid-template-columns:repeat(3,1fr);gap:8px}#npad .npl{grid-column:1/-1;font-size:13px;color:var(--mut);min-height:18px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#npad button{min-height:58px;font:600 26px var(--f-m,inherit);border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--ink);touch-action:manipulation}#npad button:active{background:var(--accentbg)}#npad .npn{grid-column:span 2;font:600 18px var(--f-b,inherit);background:var(--accent);color:var(--onaccent);border-color:var(--accent)}#npad .npd{font:600 18px var(--f-b,inherit)}.ovl.npOn{padding-right:276px;box-sizing:border-box}@media (max-height:560px){#npad button{min-height:46px;font-size:22px}}@media (max-width:700px){#npad{left:8px;right:8px;top:auto;bottom:8px;transform:none;width:auto}.ovl.npOn{padding-right:16px;padding-bottom:330px}}
+#npad{position:fixed;right:12px;top:50%;transform:translateY(-50%);width:248px;z-index:10050;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 12px 34px rgba(0,0,0,.5);display:grid;grid-template-columns:repeat(3,1fr);gap:8px}#npad .npl{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--mut);min-height:26px;margin:-2px -2px 0;padding:2px 6px;border-radius:8px;background:var(--panel2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;touch-action:none}#npad button{min-height:58px;font:600 26px var(--f-m,inherit);border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--ink);touch-action:manipulation}#npad button:active{background:var(--accentbg)}#npad .npn{grid-column:span 2;font:600 18px var(--f-b,inherit);background:var(--accent);color:var(--onaccent);border-color:var(--accent)}#npad .npd{font:600 18px var(--f-b,inherit)}@media (max-height:560px){#npad button{min-height:46px;font-size:22px}}@media (max-width:700px){#npad{left:8px;right:8px;top:auto;bottom:8px;transform:none;width:auto}}
 #rmDlg h2{font-size:22px}#rmDlg .fld .ir input,#rmDlg .fld .ir select{font-size:16px!important;min-height:42px!important;padding-top:4px;padding-bottom:4px}#rmDlg .fld .fl,#rmDlg .l{font-size:13px}#rmDlg .fld .ir i{font-size:13px}#rmDlg .rmh{margin:12px 0 6px;font-size:14px}#rmDlg .dlg{padding:18px}#rmDlg .btn.big{min-height:48px;font-size:17px}#rmKindSel{font-size:20px;min-height:54px}label.l:has(#rmKindSel){font-size:15px}
 #rawSec .hint{display:none}#rawSec .fields{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}#rawSec fieldset.grp{padding:8px 10px 10px;margin:0 0 8px}#rawSec legend{font-size:13px;padding:0 6px}#rawSec .fld .fl{font-size:13px}#rawSec .fld .ir input{font-size:17px!important;min-height:42px!important}#rawSec .fld .ir i{font-size:12px}#rawSec .btn.big{min-height:46px;font-size:16px}
 .rawsec{margin-top:22px!important;padding-top:16px!important;border-top:2px solid var(--line)!important}
@@ -479,7 +479,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v147';
+const APP_V='plant-v148';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -500,11 +500,20 @@ function npShow(inp,root){
   let p=$('#npad');
   if(!p){
     p=document.createElement('div');p.id='npad';
-    p.innerHTML='<div class="npl" id="npL"></div>'+['7','8','9','4','5','6','1','2','3','.','0','⌫'].map(k=>'<button type="button" data-k="'+k+'" aria-label="'+(k==='⌫'?'Backspace':k)+'">'+k+'</button>').join('')+'<button type="button" class="npn" data-k="next">Next ▸</button><button type="button" class="npd" data-k="done">Done</button>';
+    p.innerHTML='<div class="npl"><span aria-hidden="true">\u22ee\u22ee</span><span id="npL"></span></div>'+['7','8','9','4','5','6','1','2','3','.','0','⌫'].map(k=>'<button type="button" data-k="'+k+'" aria-label="'+(k==='⌫'?'Backspace':k)+'">'+k+'</button>').join('')+'<button type="button" class="npn" data-k="next">Next ▸</button><button type="button" class="npd" data-k="done">Done</button>';
     document.body.appendChild(p);
-    const stop=e=>e.preventDefault();
-    p.addEventListener('mousedown',stop);p.addEventListener('touchstart',stop,{passive:false});
-    p.addEventListener('click',e=>{
+    try{const sp=(lsGet('plant.npPos')||'').split(',').map(Number);if(sp.length===2&&isFinite(sp[0])&&isFinite(sp[1])){p.style.transform='none';p.style.right='auto';p.style.bottom='auto';p.style.left=Math.max(0,Math.min(innerWidth-p.offsetWidth,sp[0]))+'px';p.style.top=Math.max(0,Math.min(innerHeight-p.offsetHeight,sp[1]))+'px';}}catch(x){}
+    /* act on the first touch (pointerdown) and keep the focus in the number box; a click would never arrive after preventDefault on a touch screen */
+    p.addEventListener('mousedown',e=>e.preventDefault());
+    p.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      if(e.target.closest('.npl')){ /* drag the pad by its top bar */
+        const r=p.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;
+        p.style.transform='none';p.style.right='auto';p.style.bottom='auto';
+        try{p.setPointerCapture(e.pointerId);}catch(x){}
+        const mv=ev=>{const x=Math.max(0,Math.min(innerWidth-p.offsetWidth,ev.clientX-dx)),y=Math.max(0,Math.min(innerHeight-p.offsetHeight,ev.clientY-dy));p.style.left=x+'px';p.style.top=y+'px';};
+        const up=()=>{p.removeEventListener('pointermove',mv);p.removeEventListener('pointerup',up);p.removeEventListener('pointercancel',up);lsSet('plant.npPos',Math.round(parseFloat(p.style.left))+','+Math.round(parseFloat(p.style.top)));};
+        p.addEventListener('pointermove',mv);p.addEventListener('pointerup',up);p.addEventListener('pointercancel',up);return;}
       const b=e.target.closest('button');if(!b||!npInp)return;const k=b.dataset.k,i=npInp;
       if(k==='done'){i.blur();npHide();return;}
       if(k==='next'){const all=$$('input[data-np="1"]',i.closest('.ovl')||document).filter(x=>!x.disabled);const n=all[all.indexOf(i)+1];if(n){n.focus();n.scrollIntoView({block:'center'});}else{i.blur();npHide();}return;}
