@@ -483,7 +483,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v159';
+const APP_V='plant-v160';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -4492,13 +4492,13 @@ function prLab(date,docs){
 }
 const prIsProd=x=>x.e&&(x.e.run===false||(x.e.v&&(x.e.v.pallets!=null||x.e.v.ptype)));
 function prPackSide(a,es,mode,title){
-  const cols=5;
+  const cols=4;
   const blk=night=>{
     const rows=es.filter(x=>prIsDay(x.h)!==night&&prIsProd(x));let tot=0;
-    const body=rows.length?rows.map(x=>{const v=x.e.v||{};if(x.e.run===false)return '<tr><td>'+hm(x.min)+'</td><td colspan="2">Stopped'+(x.e.down?' · '+esc(x.e.down)+' min':'')+'</td><td class="op">'+prOp(x.e)+'</td></tr>';const c=num(v.pallets);if(c!=null)tot+=c;return '<tr><td>'+hm(x.min)+'</td><td>'+(c==null?'':esc(fmtN(c)))+'</td><td>'+esc(v.ptype||'')+'</td><td class="op">'+prOp(x.e)+'</td></tr>';}).join(''):'<tr><td colspan="4" class="em">No production</td></tr>';
-    return {html:(mode==='both'?'<tr class="pg"><td colspan="4">'+esc(prName(night))+'</td></tr>':'')+body+'<tr class="tt"><td>Total</td><td>'+(rows.length?esc(fmtN(tot)):'')+'</td><td colspan="2"></td></tr>',tot:tot};};
+    const body=rows.length?rows.map(x=>{const v=x.e.v||{};if(x.e.run===false)return '<tr><td>'+hm(x.min)+'</td><td colspan="2">Stopped'+(x.e.down?' · '+esc(x.e.down)+' min':'')+'</td></tr>';const c=num(v.pallets);if(c!=null)tot+=c;return '<tr><td>'+hm(x.min)+'</td><td>'+(c==null?'':esc(fmtN(c)))+'</td><td>'+esc(v.ptype||'')+'</td></tr>';}).join(''):'<tr><td colspan="3" class="em">No production</td></tr>';
+    return {html:(mode==='both'?'<tr class="pg"><td colspan="3">'+esc(prName(night))+'</td></tr>':'')+body+'<tr class="tt"><td>Total</td><td>'+(rows.length?esc(fmtN(tot)):'')+'</td><td></td></tr>',tot:tot};};
   const bs=prBands(mode).map(blk);
-  return '<h2 class="prs">'+esc(title)+'</h2><table class="prg prl"><thead><tr><th style="width:18%">Time</th><th style="width:24%">Cartons</th><th>Type</th><th style="width:24%">Operator</th></tr></thead><tbody>'+bs.map(x=>x.html).join('')+(bs.length>1?'<tr class="tt"><td>24 h</td><td>'+esc(fmtN(bs[0].tot+bs[1].tot))+'</td><td colspan="2"></td></tr>':'')+'</tbody></table>';
+  return '<h2 class="prs">'+esc(title)+'</h2><table class="prg prl"><thead><tr><th style="width:22%">Time</th><th style="width:28%">Cartons</th><th>Type</th></tr></thead><tbody>'+bs.map(x=>x.html).join('')+(bs.length>1?'<tr class="tt"><td>24 h</td><td>'+esc(fmtN(bs[0].tot+bs[1].tot))+'</td><td></td></tr>':'')+'</tbody></table>';
 }
 function prSlotVal(a,es,rg,sl,id){
   if(REGR.indexOf(id)>=0){const sv=sharedVal(rg,sl.s,id);if(sv!=null)return sv;}
@@ -4521,17 +4521,17 @@ function prPack(date,docs,rg,shift){
   const slots=packSlots(am),dsl=slots.filter(sl=>prIsDay(Math.floor(sl.s/60))),nsl=slots.filter(sl=>!prIsDay(Math.floor(sl.s/60)));
   const hasR=[[am,em],[as,es]].some(q=>slots.some(sl=>['film_waste','film_waste2','scotch','scotch2','dmg_carton','dmg_carton2','flour','semolina'].some(id=>prSlotVal(q[0],q[1],rg,sl,id)!=null)))||slots.some(sl=>REGR.some(id=>prSlotVal(am,em,rg,sl,id)!=null));
   if(!ran[0]&&!ran[1]&&!hasR)return '';
-  const mid=['regr_used','regr_prod'],side=['film_waste','film_waste2','scotch','scotch2','dmg_carton','dmg_carton2','flour','semolina'],nt={label:'Night total',slots:nsl};
+  const mid=['regr_used','regr_prod'],side=['film_waste','film_waste2','scotch','scotch2','dmg_carton','dmg_carton2','flour','semolina'];
   const nm=a=>a.name.replace(/^Packaging · /,'');
-  const ssl=night?nsl:dsl,tt=night?{label:'Total',slots:nsl}:null,sn=night?'Night shift':'Day shift';
+  const ssl=night?nsl:dsl,tot={label:'Total',slots:ssl},sn=night?'Night shift':'Day shift';
   let prod,raw,two=ran[0]&&ran[1];
   if(two){
     prod=[prPackSide(am,em,sm,nm(am)+' · '+sn),prPackSide(as,es,sm,nm(as)+' · '+sn)];
-    raw=[prRawTable(am,em,rg,ssl,side,nm(am),tt),prRawTable(am,em,rg,ssl,mid,'Regrinding',null),prRawTable(as,es,rg,ssl,side,nm(as),tt)];
+    raw=[prRawTable(am,em,rg,ssl,side,nm(am),tot),prRawTable(am,em,rg,ssl,mid,'Regrinding',tot),prRawTable(as,es,rg,ssl,side,nm(as),tot)];
   }else{
     const a=ran[0]||!ran[1]?am:as,e=a===am?em:es;
     prod=[prPackSide(a,e,sm,nm(a)+' · '+sn)];
-    raw=[prRawTable(a,e,rg,ssl,side,nm(a),tt),prRawTable(a,e,rg,ssl,mid,'Regrinding',null)];
+    raw=[prRawTable(a,e,rg,ssl,side,nm(a),tot),prRawTable(a,e,rg,ssl,mid,'Regrinding',tot)];
   }
   return '<section class="prsheet pp">'+prHead('Packaging',date,night?'Night shift · 19:00 – 07:00':'Day shift · 07:00 – 19:00')+
    '<div class="prtwo"'+(two?'':' style="grid-template-columns:1fr"')+'>'+prod.map(x=>'<div>'+x+'</div>').join('')+'</div>'+
