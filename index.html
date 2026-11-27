@@ -483,7 +483,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 /* screen colours: device (follows tablet), time (light 07:00-19:00, dark at night), light, dark. Fully Kiosk always reports dark, so it starts on time. */
 const THEMES=['time','light','dark'];
-const APP_V='plant-v160';
+const APP_V='plant-v161';
 const themeLbl=()=>({time:'🌗 Auto',light:'☀ Light',dark:'🌙 Dark'}[themeMode()]);
 const themeMode=()=>{const v=lsGet('plant.theme');return THEMES.indexOf(v)>=0?v:'time';};
 function applyTheme(){
@@ -673,7 +673,7 @@ function migrateCfg(c){
   if(a.id==='pack_mac'||a.id==='pack_spa'){const pre=a.id==='pack_mac'?'MACARONI':'SPAGHETTI';a.params.forEach(p=>{if(p.id==='ptype'&&(p.kind||'text')==='text'){p.kind='select';p.label='Production type';p.options=BRANDS.map(b=>pre+' - '+b);}});}
   if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='film_brand')){const i=a.params.findIndex(p=>p.id==='film_waste');if(i>=0)a.params.splice(i+1,0,N('film_brand','Film brand','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}),N('film_waste2','Film wastage 2','kg','Film and carton wastage',{total:true,opt:true}),N('film_brand2','Film brand 2','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}));}
   if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='scotch_brand')){const i=a.params.findIndex(p=>p.id==='scotch');if(i>=0)a.params.splice(i+1,0,N('scotch_brand','Scotch brand','','Film and carton wastage',{kind:'select',options:['Transparent'].concat(BRANDS),opt:true}));const j=a.params.findIndex(p=>p.id==='dmg_carton');if(j>=0)a.params.splice(j+1,0,N('dmg_brand','Carton brand','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}));}
-  if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='scotch2')){const i=a.params.findIndex(p=>p.id==='scotch_brand');if(i>=0)a.params.splice(i+1,0,N('scotch2','Scotch used 2','cartons','Film and carton wastage',{total:true,opt:true}),N('scotch_brand2','Scotch brand 2','','Film and carton wastage',{kind:'select',options:['Transparent'].concat(BRANDS),opt:true}));}
+  if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='scotch2')){const i=a.params.findIndex(p=>p.id==='scotch_brand');if(i>=0)a.params.splice(i+1,0,N('scotch2','Scotch 2','cartons','Film and carton wastage',{total:true,opt:true}),N('scotch_brand2','Scotch brand 2','','Film and carton wastage',{kind:'select',options:['Transparent'].concat(BRANDS),opt:true}));}
   if((a.id==='pack_spa'||a.id==='pack_mac')&&!a.params.some(p=>p.id==='dmg_carton2')){const j=a.params.findIndex(p=>p.id==='dmg_brand');if(j>=0)a.params.splice(j+1,0,N('dmg_carton2','Damaged carton 2','pcs','Film and carton wastage',{total:true,opt:true}),N('dmg_brand2','Carton brand 2','','Film and carton wastage',{kind:'select',options:BRANDS,opt:true}));}
   if(a.id==='pack_spa'||a.id==='pack_mac')a.params.forEach(p=>{if(p.id==='scotch'||p.id==='dmg_carton')p.opt=true;});
   if(String(a.id).indexOf('pack_')===0){a.params.forEach(p=>{if(['flour','semolina','regr_used','regr_prod'].indexOf(p.id)>=0&&p.unit==='cartons')p.unit='kg';});a.params=a.params.filter(p=>p.id!=='pallet_times');a.params.forEach(p=>{if(p.id==='pallets'){p.label='Cartons completed';p.unit='cartons';}});a.params.forEach(p=>{if(WIN_IDS.indexOf(p.id)>=0&&!(Array.isArray(p.win)&&p.win.length))p.win=PACK_WIN;});}});return c;}
@@ -681,7 +681,7 @@ const C_='°C',H_='%RH';
 function sensors(list){return list.map(c=>{const t=c.slice(-1);if(t==='T'||t==='H')return N('s'+c.toLowerCase(),c+(t==='T'?' temp':' humidity'),t==='T'?C_:H_,'Dryer temperature & humidity');return N('s'+c,'Motor '+c+' speed','Hz','Dryer motor speeds');});}
 function pack(id,name){return {id:id,name:name,every:'any',timed:true,equipment:['Packing machine','Carton sealer','Pallet wrapper','Conveyor'],params:[
   N('pallets','Cartons completed','cartons','Production',{total:true}),N('ptype','Production type (e.g. AL-TAJ)','','Production',{kind:'text'}),
-  N('film_waste','Film wastage','kg','Film and carton wastage',{total:true,pack:true}),N('scotch','Scotch used in carton','cartons','Film and carton wastage',{total:true,pack:true}),N('dmg_carton','Damaged carton','pcs','Film and carton wastage',{total:true,pack:true}),
+  N('film_waste','Film wastage','kg','Film and carton wastage',{total:true,pack:true}),N('scotch','Scotch','cartons','Film and carton wastage',{total:true,pack:true}),N('dmg_carton','Damaged carton','pcs','Film and carton wastage',{total:true,pack:true}),
   N('flour','Flour used','kg','Raw material',{total:true,pack:true}),N('semolina','Semolina used','kg','Raw material',{total:true,pack:true}),N('regr_used','Regrinding used','kg','Raw material',{total:true,pack:true}),N('regr_prod','Regrinding produced','kg','Raw material',{total:true,pack:true})]};}
 function lab(id,name,zones){return {id:id,name:name,every:'any',timed:true,noStatus:true,equipment:['Moisture analyzer','Drying oven','Balance'],params:[N('zone','Zone','','Sample',{kind:'select',options:zones}),N('result','Moisture result','%','Sample')]};}
 const DEFAULT_CFG={
